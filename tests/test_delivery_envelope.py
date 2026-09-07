@@ -198,6 +198,12 @@ class TestEnvelopeNegative:
         ok, reason = validate_envelope(envelope)
         assert not ok and "version" in reason
 
+    def test_boolean_version_rejected(self, alice_identity):
+        envelope = _signed(alice_identity)
+        envelope.version = True
+        ok, reason = validate_envelope(envelope)
+        assert not ok and "version" in reason
+
     def test_expired_envelope_rejected(self, alice_identity):
         envelope = _signed(alice_identity, ttl_ms=1_000)
         ok, reason = validate_envelope(envelope, now_ms=envelope.expires_at_ms + 1)

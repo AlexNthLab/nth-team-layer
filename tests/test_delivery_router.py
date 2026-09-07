@@ -13,6 +13,7 @@ from nth_dao.delivery.envelope import sign_envelope
 from nth_dao.delivery.policy import (
     CENTRALIZED_POLICY,
     DECENTRALIZED_POLICY,
+    OFFLINE_POLICY,
     RoutePolicy,
     RoutePolicyError,
 )
@@ -23,6 +24,7 @@ from nth_dao.delivery.transports.base import (
     PRIVACY_PUBLIC_RELAY,
     SendResult,
     Transport,
+    TRANSPORT_ACK_NONE,
     TransportCapabilities,
 )
 from nth_dao.delivery.transports.loopback import (
@@ -60,13 +62,15 @@ class _StaticTransport(Transport):
     """Scripted transport for router behavior tests."""
 
     def __init__(self, name, *, privacy=PRIVACY_PEER, realtime=True, infra=False,
-                 accept=True, error_code="unreachable", max_bytes=524_288):
+                 accept=True, error_code="unreachable", max_bytes=524_288,
+                 ack_mode="host"):
         self.capabilities = TransportCapabilities(
             name=name,
             realtime=realtime,
             privacy_level=privacy,
             external_infrastructure=infra,
             max_envelope_bytes=max_bytes,
+            ack_mode=ack_mode,
         )
         self._accept = accept
         self._error_code = error_code
@@ -103,6 +107,22 @@ class TestRoutePolicy:
     def test_mode_presets_differ_on_privacy(self):
         assert CENTRALIZED_POLICY.privacy_floor == PRIVACY_PUBLIC_RELAY
         assert DECENTRALIZED_POLICY.privacy_floor >= PRIVACY_PEER
+        assert OFFLINE_POLICY.require_ack is False
+
+    @pytest.mark.parametrize(
+        "field,value",
+        [
+            ("copy_count", True),
+            ("require_ack", 1),
+            ("prefer_realtime", 1),
+            ("allow_fallback", 1),
+            ("max_hop_limit", True),
+            ("require_external_infrastructure", 1),
+        ],
+    )
+    def test_boolean_and_integer_types_are_not_interchangeable(self, field, value):
+        with pytest.raises(RoutePolicyError):
+            RoutePolicy(**{field: value})
 
 
 class TestRouter:
@@ -145,6 +165,46 @@ class TestRouter:
         result = router.send(_envelope(alice_identity), policy)
         assert result.sent_via == ["b"]
         assert [a.transport for a in result.attempts] == ["b"]
+
+    def test_mode_policies_enforce_infrastructure_boundary(self, alice_identity):
+        router = DeliveryRouter()
+        router.register(
+            _StaticTransport(
+                "relay", privacy=PRIVACY_PUBLIC_RELAY, infra=True
+            )
+        )
+        router.register(_StaticTransport("peer", privacy=PRIVACY_PEER, infra=False))
+
+        assert router.send(_envelope(alice_identity), CENTRALIZED_POLICY).sent_via == [
+            "relay"
+        ]
+        assert router.send(
+            _envelope(alice_identity), DECENTRALIZED_POLICY
+        ).sent_via == ["peer"]
+
+    def test_offline_policy_accepts_local_transport_without_host_ack(
+        self, alice_identity
+    ):
+        router = DeliveryRouter()
+        router.register(
+            _StaticTransport(
+                "offline",
+                privacy=PRIVACY_LOCAL,
+                realtime=False,
+                infra=False,
+                ack_mode=TRANSPORT_ACK_NONE,
+            )
+        )
+        assert router.send(_envelope(alice_identity), OFFLINE_POLICY).sent_via == [
+            "offline"
+        ]
+
+    def test_hop_limit_cannot_exceed_active_policy(self, alice_identity):
+        router = DeliveryRouter()
+        router.register(_StaticTransport("peer"))
+        envelope = _envelope(alice_identity, hop_limit=2)
+        with pytest.raises(Exception, match="hop_limit"):
+            router.send(envelope, RoutePolicy(max_hop_limit=1))
 
     def test_oversized_envelope_skips_transport(self, alice_identity):
         router = DeliveryRouter()

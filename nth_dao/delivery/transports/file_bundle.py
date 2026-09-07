@@ -1,7 +1,4 @@
-"""Signed file-bundle transport — the cheapest true-offline baseline.
-
-The integration design doc §8.1: "文件包是成本最低、最可靠的真离线基线。
-可以通过共享目录、U 盘或人工携带传输，不依赖无线协议。"
+"""Signed file-bundle transport, the cheapest true-offline baseline.
 
 One ``send`` writes ONE self-contained bundle file into the exchange
 directory::
@@ -141,7 +138,8 @@ class FileBundleTransport(Transport):
         )
         self._exchange_dir.mkdir(parents=True, exist_ok=True)
         self._state_dir.mkdir(parents=True, exist_ok=True)
-        self._load_imported()
+        with InterProcessLock(self._imported_path):
+            self._load_imported()
 
     # ─────────────────────── Transport API ───────────────────────
 
@@ -161,6 +159,8 @@ class FileBundleTransport(Transport):
         return SendResult(accepted=True)
 
     def poll(self, *, max_items: int = 64) -> List[TransportEnvelope]:
+        if isinstance(max_items, bool) or not isinstance(max_items, int) or max_items < 1:
+            raise ValueError("max_items must be a positive integer")
         envelopes: List[TransportEnvelope] = []
         for bundle_path in sorted(self._exchange_dir.glob(f"*{BUNDLE_SUFFIX}")):
             if len(envelopes) >= max_items:
@@ -188,22 +188,28 @@ class FileBundleTransport(Transport):
             digest = self._verify_bundle(bundle)
             if digest is None:
                 continue
-            with self._lock:
-                self._refold_imported_if_changed()
-                if digest in self._imported:
-                    continue
-                self._imported.add(digest)
-                self._append_imported(digest)
             for envelope_json in bundle["envelopes"]:
+                if len(envelopes) >= max_items:
+                    break
                 try:
                     parsed = json.loads(envelope_json)
                     envelope = TransportEnvelope.from_dict(parsed)
                 except (json.JSONDecodeError, TransportEnvelopeRejected, TypeError):
                     logger.warning("bundle %s holds a malformed envelope; skipping it", bundle_path.name)
                     continue
+                with self._lock:
+                    with InterProcessLock(self._imported_path):
+                        self._refold_imported_if_changed()
+                        # Legacy journals recorded the whole bundle digest;
+                        # new journals record each message independently so
+                        # max_items pagination cannot discard the tail.
+                        if digest in self._imported:
+                            break
+                        if envelope.message_id in self._imported:
+                            continue
+                        self._append_imported_locked(envelope.message_id)
+                        self._imported.add(envelope.message_id)
                 envelopes.append(envelope)
-                if len(envelopes) >= max_items:
-                    break
         return envelopes
 
     def health(self):
@@ -282,8 +288,24 @@ class FileBundleTransport(Transport):
             logger.warning("bundle envelope list invalid; rejecting")
             return None
         for envelope_json in envelopes:
-            if not isinstance(envelope_json, str) or len(envelope_json) > MAX_ENVELOPE_BYTES:
+            if (
+                not isinstance(envelope_json, str)
+                or len(envelope_json.encode("utf-8")) > MAX_ENVELOPE_BYTES
+            ):
                 logger.warning("bundle holds an oversized envelope; rejecting")
+                return None
+            try:
+                parsed = json.loads(envelope_json)
+                envelope = TransportEnvelope.from_dict(parsed)
+            except (json.JSONDecodeError, TypeError, ValueError, RecursionError):
+                logger.warning("bundle holds a malformed envelope; rejecting")
+                return None
+            if canonical_json(envelope.to_dict()).decode("utf-8") != envelope_json:
+                logger.warning("bundle envelope is not canonical JSON; rejecting")
+                return None
+            ok, _reason = validate_envelope(envelope, require_signature=True)
+            if not ok:
+                logger.warning("bundle holds an invalid envelope; rejecting")
                 return None
         if bundle["envelopes_sha256"] != _envelopes_digest(envelopes):
             logger.warning("bundle digest mismatch; rejecting")
@@ -323,7 +345,9 @@ class FileBundleTransport(Transport):
                 event = json.loads(line.decode("utf-8"))
             except (json.JSONDecodeError, UnicodeDecodeError) as exc:
                 raise FileBundleRejected(f"corrupt import journal: {exc}") from exc
-            digest = event.get("envelopes_sha256") if isinstance(event, dict) else None
+            digest = None
+            if isinstance(event, dict):
+                digest = event.get("message_id", event.get("envelopes_sha256"))
             if not isinstance(digest, str) or _SHA256_RE.fullmatch(digest) is None:
                 raise FileBundleRejected("import journal digest invalid")
             self._imported.add(digest)
@@ -343,50 +367,45 @@ class FileBundleTransport(Transport):
             self._imported = set()
             self._load_imported()
 
-    def _append_imported(self, digest: str) -> None:
+    def _append_imported_locked(self, message_id: str) -> None:
         import os
 
-        # cross-process lock: two receiver processes may poll the same
-        # exchange dir concurrently (round-3 review bug K)
-        with InterProcessLock(self._imported_path):
-            with open(self._imported_path, "ab") as handle:
-                handle.write(
-                    canonical_json(
-                        {"envelopes_sha256": digest, "at_ms": self._clock()}
-                    )
-                    + b"\n"
-                )
+        with open(self._imported_path, "ab") as handle:
+            handle.write(
+                canonical_json({"message_id": message_id, "at_ms": self._clock()})
+                + b"\n"
+            )
+            handle.flush()
+            os.fsync(handle.fileno())
+            stat = os.fstat(handle.fileno())
+            self._imported_stat = (stat.st_mtime_ns, stat.st_size)
+        # The caller still holds the process lock while rotation replaces
+        # the journal, so a concurrent import cannot be lost.
+        if self._imported_path.stat().st_size > _IMPORTED_JOURNAL_CAP:
+            lines = self._imported_path.read_bytes().splitlines()
+            keep = lines[-max(1, len(lines) // 2):]
+            tmp = self._imported_path.with_suffix(
+                f".jsonl.{os.getpid()}-{secrets.token_hex(4)}.tmp"
+            )
+            with open(tmp, "wb") as handle:
+                for line in keep:
+                    handle.write(line + b"\n")
                 handle.flush()
                 os.fsync(handle.fileno())
-                # fingerprint inside the lock (round-4 bug Q, same class)
-                try:
-                    stat = os.fstat(handle.fileno())
-                    self._imported_stat = (stat.st_mtime_ns, stat.st_size)
-                except OSError:  # pragma: no cover - fstat on our own fd
-                    pass
-            # bound the journal (round-15 bug CC-a): rotate to the newest
-            # half when it crosses the cap — safe because the inbox dedups
-            # redeliveries by message_id, so rotation can at most cause a
-            # re-import whose envelopes the inbox drops as duplicates
-            if self._imported_path.stat().st_size > _IMPORTED_JOURNAL_CAP:
-                lines = self._imported_path.read_bytes().splitlines()
-                keep = lines[-max(1, len(lines) // 2):]
-                tmp = self._imported_path.with_suffix(
-                    f".jsonl.{os.getpid()}-{secrets.token_hex(4)}.tmp"
-                )
-                with open(tmp, "wb") as handle:
-                    for line in keep:
-                        handle.write(line + b"\n")
-                    handle.flush()
-                    os.fsync(handle.fileno())
-                os.replace(tmp, self._imported_path)
-                self._imported = {
-                    json.loads(line)["envelopes_sha256"] for line in keep
-                }
-                logger.warning(
-                    "import journal exceeded %d bytes; rotated to %d entries",
-                    _IMPORTED_JOURNAL_CAP, len(keep),
-                )
+            os.replace(tmp, self._imported_path)
+            retained: set[str] = set()
+            for line in keep:
+                event = json.loads(line)
+                imported_id = event.get("message_id", event.get("envelopes_sha256"))
+                if not isinstance(imported_id, str) or _SHA256_RE.fullmatch(imported_id) is None:
+                    raise FileBundleRejected("import journal digest invalid after rotation")
+                retained.add(imported_id)
+            self._imported = retained
+            logger.warning(
+                "import journal exceeded %d bytes; rotated to %d entries",
+                _IMPORTED_JOURNAL_CAP,
+                len(keep),
+            )
 
 
 __all__ = [

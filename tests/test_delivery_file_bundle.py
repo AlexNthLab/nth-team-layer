@@ -105,6 +105,29 @@ class TestBundleRoundtrip:
         # canonical bytes on disk: re-encoding matches
         assert canonical_json(data) == bundles[0].read_bytes()
 
+    def test_partial_poll_does_not_discard_bundle_tail(
+        self, exchange, alice_identity, bob_identity
+    ):
+        sender = sender_transport_factory(exchange, alice_identity)
+        originals = [
+            _envelope(alice_identity, payload={"n": index}) for index in range(3)
+        ]
+        sender._write_bundle(sender._build_bundle(originals))
+        receiver = FileBundleTransport(
+            exchange,
+            bob_identity,
+            state_dir=exchange / ".state-bob",
+            clock=lambda: NOW_MS,
+        )
+
+        first = receiver.poll(max_items=1)
+        remainder = receiver.poll(max_items=10)
+
+        assert [item.message_id for item in first] == [originals[0].message_id]
+        assert [item.message_id for item in remainder] == [
+            item.message_id for item in originals[1:]
+        ]
+
 
 class TestBundleHostility:
     def test_tampered_bundle_rejected(self, exchange, alice_identity, bob_identity):
@@ -291,5 +314,7 @@ class TestImportJournalCrossProcess:
         )
         assert len(receiver_one.poll()) == 1
         # the second process folds the same journal: no double delivery
-        import time as _t; _t.sleep(0.02)
+        import time as _t
+
+        _t.sleep(0.02)
         assert receiver_two.poll() == []

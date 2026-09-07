@@ -26,12 +26,17 @@ from dataclasses import dataclass, field
 from typing import Callable, Dict, List, Optional
 
 from nth_dao.canonical_json import canonical_json
-from nth_dao.delivery.envelope import TransportEnvelope
+from nth_dao.delivery.envelope import (
+    TransportEnvelope,
+    TransportEnvelopeRejected,
+    validate_envelope,
+)
 from nth_dao.delivery.policy import RoutePolicy
 from nth_dao.delivery.transports.base import (
     DEFAULT_COOLDOWN_MS,
     DEFAULT_FAILURE_THRESHOLD,
     Transport,
+    TRANSPORT_ACK_HOST,
     TransportHealth,
     monotonic_ms,
 )
@@ -127,6 +132,15 @@ class DeliveryRouter:
 
     def send(self, envelope: TransportEnvelope, policy: Optional[RoutePolicy] = None) -> RoutingResult:
         policy = policy or RoutePolicy()
+        if not isinstance(policy, RoutePolicy):
+            raise TypeError("policy must be a RoutePolicy")
+        ok, reason = validate_envelope(envelope, require_signature=True)
+        if not ok:
+            raise TransportEnvelopeRejected(reason)
+        if envelope.routing["hop_limit"] > policy.max_hop_limit:
+            raise TransportEnvelopeRejected(
+                "envelope hop_limit exceeds the active route policy"
+            )
         candidates = self._score(envelope, policy)
         result = RoutingResult()
         now = self._clock()
@@ -153,26 +167,31 @@ class DeliveryRouter:
     def receive(self, *, max_items: int = 64) -> List[ReceivedEnvelope]:
         """Poll every registered transport and drain what arrived."""
 
+        if isinstance(max_items, bool) or not isinstance(max_items, int) or max_items < 1:
+            raise ValueError("max_items must be a positive integer")
         received: List[ReceivedEnvelope] = []
         with self._lock:
             names = list(self._order)
             transports = dict(self._transports)
         for name in names:
+            remaining = max_items - len(received)
+            if remaining <= 0:
+                break
             transport = transports[name]
             try:
-                items = transport.poll(max_items=max_items)
+                items = transport.poll(max_items=remaining)
             except Exception as exc:
                 logger.warning("transport %s poll failed: %s", name, exc)
                 self._note_failure(name, self._clock())
                 continue
-            for envelope in items:
+            for envelope in items[:remaining]:
                 received.append(ReceivedEnvelope(transport=name, envelope=envelope))
         return received
 
     def stats(self) -> Dict[str, Dict[str, object]]:
         now = self._clock()
         with self._lock:
-            snapshot = {}
+            snapshot: Dict[str, Dict[str, object]] = {}
             for name in self._order:
                 health = self._health[name]
                 snapshot[name] = {
@@ -201,6 +220,14 @@ class DeliveryRouter:
                 if policy.allowed_transports and name not in policy.allowed_transports:
                     continue
                 if capabilities.privacy_level < policy.privacy_floor:
+                    continue
+                if policy.require_ack and capabilities.ack_mode != TRANSPORT_ACK_HOST:
+                    continue
+                infrastructure = policy.require_external_infrastructure
+                if (
+                    infrastructure is not None
+                    and capabilities.external_infrastructure != infrastructure
+                ):
                     continue
                 if envelope_bytes > capabilities.max_envelope_bytes:
                     continue
@@ -246,14 +273,18 @@ class DeliveryRouter:
 
     def _note_success(self, name: str, now_ms: int) -> None:
         with self._lock:
-            health = self._health[name]
+            health = self._health.get(name)
+            if health is None:
+                return
             health.consecutive_failures = 0
             health.last_success_ms = now_ms
             health.reachable = True
 
     def _note_failure(self, name: str, now_ms: int) -> None:
         with self._lock:
-            health = self._health[name]
+            health = self._health.get(name)
+            if health is None:
+                return
             health.consecutive_failures += 1
             health.last_failure_ms = now_ms
 

@@ -87,6 +87,27 @@ class TestAckHappyPath:
 
 
 class TestAckNegative:
+    def test_boolean_version_rejected(self, bob_identity, envelope):
+        ack = sign_ack(
+            bob_identity,
+            message_id=envelope.message_id,
+            envelope_sha256=envelope_digest(envelope),
+            received_at_ms=NOW_MS,
+        )
+        ack.version = True
+        ok, reason = validate_ack(ack, now_ms=NOW_MS + 100)
+        assert not ok and "version" in reason
+
+    def test_boolean_now_rejected(self, bob_identity, envelope):
+        ack = sign_ack(
+            bob_identity,
+            message_id=envelope.message_id,
+            envelope_sha256=envelope_digest(envelope),
+            received_at_ms=NOW_MS,
+        )
+        ok, reason = validate_ack(ack, now_ms=True)
+        assert not ok and "now_ms" in reason
+
     def test_unknown_field_rejected(self, bob_identity, envelope):
         data = sign_ack(
             bob_identity,

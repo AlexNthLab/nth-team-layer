@@ -117,7 +117,11 @@ def _validate_ack(
         return False, "ack must be a DeliveryAck"
     if ack.protocol != ACK_PROTOCOL:
         return False, "wrong ack protocol"
-    if ack.version != ACK_VERSION:
+    if (
+        isinstance(ack.version, bool)
+        or not isinstance(ack.version, int)
+        or ack.version != ACK_VERSION
+    ):
         return False, "unsupported ack version"
     if ack.kind != ACK_KIND:
         return False, "wrong ack kind"
@@ -140,8 +144,13 @@ def _validate_ack(
         return False, "received_at_ms must be an integer"
     if not 0 < ack.received_at_ms <= MAX_SAFE_INTEGER:
         return False, "received_at_ms out of range"
-    if now_ms is not None and ack.received_at_ms > now_ms + MAX_CLOCK_SKEW_MS:
-        return False, "ack dated in the future beyond clock skew"
+    if now_ms is not None:
+        if isinstance(now_ms, bool) or not isinstance(now_ms, int):
+            return False, "now_ms must be an integer"
+        if not 0 < now_ms <= MAX_SAFE_INTEGER:
+            return False, "now_ms out of range"
+        if ack.received_at_ms > now_ms + MAX_CLOCK_SKEW_MS:
+            return False, "ack dated in the future beyond clock skew"
 
     try:
         wire = canonical_json(ack.to_dict())

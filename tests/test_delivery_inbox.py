@@ -224,7 +224,7 @@ class TestAuthorization:
         )
         decision = inbox.accept(_envelope(alice_identity), now_ms=NOW_MS)
         assert not decision.accepted
-        assert "authorize error" in decision.reason
+        assert decision.reason == "authorization callback failed"
 
 
 class TestReplayCacheBound:
@@ -234,9 +234,11 @@ class TestReplayCacheBound:
             directory, clock=lambda: NOW_MS, max_replay_entries=2
         )
         envelopes = [_envelope(alice_identity, payload={"n": i}) for i in range(3)]
-        for index, envelope in enumerate(envelopes):
-            decision = inbox.accept(envelope, now_ms=NOW_MS + index)
-            assert decision.accepted, decision.reason
+        assert inbox.accept(envelopes[0], now_ms=NOW_MS).accepted
+        assert inbox.mark_processed(envelopes[0].message_id)
+        assert inbox.accept(envelopes[1], now_ms=NOW_MS + 1).accepted
+        decision = inbox.accept(envelopes[2], now_ms=NOW_MS + 2)
+        assert decision.accepted, decision.reason
         assert inbox.entry_count() == 2
         assert not inbox.seen(envelopes[0].message_id)  # oldest evicted
 
@@ -246,9 +248,36 @@ class TestReplayCacheBound:
         assert reloaded.entry_count() == 2
         assert not reloaded.seen(envelopes[0].message_id)
         assert reloaded.seen(envelopes[2].message_id)
-        # evicted message can be accepted again (fresh content address is new)
+        # An evicted message can be accepted again after capacity is available.
+        assert reloaded.mark_processed(envelopes[1].message_id)
         decision = reloaded.accept(envelopes[0], now_ms=NOW_MS + 10)
         assert decision.accepted, decision.reason
+
+    def test_unprocessed_envelopes_survive_restart(self, tmp_path, alice_identity):
+        directory = tmp_path / "delivery"
+        envelope = _envelope(alice_identity, payload={"work": "durable"})
+        inbox = DeliveryInbox(directory, clock=lambda: NOW_MS)
+        assert inbox.accept(envelope, now_ms=NOW_MS).accepted
+
+        reloaded = DeliveryInbox(directory, clock=lambda: NOW_MS)
+        assert [item.message_id for item in reloaded.pending()] == [
+            envelope.message_id
+        ]
+        assert reloaded.mark_processed(envelope.message_id) is True
+        assert reloaded.mark_processed(envelope.message_id) is False
+        assert DeliveryInbox(directory, clock=lambda: NOW_MS).pending() == []
+
+    def test_full_inbox_never_evicts_unprocessed_work(self, tmp_path, alice_identity):
+        directory = tmp_path / "delivery"
+        inbox = DeliveryInbox(directory, clock=lambda: NOW_MS, max_replay_entries=1)
+        first = _envelope(alice_identity, payload={"n": 1})
+        second = _envelope(alice_identity, payload={"n": 2})
+        assert inbox.accept(first, now_ms=NOW_MS).accepted
+
+        decision = inbox.accept(second, now_ms=NOW_MS + 1)
+        assert not decision.accepted
+        assert "unprocessed" in decision.reason
+        assert [item.message_id for item in inbox.pending()] == [first.message_id]
 
     def test_rejections_journaled_and_compactable(self, tmp_path, alice_identity):
         directory = tmp_path / "delivery"
@@ -296,6 +325,32 @@ class TestCrossProcess:
         decision = second.accept(envelope, now_ms=NOW_MS)
         assert not decision.accepted and decision.duplicate
 
+    def test_concurrent_instances_accept_exactly_once(self, tmp_path, alice_identity):
+        from concurrent.futures import ThreadPoolExecutor
+        from threading import Barrier
+
+        directory = tmp_path / "delivery"
+        inboxes = [
+            DeliveryInbox(directory, clock=lambda: NOW_MS),
+            DeliveryInbox(directory, clock=lambda: NOW_MS),
+        ]
+        envelope = _envelope(alice_identity)
+        barrier = Barrier(2)
+
+        def accept(index):
+            barrier.wait(timeout=5)
+            return inboxes[index].accept(envelope, now_ms=NOW_MS)
+
+        with ThreadPoolExecutor(max_workers=2) as pool:
+            decisions = list(pool.map(accept, range(2)))
+
+        assert sum(decision.accepted for decision in decisions) == 1
+        assert sum(decision.duplicate for decision in decisions) == 1
+        reloaded = DeliveryInbox(directory, clock=lambda: NOW_MS)
+        assert [item.message_id for item in reloaded.pending()] == [
+            envelope.message_id
+        ]
+
 
 # ─────────────────── adversarial review round 2 (bugs D + H) ───────────────────
 
@@ -335,12 +390,13 @@ class TestReviewRoundTwo:
         first = _envelope(alice_identity, payload={"n": 1})
         second = _envelope(alice_identity, payload={"n": 2})
         assert inbox.accept(first, now_ms=NOW_MS).accepted
+        assert inbox.mark_processed(first.message_id)
 
 
         def broken_open(*args, **kwargs):
             raise OSError("disk full")
 
-        # the accepted+evicted pair for `second` cannot be persisted
+        # The atomic replacement event for `second` cannot be persisted.
         monkeypatch.setattr("builtins.open", broken_open)
         with pytest.raises(OSError):
             inbox.accept(second, now_ms=NOW_MS + 1)
@@ -381,27 +437,23 @@ class TestReviewRoundThree:
 
         directory = tmp_path / "delivery"
         inbox = DeliveryInbox(directory, clock=lambda: NOW_MS)
-        refold_calls = []
-        orig = inbox._refold_if_changed.__get__(inbox)
+        reloads = []
+        original_load = inbox._load_cache_locked
 
-        def counting_refold():
-            before = len(refold_calls)
-            orig()
-            refold_calls.append(1)
-            return before
+        def counting_load():
+            reloads.append(1)
+            return original_load()
 
-        monkeypatch.setattr(inbox, "_refold_if_changed", counting_refold)
+        monkeypatch.setattr(inbox, "_load_cache_locked", counting_load)
         for i in range(20):
             envelope = _envelope(alice_identity, payload={"n": i})
             decision = inbox.accept(envelope, now_ms=NOW_MS + i)
             assert decision.accepted
-        # 20 accepts → exactly 20 refold checks; the point is they are cheap
-        # stat() calls now, not full journal re-reads. Pin the invariant
-        # differently: the journal stat must be current after each write.
-        assert inbox._journal_stat is not None
+        assert reloads == []
+        assert inbox._cache_stat is not None
         stat = directory / "inbox.cache.jsonl"
         current = stat.stat()
-        assert inbox._journal_stat == (current.st_mtime_ns, current.st_size)
+        assert inbox._cache_stat == (current.st_mtime_ns, current.st_size)
 
 
 # ─────────────────── adversarial review round 4 (bug R) ───────────────────
@@ -469,6 +521,7 @@ class TestCacheJournalAutoCompact:
             envelope = _envelope(alice_identity, payload={"n": i})
             decision = inbox.accept(envelope, now_ms=NOW_MS + i)
             assert decision.accepted, decision.reason
+            assert inbox.mark_processed(envelope.message_id)
             envelopes.append(envelope)
         cache = directory / "inbox.cache.jsonl"
         assert cache.stat().st_size <= inbox_module.MAX_CACHE_JOURNAL_BYTES

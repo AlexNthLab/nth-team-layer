@@ -282,7 +282,11 @@ def _validate_envelope(
         return False, "envelope must be a TransportEnvelope"
     if envelope.protocol != ENVELOPE_PROTOCOL:
         return False, "wrong envelope protocol"
-    if envelope.version != ENVELOPE_VERSION:
+    if (
+        isinstance(envelope.version, bool)
+        or not isinstance(envelope.version, int)
+        or envelope.version != ENVELOPE_VERSION
+    ):
         return False, "unsupported envelope version"
 
     wire = _recode_envelope(envelope)

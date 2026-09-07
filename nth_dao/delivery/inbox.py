@@ -7,16 +7,18 @@ the integration design doc §5.1 / §10:
 1. structure  — exact field set, canonical JSON, bounded size and depth;
 2. signature  — sender's Ed25519 did:key verifies the author-signed body;
 3. freshness  — expiry in the past, or creation beyond clock skew, rejects;
-4. replay     — (sender_did, nonce) pairs already seen are rejected; the
+4. authority  — the host-provided ``authorize`` callback decides membership
+   and business permission. The inbox itself grants nothing;
+5. replay     — (sender_did, nonce) pairs already seen are rejected; the
    cache persists across process restarts (journal-backed);
-5. dedup      — a ``message_id`` that was already accepted is an idempotent
+6. dedup      — a ``message_id`` that was already accepted is an idempotent
    drop, not an error: receivers act once per content address;
-6. authority  — the host-provided ``authorize`` callback decides membership
-   and business permission. The inbox itself grants nothing.
+7. durability — the full canonical envelope remains pending until the domain
+   layer explicitly calls ``mark_processed``.
 
 Every rejection is recorded with an explicit reason. The replay cache is
-bounded: when the entry cap is reached, the oldest entry is evicted and the
-eviction is journaled, so a reload folds to the identical state.
+bounded. Only processed replay entries may be evicted; an inbox full of
+unprocessed envelopes rejects new intake instead of silently losing work.
 """
 
 from __future__ import annotations
@@ -49,7 +51,13 @@ DEFAULT_MAX_REJECTION_LOG = 8_192
 REJECTION_LOG_MAX_BYTES = 4 * 1024 * 1024
 MAX_CACHE_JOURNAL_BYTES = 16 * 1024 * 1024
 _MESSAGE_ID_RE = re.compile(r"^sha256:[0-9a-f]{64}$")
-_CACHE_EVENTS = ("accepted", "evicted")
+_CACHE_EVENTS = ("accepted", "processed", "evicted")
+_ACCEPTED_REQUIRED_FIELDS = frozenset(
+    {"event", "message_id", "sender_did", "nonce"}
+)
+_ACCEPTED_OPTIONAL_FIELDS = frozenset(
+    {"at_ms", "envelope_json", "evicted_message_id"}
+)
 
 AuthorizeCallable = Callable[[TransportEnvelope], Tuple[bool, str]]
 
@@ -82,7 +90,11 @@ class DeliveryInbox:
         clock: Optional[Callable[[], int]] = None,
         max_replay_entries: int = DEFAULT_MAX_REPLAY_ENTRIES,
     ) -> None:
-        if max_replay_entries < 1:
+        if (
+            isinstance(max_replay_entries, bool)
+            or not isinstance(max_replay_entries, int)
+            or max_replay_entries < 1
+        ):
             raise ValueError("max_replay_entries must be a positive integer")
         self._dir = Path(directory)
         self._cache_path = self._dir / "inbox.cache.jsonl"
@@ -96,8 +108,10 @@ class DeliveryInbox:
         # message_id -> (sender_did, nonce); insertion order = eviction order
         self._by_message_id: "OrderedDict[str, Tuple[str, str]]" = OrderedDict()
         self._nonces: Dict[Tuple[str, str], str] = {}
+        self._pending_json: "OrderedDict[str, str]" = OrderedDict()
         self._cache_stat: Optional[Tuple[int, int]] = None
-        self._load_cache()
+        with InterProcessLock(self._lock_path):
+            self._load_cache_locked()
 
     # ─────────────────────── the pipeline ───────────────────────
 
@@ -131,34 +145,53 @@ class DeliveryInbox:
             return self._reject(envelope.message_id, envelope.sender_did, reason)
 
         digest = envelope_digest(envelope)
-        with self._thread_lock:
-            self._refold_if_changed()
-            if envelope.message_id in self._by_message_id:
-                return InboxDecision(
-                    accepted=False,
-                    reason="duplicate",
-                    message_id=envelope.message_id,
-                    envelope_sha256=digest,
-                    duplicate=True,
-                )
-            nonce_key = (envelope.sender_did, envelope.nonce)
-            if nonce_key in self._nonces:
+        if self._authorize is not None:
+            try:
+                allowed, authorize_reason = self._authorize(envelope)
+            except Exception:
+                logger.exception("delivery inbox authorization callback failed")
+                allowed, authorize_reason = False, "authorization callback failed"
+            if not allowed:
                 return self._reject(
-                    envelope.message_id, envelope.sender_did, "replayed nonce",
-                    replayed=True,
+                    envelope.message_id,
+                    envelope.sender_did,
+                    authorize_reason or "unauthorized",
                 )
-            if self._authorize is not None:
-                try:
-                    allowed, authorize_reason = self._authorize(envelope)
-                except Exception as exc:
-                    allowed, authorize_reason = False, f"authorize error: {exc}"
-                if not allowed:
-                    return self._reject(
-                        envelope.message_id,
-                        envelope.sender_did,
-                        authorize_reason or "unauthorized",
+
+        replayed = False
+        full = False
+        with self._thread_lock:
+            with InterProcessLock(self._lock_path):
+                self._refold_if_changed_locked()
+                if envelope.message_id in self._by_message_id:
+                    return InboxDecision(
+                        accepted=False,
+                        reason="duplicate",
+                        message_id=envelope.message_id,
+                        envelope_sha256=digest,
+                        duplicate=True,
                     )
-            self._remember(envelope, now)
+                nonce_key = (envelope.sender_did, envelope.nonce)
+                if nonce_key in self._nonces:
+                    replayed = True
+                else:
+                    try:
+                        self._remember_locked(envelope, now)
+                    except DeliveryInboxFull:
+                        full = True
+        if replayed:
+            return self._reject(
+                envelope.message_id,
+                envelope.sender_did,
+                "replayed nonce",
+                replayed=True,
+            )
+        if full:
+            return self._reject(
+                envelope.message_id,
+                envelope.sender_did,
+                "inbox replay cache is full of unprocessed envelopes",
+            )
         return InboxDecision(
             accepted=True,
             reason="ok",
@@ -171,13 +204,53 @@ class DeliveryInbox:
 
     def seen(self, message_id: str) -> bool:
         with self._thread_lock:
-            self._refold_if_changed()
-            return message_id in self._by_message_id
+            with InterProcessLock(self._lock_path):
+                self._refold_if_changed_locked()
+                return message_id in self._by_message_id
 
     def entry_count(self) -> int:
         with self._thread_lock:
-            self._refold_if_changed()
-            return len(self._by_message_id)
+            with InterProcessLock(self._lock_path):
+                self._refold_if_changed_locked()
+                return len(self._by_message_id)
+
+    def pending(self, *, max_items: int = 64) -> list[TransportEnvelope]:
+        """Return durably accepted envelopes awaiting business processing."""
+
+        if isinstance(max_items, bool) or not isinstance(max_items, int) or max_items < 1:
+            raise ValueError("max_items must be a positive integer")
+        with self._thread_lock:
+            with InterProcessLock(self._lock_path):
+                self._refold_if_changed_locked()
+                pending_json = list(self._pending_json.values())[:max_items]
+        envelopes: list[TransportEnvelope] = []
+        for encoded in pending_json:
+            try:
+                envelopes.append(TransportEnvelope.from_dict(json.loads(encoded)))
+            except (json.JSONDecodeError, TypeError, ValueError) as exc:
+                raise DeliveryInboxCacheCorrupt(
+                    f"persisted pending envelope is invalid: {exc}"
+                ) from exc
+        return envelopes
+
+    def mark_processed(self, message_id: str) -> bool:
+        """Durably mark one accepted envelope as handled by the domain layer."""
+
+        if not isinstance(message_id, str) or _MESSAGE_ID_RE.fullmatch(message_id) is None:
+            raise ValueError("message_id is not a content address")
+        with self._thread_lock:
+            with InterProcessLock(self._lock_path):
+                self._refold_if_changed_locked()
+                if message_id not in self._by_message_id:
+                    raise KeyError(message_id)
+                if message_id not in self._pending_json:
+                    return False
+                self._append_cache_locked(
+                    {"event": "processed", "message_id": message_id}
+                )
+                self._pending_json.pop(message_id, None)
+                self._compact_if_oversized_locked()
+                return True
 
     def compact_rejections(self, max_keep: int = DEFAULT_MAX_REJECTION_LOG) -> int:
         """Trim the rejection log to the most recent ``max_keep`` lines."""
@@ -330,119 +403,104 @@ class DeliveryInbox:
         except OSError as exc:  # pragma: no cover - trim is best-effort
             logger.warning("could not trim inbox rejection journal: %s", exc)
 
-    def _remember(self, envelope: TransportEnvelope, now_ms: int) -> None:
-        """Journal-first acceptance with bounded eviction.
-
-        The journal line (accepted + optional evicted) is fsynced BEFORE the
-        in-memory state moves, so a crash or full disk can never leave memory
-        ahead of the durable replay cache. The eviction victim is only
-        *peeked* before the write and removed from memory after it — a failed
-        write must not mutate memory at all.
-        """
-
-        import os
+    def _remember_locked(self, envelope: TransportEnvelope, now_ms: int) -> None:
+        """Persist an accepted envelope while holding the process lock."""
 
         message_id = envelope.message_id
         nonce_key = (envelope.sender_did, envelope.nonce)
         evicted_id: Optional[str] = None
         evicted_key: Optional[Tuple[str, str]] = None
         if len(self._by_message_id) >= self._max_entries:
-            # peek the oldest entry; no mutation until the write succeeded
-            evicted_id, evicted_key = next(iter(self._by_message_id.items()))
-        event = {
+            for candidate_id, candidate_key in self._by_message_id.items():
+                if candidate_id not in self._pending_json:
+                    evicted_id, evicted_key = candidate_id, candidate_key
+                    break
+            if evicted_id is None:
+                raise DeliveryInboxFull(
+                    "replay cache capacity is occupied by unprocessed envelopes"
+                )
+
+        envelope_json = canonical_json(envelope.to_dict()).decode("utf-8")
+        event: Dict[str, Any] = {
             "event": "accepted",
             "message_id": message_id,
             "sender_did": envelope.sender_did,
             "nonce": envelope.nonce,
             "at_ms": now_ms,
+            "envelope_json": envelope_json,
         }
-        with (
-            InterProcessLock(self._lock_path),
-            open(self._cache_path, "ab") as handle,
-        ):
-            handle.write(canonical_json(event) + b"\n")
-            if evicted_id is not None:
-                handle.write(
-                    canonical_json({"event": "evicted", "message_id": evicted_id}) + b"\n"
-                )
-            handle.flush()
-            os.fsync(handle.fileno())
-            # fingerprint captured while STILL holding the lock: one taken
-            # after release could absorb another process's append and hide
-            # it from the re-fold check forever (round-4 bug Q)
-            try:
-                stat = os.fstat(handle.fileno())
-                self._journal_stat = (stat.st_mtime_ns, stat.st_size)
-            except OSError:  # pragma: no cover - fstat on our own fd
-                pass
-        # durable now — apply to memory
+        if evicted_id is not None:
+            # The replacement is one journal record. A torn append is ignored
+            # on reload; a complete append applies both changes together.
+            event["evicted_message_id"] = evicted_id
+        self._append_cache_locked(event)
+
         self._by_message_id[message_id] = nonce_key
         self._nonces[nonce_key] = message_id
+        self._pending_json[message_id] = envelope_json
         if evicted_key is not None and evicted_id is not None:
             self._by_message_id.pop(evicted_id, None)
             self._nonces.pop(evicted_key, None)
-        # bound the journal on the append path too: crossing the cap folds
-        # and rewrites losslessly instead of growing forever (round-11 BB-p)
+            self._pending_json.pop(evicted_id, None)
+        self._compact_if_oversized_locked()
+
+    def _compact_if_oversized_locked(self) -> None:
         try:
             if self._cache_path.stat().st_size > MAX_CACHE_JOURNAL_BYTES:
-                self._compact_cache_journal()
-        except OSError:  # pragma: no cover - stat raced an external replace
+                self._compact_cache_journal_locked()
+        except OSError:  # pragma: no cover - stat after our own append
             pass
 
-    def _compact_cache_journal(self) -> None:
-        """Losslessly rewrite an oversized cache journal to its live entries.
+    def _append_cache_locked(self, event: Dict[str, Any]) -> None:
+        self._append_cache_events_locked([event])
 
-        The oversized journal is folded into memory first (torn tail
-        tolerated, corruption still fails closed), then the journal is
-        rewritten holding only the live entries. The rewritten journal folds
-        to the identical in-memory state, so dedup semantics are unchanged
-        and the inbox recovers instead of bricking (round-11 bug BB-p). The
-        caller must hold ``self._thread_lock``.
-        """
+    def _append_cache_events_locked(self, events: list[Dict[str, Any]]) -> None:
+        import os
+
+        with open(self._cache_path, "ab") as handle:
+            for event in events:
+                handle.write(canonical_json(event) + b"\n")
+            handle.flush()
+            os.fsync(handle.fileno())
+            stat = os.fstat(handle.fileno())
+            self._cache_stat = (stat.st_mtime_ns, stat.st_size)
+
+    def _compact_cache_journal_locked(self) -> None:
+        """Rewrite the current cache state while holding the process lock."""
 
         import os
         import secrets
 
-        self._by_message_id.clear()
-        self._nonces.clear()
-        raw = self._cache_path.read_bytes()
-        self._fold_cache_lines(raw)
         tmp = self._cache_path.with_suffix(f".jsonl.{secrets.token_hex(4)}.tmp")
         try:
-            with (
-                InterProcessLock(self._lock_path),
-                open(tmp, "wb") as handle,
-            ):
+            with open(tmp, "wb") as handle:
                 for message_id, (sender_did, nonce) in self._by_message_id.items():
-                    handle.write(canonical_json({
+                    event: Dict[str, Any] = {
                         "event": "accepted",
                         "message_id": message_id,
                         "sender_did": sender_did,
                         "nonce": nonce,
-                    }) + b"\n")
+                    }
+                    envelope_json = self._pending_json.get(message_id)
+                    if envelope_json is not None:
+                        event["envelope_json"] = envelope_json
+                    handle.write(canonical_json(event) + b"\n")
                 handle.flush()
                 os.fsync(handle.fileno())
             os.replace(tmp, self._cache_path)
         except OSError:
             tmp.unlink(missing_ok=True)
             raise
-        try:
-            stat = self._cache_path.stat()
-            self._cache_stat = (stat.st_mtime_ns, stat.st_size)
-        except OSError:  # pragma: no cover - stat after our own replace
-            self._cache_stat = None
+        stat = self._cache_path.stat()
+        self._cache_stat = (stat.st_mtime_ns, stat.st_size)
         logger.warning(
-            "inbox cache journal exceeded %d bytes; compacted to %d live "
-            "entries", MAX_CACHE_JOURNAL_BYTES, len(self._by_message_id),
+            "inbox cache journal exceeded %d bytes; compacted to %d live entries",
+            MAX_CACHE_JOURNAL_BYTES,
+            len(self._by_message_id),
         )
 
-    def _refold_if_changed(self) -> None:
-        """Re-fold the cache journal when another process appended to it.
-
-        Every mutation is journaled before it is applied in memory, so a
-        re-fold is always safe and makes cross-process dedup live instead of
-        restart-only.
-        """
+    def _refold_if_changed_locked(self) -> None:
+        """Re-fold when another process changed the cache journal."""
 
         try:
             stat = self._cache_path.stat()
@@ -453,25 +511,20 @@ class DeliveryInbox:
             logger.debug("delivery inbox cache changed on disk; re-folding")
             self._by_message_id.clear()
             self._nonces.clear()
-            self._load_cache()
+            self._pending_json.clear()
+            self._load_cache_locked()
 
-    def _load_cache(self) -> None:
+    def _load_cache_locked(self) -> None:
         if not self._cache_path.exists():
             self._cache_stat = None
             return
-        if self._cache_path.stat().st_size > MAX_CACHE_JOURNAL_BYTES:
-            # round-11 bug BB-p: the journal grows monotonically (accepted +
-            # evicted pairs), so at the cap the inbox used to brick itself
-            # forever. Compaction IS the recovery: fold, rewrite losslessly,
-            # and continue with a live state (no operator intervention).
-            self._compact_cache_journal()
+        raw = self._cache_path.read_bytes()
+        self._fold_cache_lines(raw)
+        if len(raw) > MAX_CACHE_JOURNAL_BYTES:
+            self._compact_cache_journal_locked()
             return
-        try:
-            stat = self._cache_path.stat()
-            self._cache_stat = (stat.st_mtime_ns, stat.st_size)
-        except OSError:  # pragma: no cover - raced an external replace
-            self._cache_stat = None
-        self._fold_cache_lines(self._cache_path.read_bytes())
+        stat = self._cache_path.stat()
+        self._cache_stat = (stat.st_mtime_ns, stat.st_size)
 
     def _fold_cache_lines(self, raw: bytes) -> None:
         """Fold cache journal bytes into the in-memory state (fail closed)."""
@@ -490,27 +543,124 @@ class DeliveryInbox:
                 raise DeliveryInboxCacheCorrupt(
                     f"corrupt inbox cache line {index + 1}: {exc}"
                 ) from exc
+            if not isinstance(event, dict):
+                raise DeliveryInboxCacheCorrupt("cache event must be an object")
             kind = event.get("event")
             if kind not in _CACHE_EVENTS:
                 raise DeliveryInboxCacheCorrupt(f"unknown cache event: {kind!r}")
+            fields = frozenset(event)
+            if kind == "accepted":
+                if not _ACCEPTED_REQUIRED_FIELDS <= fields or not fields <= (
+                    _ACCEPTED_REQUIRED_FIELDS | _ACCEPTED_OPTIONAL_FIELDS
+                ):
+                    raise DeliveryInboxCacheCorrupt(
+                        "accepted cache event has missing or unknown fields"
+                    )
+            elif fields != frozenset({"event", "message_id"}):
+                raise DeliveryInboxCacheCorrupt(
+                    f"{kind} cache event has missing or unknown fields"
+                )
             message_id = event.get("message_id")
             if not isinstance(message_id, str) or _MESSAGE_ID_RE.fullmatch(message_id) is None:
                 raise DeliveryInboxCacheCorrupt("cache event message_id is invalid")
             if kind == "evicted":
                 existing = self._by_message_id.pop(message_id, None)
-                if existing is not None:
-                    self._nonces.pop(existing, None)
+                if existing is None:
+                    raise DeliveryInboxCacheCorrupt(
+                        "evicted cache event references an unknown message"
+                    )
+                self._nonces.pop(existing, None)
+                self._pending_json.pop(message_id, None)
+                continue
+            if kind == "processed":
+                if message_id not in self._by_message_id:
+                    raise DeliveryInboxCacheCorrupt(
+                        "processed cache event references an unknown message"
+                    )
+                if self._pending_json.pop(message_id, None) is None:
+                    raise DeliveryInboxCacheCorrupt(
+                        "processed cache event repeats an existing transition"
+                    )
                 continue
             sender_did = event.get("sender_did")
             nonce = event.get("nonce")
             if not isinstance(sender_did, str) or not isinstance(nonce, str):
                 raise DeliveryInboxCacheCorrupt("accepted event missing sender or nonce")
-            self._by_message_id[message_id] = (sender_did, nonce)
-            self._nonces[(sender_did, nonce)] = message_id
+            nonce_key = (sender_did, nonce)
+            existing = self._by_message_id.get(message_id)
+            if existing is not None:
+                raise DeliveryInboxCacheCorrupt(
+                    "accepted cache event repeats a message_id"
+                )
+            existing_nonce_message = self._nonces.get(nonce_key)
+            if existing_nonce_message is not None:
+                raise DeliveryInboxCacheCorrupt(
+                    "accepted cache event reuses a sender nonce"
+                )
+            at_ms = event.get("at_ms")
+            if at_ms is not None and (
+                isinstance(at_ms, bool) or not isinstance(at_ms, int) or at_ms < 1
+            ):
+                raise DeliveryInboxCacheCorrupt("accepted event at_ms is invalid")
+            evicted_message_id = event.get("evicted_message_id")
+            if evicted_message_id is not None:
+                if (
+                    not isinstance(evicted_message_id, str)
+                    or _MESSAGE_ID_RE.fullmatch(evicted_message_id) is None
+                    or evicted_message_id == message_id
+                ):
+                    raise DeliveryInboxCacheCorrupt(
+                        "accepted event eviction reference is invalid"
+                    )
+                evicted_nonce = self._by_message_id.get(evicted_message_id)
+                if evicted_nonce is None:
+                    raise DeliveryInboxCacheCorrupt(
+                        "accepted event evicts an unknown message"
+                    )
+                if evicted_message_id in self._pending_json:
+                    raise DeliveryInboxCacheCorrupt(
+                        "accepted event attempts to evict pending work"
+                    )
+            envelope_json = event.get("envelope_json")
+            if envelope_json is not None:
+                if not isinstance(envelope_json, str):
+                    raise DeliveryInboxCacheCorrupt(
+                        "accepted event envelope_json must be text"
+                    )
+                try:
+                    envelope = TransportEnvelope.from_dict(json.loads(envelope_json))
+                except (json.JSONDecodeError, TypeError, ValueError) as exc:
+                    raise DeliveryInboxCacheCorrupt(
+                        f"accepted event envelope_json is invalid: {exc}"
+                    ) from exc
+                if canonical_json(envelope.to_dict()).decode("utf-8") != envelope_json:
+                    raise DeliveryInboxCacheCorrupt(
+                        "accepted event envelope_json is not canonical"
+                    )
+                ok, reason = validate_envelope(envelope, require_signature=True)
+                if not ok or envelope.message_id != message_id:
+                    raise DeliveryInboxCacheCorrupt(
+                        f"accepted event envelope is invalid: {reason}"
+                    )
+                if envelope.sender_did != sender_did or envelope.nonce != nonce:
+                    raise DeliveryInboxCacheCorrupt(
+                        "accepted event envelope binding mismatch"
+                    )
+                self._pending_json[message_id] = envelope_json
+            if evicted_message_id is not None:
+                evicted_nonce = self._by_message_id.pop(evicted_message_id)
+                self._nonces.pop(evicted_nonce, None)
+                self._pending_json.pop(evicted_message_id, None)
+            self._by_message_id[message_id] = nonce_key
+            self._nonces[nonce_key] = message_id
 
 
 class DeliveryInboxCacheCorrupt(RuntimeError):
     """Raised when the persisted replay cache is damaged (fail closed)."""
+
+
+class DeliveryInboxFull(RuntimeError):
+    """Raised when no processed replay entry can be evicted safely."""
 
 
 __all__ = [
@@ -519,5 +669,6 @@ __all__ = [
     "REJECTION_LOG_MAX_BYTES",
     "DeliveryInbox",
     "DeliveryInboxCacheCorrupt",
+    "DeliveryInboxFull",
     "InboxDecision",
 ]

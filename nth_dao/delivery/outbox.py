@@ -14,9 +14,8 @@ Guarantees:
   fails closed.
 * **Idempotent** — enqueueing the same ``message_id`` twice never creates a
   second record.
-* **ACK-terminal** — one valid signed ACK for a message_id marks it
-  delivered and cancels every other in-flight copy, per design doc §8.2
-  ("收到任一有效 ACK 后取消其余副本").
+* **ACK-terminal** — one authorized signed ACK for the exact queued envelope
+  marks it delivered and cancels every other in-flight copy.
 * **Cross-process safe** — journal mutation happens under an
   ``InterProcessLock`` on the journal file.
 * **Bounded** — non-terminal record count is capped; enqueue fails closed
@@ -37,12 +36,11 @@ import threading
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Mapping, Optional, Union
+from typing import Any, Callable, Dict, List, Mapping, Optional, Tuple, Union
 
 from nth_dao.canonical_json import canonical_json
 from nth_dao.delivery.acknowledgement import (
     DeliveryAck,
-    ack_digest,
     validate_ack,
 )
 from nth_dao.delivery.envelope import (
@@ -57,6 +55,7 @@ from nth_dao.util.io import InterProcessLock
 logger = logging.getLogger("nth_dao.delivery")
 
 PathLike = Union[str, Path]
+AckAuthorizer = Callable[[DeliveryAck, TransportEnvelope], Tuple[bool, str]]
 
 OUTBOX_STATE_QUEUED = "queued"
 OUTBOX_STATE_DELIVERED = "delivered"
@@ -75,6 +74,26 @@ MAX_JOURNAL_BYTES = 64 * 1024 * 1024
 _JOURNAL_EVENTS = ("enqueued", "attempt", "delivered", "rejected", "expired")
 _MESSAGE_ID_RE = re.compile(r"^sha256:[0-9a-f]{64}$")
 _TRANSPORT_NAME_RE = re.compile(r"^[a-z0-9][a-z0-9._-]{0,63}$")
+_EVENT_FIELDS = {
+    "enqueued": frozenset(
+        {
+            "event",
+            "message_id",
+            "envelope_json",
+            "envelope_sha256",
+            "created_at_ms",
+            "expires_at_ms",
+            "at_ms",
+        }
+    ),
+    "attempt": frozenset({"event", "message_id", "transport", "at_ms", "outcome"}),
+    "delivered": frozenset({"event", "message_id", "at_ms", "ack_json"}),
+    "rejected": frozenset(
+        {"event", "message_id", "transport", "at_ms", "error_code"}
+    ),
+    "expired": frozenset({"event", "message_id", "at_ms"}),
+}
+MAX_ERROR_CODE_LENGTH = 256
 
 
 class DeliveryOutboxError(RuntimeError):
@@ -131,6 +150,20 @@ def _validate_transport_name(value: Any) -> str:
     return value
 
 
+def _validate_error_code(value: Any) -> str:
+    if not isinstance(value, str) or len(value) > MAX_ERROR_CODE_LENGTH:
+        raise DeliveryOutboxError(
+            f"error_code must be a string no longer than {MAX_ERROR_CODE_LENGTH} chars"
+        )
+    return value
+
+
+def _validate_operation_time(value: Any, name: str) -> int:
+    if isinstance(value, bool) or not isinstance(value, int) or value < 1:
+        raise DeliveryOutboxError(f"{name} must be a positive integer")
+    return value
+
+
 class DurableOutbox:
     """Append-only journal backed outbox for one workspace delivery dir."""
 
@@ -140,19 +173,26 @@ class DurableOutbox:
         *,
         max_pending_records: int = DEFAULT_MAX_PENDING_RECORDS,
         clock: Optional[Callable[[], int]] = None,
+        authorize_ack: Optional[AckAuthorizer] = None,
     ) -> None:
         self._dir = Path(directory)
         self._journal_path = self._dir / "outbox.journal.jsonl"
         self._lock_path = self._dir / "outbox.lock"
         self._max_pending = max_pending_records
-        if not isinstance(max_pending_records, int) or max_pending_records < 1:
+        if (
+            isinstance(max_pending_records, bool)
+            or not isinstance(max_pending_records, int)
+            or max_pending_records < 1
+        ):
             raise ValueError("max_pending_records must be a positive integer")
         self._clock = clock or (lambda: int(time.time() * 1000))
+        self._authorize_ack = authorize_ack
         self._records: Dict[str, OutboxRecord] = {}
         self._thread_lock = threading.RLock()
         self._journal_stat: Optional[tuple] = None
         self._dir.mkdir(parents=True, exist_ok=True)
-        self._load()
+        with InterProcessLock(self._lock_path):
+            self._load()
 
     # ─────────────────────── persistence ───────────────────────
 
@@ -215,9 +255,16 @@ class DurableOutbox:
             self._records = {}
             self._load()
 
-    def _append(self, event: Dict[str, Any]) -> None:
+    def _append_locked(self, event: Dict[str, Any]) -> None:
+        """Append while the caller holds ``self._lock_path``.
+
+        State-changing operations deliberately hold one process lock across
+        refold, validation, append, and the in-memory update. Locking only
+        this write would leave a check-then-append race between processes.
+        """
+
         line = canonical_json(event) + b"\n"
-        with InterProcessLock(self._lock_path), open(self._journal_path, "ab") as handle:
+        with open(self._journal_path, "ab") as handle:
             handle.write(line)
             handle.flush()
             os.fsync(handle.fileno())
@@ -234,36 +281,43 @@ class DurableOutbox:
 
     def get(self, message_id: str) -> Optional[OutboxRecord]:
         with self._thread_lock:
-            self._refold_if_changed()
-            record = self._records.get(message_id)
-            return _copy_record(record) if record else None
+            with InterProcessLock(self._lock_path):
+                self._refold_if_changed()
+                record = self._records.get(message_id)
+                return _copy_record(record) if record else None
 
     def pending(self, now_ms: Optional[int] = None) -> List[OutboxRecord]:
         """Non-terminal records; expired ones are folded to expired first."""
 
-        now = self._clock() if now_ms is None else now_ms
+        now = _validate_operation_time(
+            self._clock() if now_ms is None else now_ms, "now_ms"
+        )
         with self._thread_lock:
-            self._refold_if_changed()
-            expired = [
-                record
-                for record in self._records.values()
-                if record.state == OUTBOX_STATE_QUEUED and record.expires_at_ms <= now
-            ]
-            for record in expired:
-                self._transition_expired(record, now)
-            return [
-                _copy_record(record)
-                for record in self._records.values()
-                if record.state == OUTBOX_STATE_QUEUED
-            ]
+            with InterProcessLock(self._lock_path):
+                self._refold_if_changed()
+                expired = [
+                    record
+                    for record in self._records.values()
+                    if record.state == OUTBOX_STATE_QUEUED
+                    and record.expires_at_ms <= now
+                ]
+                for record in expired:
+                    self._transition_expired(record, now)
+                return [
+                    _copy_record(record)
+                    for record in self._records.values()
+                    if record.state == OUTBOX_STATE_QUEUED
+                ]
 
     def stats(self) -> Dict[str, int]:
         with self._thread_lock:
-            counts: Dict[str, int] = {}
-            for record in self._records.values():
-                counts[record.state] = counts.get(record.state, 0) + 1
-            counts["total"] = len(self._records)
-            return counts
+            with InterProcessLock(self._lock_path):
+                self._refold_if_changed()
+                counts: Dict[str, int] = {}
+                for record in self._records.values():
+                    counts[record.state] = counts.get(record.state, 0) + 1
+                counts["total"] = len(self._records)
+                return counts
 
     # ─────────────────────── mutations ───────────────────────
 
@@ -279,49 +333,52 @@ class DurableOutbox:
         ok, reason = validate_envelope(envelope, require_signature=True)
         if not ok:
             raise TransportEnvelopeRejected(reason)
-        now = self._clock() if now_ms is None else now_ms
+        now = _validate_operation_time(
+            self._clock() if now_ms is None else now_ms, "now_ms"
+        )
         if envelope.expires_at_ms <= now:
             raise TransportEnvelopeRejected("envelope expired")
         envelope_json = canonical_json(envelope.to_dict()).decode("utf-8")
         if len(envelope_json.encode("utf-8")) > MAX_ENVELOPE_BYTES:
             raise TransportEnvelopeRejected("envelope exceeds the wire byte limit")
         with self._thread_lock:
-            self._refold_if_changed()
-            existing = self._records.get(envelope.message_id)
-            if existing is not None:
-                if existing.envelope_sha256 != envelope_digest(envelope):
-                    raise DeliveryOutboxError(
-                        "message_id already bound to different envelope bytes"
-                    )
-                return _copy_record(existing)
-            pending_count = sum(
-                1 for record in self._records.values() if not record.is_terminal
-            )
-            if pending_count >= self._max_pending:
-                raise DeliveryOutboxFull(
-                    f"outbox holds {pending_count} pending records; cap is "
-                    f"{self._max_pending}"
+            with InterProcessLock(self._lock_path):
+                self._refold_if_changed()
+                existing = self._records.get(envelope.message_id)
+                if existing is not None:
+                    if existing.envelope_sha256 != envelope_digest(envelope):
+                        raise DeliveryOutboxError(
+                            "message_id already bound to different envelope bytes"
+                        )
+                    return _copy_record(existing)
+                pending_count = sum(
+                    1 for record in self._records.values() if not record.is_terminal
                 )
-            record = OutboxRecord(
-                message_id=envelope.message_id,
-                envelope_json=envelope_json,
-                envelope_sha256=envelope_digest(envelope),
-                created_at_ms=envelope.created_at_ms,
-                expires_at_ms=envelope.expires_at_ms,
-            )
-            self._append(
-                {
-                    "event": "enqueued",
-                    "message_id": record.message_id,
-                    "envelope_json": envelope_json,
-                    "envelope_sha256": record.envelope_sha256,
-                    "created_at_ms": record.created_at_ms,
-                    "expires_at_ms": record.expires_at_ms,
-                    "at_ms": self._clock(),
-                }
-            )
-            self._records[record.message_id] = record
-            return _copy_record(record)
+                if pending_count >= self._max_pending:
+                    raise DeliveryOutboxFull(
+                        f"outbox holds {pending_count} pending records; cap is "
+                        f"{self._max_pending}"
+                    )
+                record = OutboxRecord(
+                    message_id=envelope.message_id,
+                    envelope_json=envelope_json,
+                    envelope_sha256=envelope_digest(envelope),
+                    created_at_ms=envelope.created_at_ms,
+                    expires_at_ms=envelope.expires_at_ms,
+                )
+                self._append_locked(
+                    {
+                        "event": "enqueued",
+                        "message_id": record.message_id,
+                        "envelope_json": envelope_json,
+                        "envelope_sha256": record.envelope_sha256,
+                        "created_at_ms": record.created_at_ms,
+                        "expires_at_ms": record.expires_at_ms,
+                        "at_ms": now,
+                    }
+                )
+                self._records[record.message_id] = record
+                return _copy_record(record)
 
     def record_attempt(
         self,
@@ -337,35 +394,40 @@ class DurableOutbox:
         _validate_transport_name(transport)
         if outcome not in OUTBOX_ATTEMPT_OUTCOMES:
             raise DeliveryOutboxError(f"unsupported attempt outcome: {outcome}")
-        now = self._clock() if at_ms is None else at_ms
+        _validate_error_code(error_code)
+        now = _validate_operation_time(
+            self._clock() if at_ms is None else at_ms, "at_ms"
+        )
         with self._thread_lock:
-            self._refold_if_changed()
-            record = self._require_live(message_id)
-            if len(record.attempts) >= MAX_ATTEMPTS_PER_RECORD:
-                raise DeliveryOutboxError("attempt history exceeds the cap")
-            event: Dict[str, Any] = {
-                "event": "attempt",
-                "message_id": message_id,
-                "transport": transport,
-                "at_ms": now,
-                "outcome": outcome,
-            }
-            if error_code:
-                event["error_code"] = error_code
-            self._append(event)
-            record.attempts.append(
-                OutboxAttempt(
-                    transport=transport,
-                    at_ms=now,
-                    outcome=outcome,
-                    error_code=error_code,
+            with InterProcessLock(self._lock_path):
+                self._refold_if_changed()
+                record = self._require_live(message_id)
+                if len(record.attempts) >= MAX_ATTEMPTS_PER_RECORD:
+                    raise DeliveryOutboxError("attempt history exceeds the cap")
+                event: Dict[str, Any] = {
+                    "event": "attempt",
+                    "message_id": message_id,
+                    "transport": transport,
+                    "at_ms": now,
+                    "outcome": outcome,
+                }
+                if error_code:
+                    event["error_code"] = error_code
+                self._append_locked(event)
+                record.attempts.append(
+                    OutboxAttempt(
+                        transport=transport,
+                        at_ms=now,
+                        outcome=outcome,
+                        error_code=error_code,
+                    )
                 )
-            )
-            if outcome == OUTBOX_ATTEMPT_REJECTED:
-                self._transition_rejected(record, transport, now, error_code)
-            else:
-                record.last_error_code = error_code
-            return _copy_record(record)
+                if outcome == OUTBOX_ATTEMPT_REJECTED:
+                    record.state = OUTBOX_STATE_REJECTED
+                    record.last_error_code = error_code
+                else:
+                    record.last_error_code = error_code
+                return _copy_record(record)
 
     def handle_ack(self, ack: DeliveryAck, *, now_ms: Optional[int] = None) -> OutboxRecord:
         """Apply one verified ACK: mark delivered, cancel other copies.
@@ -378,31 +440,64 @@ class DurableOutbox:
         ok, reason = validate_ack(ack, now_ms=now_ms if now_ms is not None else self._clock())
         if not ok:
             raise TransportEnvelopeRejected(f"invalid delivery ack: {reason}")
-        now = self._clock() if now_ms is None else now_ms
+        now = _validate_operation_time(
+            self._clock() if now_ms is None else now_ms, "now_ms"
+        )
         with self._thread_lock:
-            self._refold_if_changed()
-            record = self._records.get(ack.message_id)
-            if record is None:
-                raise DeliveryOutboxError("ack for unknown message_id")
-            if record.state == OUTBOX_STATE_DELIVERED:
-                return _copy_record(record)
-            if record.state != OUTBOX_STATE_QUEUED:
-                raise DeliveryOutboxError(
-                    f"cannot acknowledge record in state {record.state}"
+            with InterProcessLock(self._lock_path):
+                self._refold_if_changed()
+                record = self._records.get(ack.message_id)
+                if record is None:
+                    raise DeliveryOutboxError("ack for unknown message_id")
+                if ack.envelope_sha256 != record.envelope_sha256:
+                    raise DeliveryOutboxError(
+                        "ack envelope_sha256 does not match the queued envelope"
+                    )
+                envelope = _record_envelope(record)
+                if record.state == OUTBOX_STATE_DELIVERED:
+                    if ack.receiver_did != record.delivered_by:
+                        raise DeliveryOutboxError(
+                            "ack receiver does not match the recorded delivery"
+                        )
+                    return _copy_record(record)
+                if record.state != OUTBOX_STATE_QUEUED:
+                    raise DeliveryOutboxError(
+                        f"cannot acknowledge record in state {record.state}"
+                    )
+                if envelope.recipient.startswith("did:key:"):
+                    if ack.receiver_did != envelope.recipient:
+                        raise DeliveryOutboxError(
+                            "ack receiver is not the envelope recipient"
+                        )
+                elif self._authorize_ack is None:
+                    raise DeliveryOutboxError(
+                        "ack authorization is required for shared recipients"
+                    )
+                else:
+                    try:
+                        allowed, authorization_reason = self._authorize_ack(
+                            ack, envelope
+                        )
+                    except Exception as exc:
+                        raise DeliveryOutboxError(
+                            "ack authorization callback failed"
+                        ) from exc
+                    if not allowed:
+                        raise DeliveryOutboxError(
+                            authorization_reason or "ack receiver is not authorized"
+                        )
+                self._append_locked(
+                    {
+                        "event": "delivered",
+                        "message_id": record.message_id,
+                        "at_ms": now,
+                        "ack_json": canonical_json(ack.to_dict()).decode("utf-8"),
+                    }
                 )
-            self._append(
-                {
-                    "event": "delivered",
-                    "message_id": record.message_id,
-                    "at_ms": now,
-                    "ack_receiver_did": ack.receiver_did,
-                    "ack_sha256": ack_digest(ack),
-                }
-            )
-            record.state = OUTBOX_STATE_DELIVERED
-            record.delivered_by = ack.receiver_did
-            record.delivered_at_ms = ack.received_at_ms
-            return _copy_record(record)
+                record.state = OUTBOX_STATE_DELIVERED
+                record.delivered_by = ack.receiver_did
+                record.delivered_at_ms = ack.received_at_ms
+                return _copy_record(record)
 
     def compact(self) -> int:
         """Rewrite the journal keeping only pending records; return kept count.
@@ -477,23 +572,8 @@ class DurableOutbox:
             raise DeliveryOutboxError("record is expired")
         return record
 
-    def _transition_rejected(
-        self, record: OutboxRecord, transport: str, now_ms: int, error_code: str
-    ) -> None:
-        self._append(
-            {
-                "event": "rejected",
-                "message_id": record.message_id,
-                "transport": transport,
-                "at_ms": now_ms,
-                "error_code": error_code,
-            }
-        )
-        record.state = OUTBOX_STATE_REJECTED
-        record.last_error_code = error_code
-
     def _transition_expired(self, record: OutboxRecord, now_ms: int) -> None:
-        self._append(
+        self._append_locked(
             {
                 "event": "expired",
                 "message_id": record.message_id,
@@ -509,11 +589,22 @@ def _fold_event(records: Dict[str, OutboxRecord], event: Dict[str, Any]) -> None
     kind = event.get("event")
     if kind not in _JOURNAL_EVENTS:
         raise DeliveryOutboxCorrupt(f"unknown journal event: {kind!r}")
+    allowed_fields = _EVENT_FIELDS[kind]
+    fields = frozenset(event)
+    if kind == "attempt":
+        if not allowed_fields <= fields or not fields <= allowed_fields | {"error_code"}:
+            raise DeliveryOutboxCorrupt("attempt event has missing or unknown fields")
+    elif fields != allowed_fields:
+        raise DeliveryOutboxCorrupt(
+            f"{kind} event has missing or unknown fields"
+        )
     message_id = event.get("message_id")
     if not isinstance(message_id, str) or _MESSAGE_ID_RE.fullmatch(message_id) is None:
         raise DeliveryOutboxCorrupt("journal event message_id is not a content address")
 
     if kind == "enqueued":
+        if message_id in records:
+            raise DeliveryOutboxCorrupt("duplicate enqueued event for message_id")
         envelope_json = event.get("envelope_json")
         envelope_sha256 = event.get("envelope_sha256")
         created_at_ms = event.get("created_at_ms")
@@ -525,13 +616,18 @@ def _fold_event(records: Dict[str, OutboxRecord], event: Dict[str, Any]) -> None
         for value in (created_at_ms, expires_at_ms):
             if isinstance(value, bool) or not isinstance(value, int):
                 raise DeliveryOutboxCorrupt("enqueued event timestamps must be integers")
-        records[message_id] = OutboxRecord(
+        _fold_at_ms(event)
+        assert isinstance(created_at_ms, int)
+        assert isinstance(expires_at_ms, int)
+        enqueued_record = OutboxRecord(
             message_id=message_id,
             envelope_json=envelope_json,
             envelope_sha256=envelope_sha256,
             created_at_ms=created_at_ms,
             expires_at_ms=expires_at_ms,
         )
+        _record_envelope(enqueued_record)
+        records[message_id] = enqueued_record
         return
 
     record = records.get(message_id)
@@ -539,49 +635,72 @@ def _fold_event(records: Dict[str, OutboxRecord], event: Dict[str, Any]) -> None
         raise DeliveryOutboxCorrupt(f"journal event for unknown message_id: {kind}")
 
     if kind == "attempt":
+        if record.state != OUTBOX_STATE_QUEUED:
+            raise DeliveryOutboxCorrupt("attempt event follows a terminal state")
+        if len(record.attempts) >= MAX_ATTEMPTS_PER_RECORD:
+            raise DeliveryOutboxCorrupt("attempt history exceeds the cap")
         transport = _fold_transport(event)
         outcome = event.get("outcome")
         if outcome not in OUTBOX_ATTEMPT_OUTCOMES:
             raise DeliveryOutboxCorrupt(f"unsupported attempt outcome: {outcome!r}")
         at_ms = _fold_at_ms(event)
         error_code = event.get("error_code", "")
-        if error_code and not isinstance(error_code, str):
-            raise DeliveryOutboxCorrupt("attempt error_code must be a string")
+        try:
+            validated_error_code = _validate_error_code(error_code)
+        except DeliveryOutboxError as exc:
+            raise DeliveryOutboxCorrupt(str(exc)) from exc
         record.attempts.append(
             OutboxAttempt(
                 transport=transport,
                 at_ms=at_ms,
                 outcome=outcome,
-                error_code=error_code,
+                error_code=validated_error_code,
             )
         )
         if outcome == OUTBOX_ATTEMPT_REJECTED and record.state == OUTBOX_STATE_QUEUED:
             record.state = OUTBOX_STATE_REJECTED
-        if error_code:
-            record.last_error_code = error_code
+        if validated_error_code:
+            record.last_error_code = validated_error_code
         return
 
     if record.state in OUTBOX_TERMINAL_STATES:
-        # Idempotent terminal re-statements (e.g. duplicate delivered lines
-        # after a compact/reload race) are safe to ignore.
-        return
+        raise DeliveryOutboxCorrupt(f"{kind} event follows a terminal state")
 
     at_ms = _fold_at_ms(event)
     if kind == "delivered":
-        receiver = event.get("ack_receiver_did")
-        ack_sha = event.get("ack_sha256")
-        if not isinstance(receiver, str) or not receiver:
-            raise DeliveryOutboxCorrupt("delivered event missing ack_receiver_did")
-        if not isinstance(ack_sha, str) or not ack_sha:
-            raise DeliveryOutboxCorrupt("delivered event missing ack_sha256")
+        ack_json = event.get("ack_json")
+        if not isinstance(ack_json, str):
+            raise DeliveryOutboxCorrupt("delivered event ack_json must be text")
+        try:
+            ack = DeliveryAck.from_dict(json.loads(ack_json))
+        except (json.JSONDecodeError, TypeError, ValueError) as exc:
+            raise DeliveryOutboxCorrupt(f"delivered event ACK is invalid: {exc}") from exc
+        if canonical_json(ack.to_dict()).decode("utf-8") != ack_json:
+            raise DeliveryOutboxCorrupt("delivered event ACK is not canonical JSON")
+        ok, reason = validate_ack(ack, now_ms=at_ms)
+        if not ok:
+            raise DeliveryOutboxCorrupt(f"delivered event ACK is invalid: {reason}")
+        if ack.message_id != message_id or ack.envelope_sha256 != record.envelope_sha256:
+            raise DeliveryOutboxCorrupt("delivered event ACK binding mismatch")
+        envelope = _record_envelope(record)
+        if (
+            envelope.recipient.startswith("did:key:")
+            and ack.receiver_did != envelope.recipient
+        ):
+            raise DeliveryOutboxCorrupt("delivered event ACK receiver mismatch")
         record.state = OUTBOX_STATE_DELIVERED
-        record.delivered_by = receiver
-        record.delivered_at_ms = at_ms
+        record.delivered_by = ack.receiver_did
+        record.delivered_at_ms = ack.received_at_ms
         return
     if kind == "rejected":
         transport = _fold_transport(event)
+        error_code = event.get("error_code")
+        try:
+            validated_error_code = _validate_error_code(error_code)
+        except DeliveryOutboxError as exc:
+            raise DeliveryOutboxCorrupt(str(exc)) from exc
         record.state = OUTBOX_STATE_REJECTED
-        record.last_error_code = event.get("error_code", "")
+        record.last_error_code = validated_error_code
         return
     if kind == "expired":
         record.state = OUTBOX_STATE_EXPIRED
@@ -616,3 +735,30 @@ def _copy_record(record: OutboxRecord) -> OutboxRecord:
         delivered_at_ms=record.delivered_at_ms,
         last_error_code=record.last_error_code,
     )
+
+
+def _record_envelope(record: OutboxRecord) -> TransportEnvelope:
+    """Reconstruct and verify the envelope bound into an outbox record."""
+
+    try:
+        parsed = json.loads(record.envelope_json)
+        envelope = TransportEnvelope.from_dict(parsed)
+        if canonical_json(envelope.to_dict()).decode("utf-8") != record.envelope_json:
+            raise DeliveryOutboxCorrupt("enqueued envelope_json is not canonical")
+        ok, reason = validate_envelope(envelope, require_signature=True)
+        if not ok:
+            raise DeliveryOutboxCorrupt(f"enqueued envelope is invalid: {reason}")
+        if envelope.message_id != record.message_id:
+            raise DeliveryOutboxCorrupt("enqueued message_id does not match envelope")
+        if envelope_digest(envelope) != record.envelope_sha256:
+            raise DeliveryOutboxCorrupt("enqueued envelope_sha256 does not match envelope")
+        if (
+            envelope.created_at_ms != record.created_at_ms
+            or envelope.expires_at_ms != record.expires_at_ms
+        ):
+            raise DeliveryOutboxCorrupt("enqueued timestamps do not match envelope")
+        return envelope
+    except DeliveryOutboxCorrupt:
+        raise
+    except (json.JSONDecodeError, TypeError, ValueError, UnicodeError) as exc:
+        raise DeliveryOutboxCorrupt(f"enqueued envelope_json is invalid: {exc}") from exc
