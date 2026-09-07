@@ -72,7 +72,14 @@ REFERENCE_ADAPTER = textwrap.dedent(
 
 @pytest.fixture()
 def runner():
-    return SubprocessAdapterRunner()
+    return _unsafe_runner(max_concurrent_runs=8)
+
+
+def _unsafe_runner(**kwargs):
+    return SubprocessAdapterRunner(
+        allow_unsafe_local_execution=True,
+        **kwargs,
+    )
 
 
 @pytest.fixture()
@@ -120,7 +127,7 @@ class TestProtocolCodec:
     def test_handshake_rejects_bad_ack(self):
         with pytest.raises(AdapterHookRejected, match="handshake"):
             parse_handshake_ack(json.dumps({"ok": False, "error": "x"}).encode())
-        with pytest.raises(AdapterHookRejected, match="not JSON"):
+        with pytest.raises(AdapterHookRejected, match="strict JSON"):
             parse_handshake_ack(b"{nope")
 
     def test_response_roundtrip(self):
@@ -131,6 +138,21 @@ class TestProtocolCodec:
         line = json.dumps({"id": 8, "ok": True, "result": {}}).encode()
         with pytest.raises(AdapterHookRejected, match="id does not match"):
             parse_response(line, expected_id=7)
+
+    def test_boolean_response_id_is_rejected(self):
+        line = json.dumps(
+            {"id": True, "ok": True, "result": {}}
+        ).encode()
+        with pytest.raises(AdapterHookRejected, match="id must be an integer"):
+            parse_response(line, expected_id=1)
+
+    def test_duplicate_and_unknown_response_fields_are_rejected(self):
+        duplicate = b'{"id":7,"id":7,"ok":true,"result":{}}'
+        with pytest.raises(AdapterHookRejected, match="duplicate object key"):
+            parse_response(duplicate, expected_id=7)
+        unknown = b'{"id":7,"ok":true,"result":{},"extra":1}'
+        with pytest.raises(AdapterHookRejected, match="unknown fields"):
+            parse_response(unknown, expected_id=7)
 
     def test_response_failure_raises_hook_failed(self):
         line = json.dumps({"id": 7, "ok": False, "error": "boom"}).encode()
@@ -154,6 +176,27 @@ class TestProtocolCodec:
 
 
 class TestRunnerHappyPath:
+    def test_local_execution_is_disabled_by_default(self, adapter):
+        adapter_desc, artifact = adapter
+        with pytest.raises(AdapterHookRejected, match="disabled"):
+            _run(SubprocessAdapterRunner(), adapter_desc, artifact)
+
+    @pytest.mark.parametrize(
+        "kwargs",
+        [
+            {"default_timeout_s": True},
+            {"max_timeout_s": float("nan")},
+            {"max_concurrent_runs": 0},
+            {"max_concurrent_runs": True},
+            {"max_result_bytes": 17 * 1024 * 1024},
+            {"python": ""},
+            {"allow_unsafe_local_execution": "yes"},
+        ],
+    )
+    def test_runner_configuration_is_strict(self, kwargs):
+        with pytest.raises((TypeError, ValueError)):
+            SubprocessAdapterRunner(**kwargs)
+
     def test_executes_reference_adapter(self, runner, adapter):
         adapter, artifact = adapter
         outcome = _run(runner, adapter, artifact)
@@ -195,6 +238,17 @@ class TestRunnerHappyPath:
 
 
 class TestRunnerHostility:
+    def test_concurrency_limit_fails_closed_without_spawning(self, adapter):
+        runner = _unsafe_runner(max_concurrent_runs=1)
+        adapter_desc, artifact = adapter
+        assert runner._slots.acquire(blocking=False)
+        try:
+            with pytest.raises(AdapterHookRejected, match="concurrency limit") as info:
+                _run(runner, adapter_desc, artifact)
+            assert info.value.retryable is True
+        finally:
+            runner._slots.release()
+
     def test_timeout_kills_hanging_adapter(self, runner, adapter, tmp_path):
         adapter, _ = adapter
         hang = b"import time; time.sleep(30)"
@@ -236,7 +290,7 @@ class TestRunnerHostility:
             }],
             permissions=[],
         )
-        runner = SubprocessAdapterRunner()
+        runner = _unsafe_runner()
         with pytest.raises(AdapterHookRejected, match="bound"):
             _run(runner, flooding, flood)
 
@@ -258,8 +312,9 @@ class TestRunnerHostility:
             }],
             permissions=[],
         )
-        with pytest.raises(AdapterHookRejected, match="disk on fire"):
+        with pytest.raises(AdapterHookRejected, match="disk on fire") as info:
             _run(runner, crashing, crash)
+        assert info.value.retryable is False
 
     def test_extra_stdout_lines_rejected(self, adapter):
         import hashlib
@@ -287,7 +342,7 @@ class TestRunnerHostility:
             permissions=[],
         )
         with pytest.raises(AdapterHookRejected, match="exactly the ack and response"):
-            _run(SubprocessAdapterRunner(), verbose_adapter, verbose)
+            _run(_unsafe_runner(), verbose_adapter, verbose)
 
     def test_hook_failure_returns_failed_outcome(self, runner, adapter):
         adapter, artifact = adapter
@@ -363,7 +418,7 @@ class TestEndToEndWithCoordinator:
         )
 
         # 1. the runtime executes the approved artifact against the input
-        runner = SubprocessAdapterRunner()
+        runner = _unsafe_runner()
         outcome = runner.run(
             adapter=adapter,
             artifact_bytes=artifact,
@@ -405,8 +460,18 @@ class TestCanonicalContract:
         back as AdapterHookRejected, never a raw TypeError."""
 
         adapter_desc, artifact = adapter
-        with pytest.raises(AdapterHookRejected, match="not canonical JSON"):
+        with pytest.raises(AdapterHookRejected, match="strict JSON"):
             _run(runner, adapter_desc, artifact, input_payload=b'{"x": NaN}')
+
+    def test_duplicate_input_keys_are_rejected(self, runner, adapter):
+        adapter_desc, artifact = adapter
+        with pytest.raises(AdapterHookRejected, match="duplicate object key"):
+            _run(
+                runner,
+                adapter_desc,
+                artifact,
+                input_payload=b'{"order":"one","order":"two"}',
+            )
 
     def test_float_result_rejected_with_contract_type(self, tmp_path):
         """Bug BB-m: an adapter returning a float result (or printing NaN)
@@ -437,7 +502,7 @@ class TestCanonicalContract:
             permissions=[],
         )
         with pytest.raises(AdapterHookRejected, match="not canonical JSON"):
-            _run(SubprocessAdapterRunner(), adapter, artifact, input_payload=b"{}")
+            _run(_unsafe_runner(), adapter, artifact, input_payload=b"{}")
 
     def test_concurrent_runs_are_independent(self, runner, adapter):
         """The runner holds no shared mutable state: eight concurrent runs
@@ -494,7 +559,7 @@ class TestCanonicalContract:
             }],
             permissions=[],
         )
-        outcome = _run(SubprocessAdapterRunner(), adapter, artifact, input_payload=b"{}")
+        outcome = _run(_unsafe_runner(), adapter, artifact, input_payload=b"{}")
         assert outcome.outcome == "succeeded"
 
     def test_silent_exit_zero_rejected(self, tmp_path):
@@ -519,7 +584,7 @@ class TestCanonicalContract:
             permissions=[],
         )
         with pytest.raises(AdapterHookRejected, match="exactly the ack and response"):
-            _run(SubprocessAdapterRunner(), adapter, silent, input_payload=b"{}")
+            _run(_unsafe_runner(), adapter, silent, input_payload=b"{}")
 
 
 # ─────────────────── adversarial review round 10 (BB-n / BB-o) ───────────────────
@@ -530,7 +595,7 @@ class TestRetryabilitySemantics:
         """Bug BB-n: a spawn failure must surface as a retryable
         AdapterHookRejected, never a raw FileNotFoundError."""
 
-        broken = SubprocessAdapterRunner(python="/nonexistent/python3")
+        broken = _unsafe_runner(python="/nonexistent/python3")
         adapter_desc, artifact = adapter
         with pytest.raises(AdapterHookRejected, match="could not be started") as info:
             _run(broken, adapter_desc, artifact, input_payload=b"{}")
@@ -551,7 +616,7 @@ class TestRetryabilitySemantics:
             }],
             permissions=[],
         )
-        runner = SubprocessAdapterRunner(default_timeout_s=0.3)
+        runner = _unsafe_runner(default_timeout_s=0.3)
         with pytest.raises(AdapterHookRejected, match="execution budget") as info:
             _run(runner, hanging, hang, input_payload=b"{}")
         assert info.value.retryable is True
@@ -567,3 +632,25 @@ class TestRetryabilitySemantics:
         with pytest.raises(AdapterHookRejected) as info2:
             _run(runner, adapter_desc, artifact, input_payload=b"[not-an-object]")
         assert info2.value.retryable is False
+
+
+class TestScratchCleanup:
+    def test_cleanup_failure_is_never_silently_ignored(
+        self, monkeypatch, adapter
+    ):
+        import shutil
+
+        original = shutil.rmtree
+
+        def remove_then_report(path, *, ignore_errors=False):
+            original(path, ignore_errors=ignore_errors)
+            raise OSError("simulated cleanup report")
+
+        monkeypatch.setattr(
+            "nth_dao.trade_rules.adapter_runtime.shutil.rmtree",
+            remove_then_report,
+        )
+        adapter_desc, artifact = adapter
+        with pytest.raises(AdapterHookRejected, match="scratch cleanup failed") as info:
+            _run(_unsafe_runner(), adapter_desc, artifact)
+        assert info.value.retryable is True

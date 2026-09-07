@@ -925,7 +925,7 @@ only parse a signature. Those keys must never be reused or trusted.
 
 The first execution surface for mode `adapter` is
 `nth_dao.trade_rules.adapter_runtime.SubprocessAdapterRunner`: it runs one
-approved, digest-pinned adapter artifact as an isolated subprocess speaking
+approved, digest-pinned adapter artifact as a separate local process speaking
 `nth-trade-adapter-rpc/1` — a minimal, MCP-shaped JSON-lines protocol over
 stdio (initialize-with-digest handshake → hook invocation → result; the
 message shapes follow MCP's initialize/tools-call pattern without importing
@@ -933,16 +933,20 @@ any MCP SDK).
 
 Boundaries that are deliberate:
 
-* The runner is a pure hook executor. Bilateral consent, readiness,
+* The runner is a pure hook executor and is disabled by default. A host must
+  explicitly set `allow_unsafe_local_execution=True` for reviewed local code.
+  Bilateral consent, readiness,
   permission scoping, and schema validation stay in
-  `TradeExecutionCoordinator.issue`; the runner adds process isolation and
-  hard resource bounds (wall-clock kill, bounded stdout/stderr/stdin, fresh
-  cwd, `python -I`, minimal env, artifact digest re-verified from bytes
-  before every spawn).
-* The subprocess is process isolation, not a capability sandbox: an approved
-  artifact can do whatever its host platform allows. Permission tokens
-  declare intent for local policy and receipts; technical enforcement of
-  per-permission access is future work.
+  `TradeExecutionCoordinator.issue`; the runner adds an administrative process
+  boundary, concurrency gate, wall-clock termination, bounded stdio, a fresh
+  cwd, `python -I`, a minimal environment, and artifact digest verification
+  before every spawn.
+* None of those controls is an OS or capability sandbox. An enabled artifact
+  can read user files, use the network, start subprocesses, and consume CPU or
+  memory with the NTH DAO process's authority. Permission tokens declare intent
+  for policy and receipts; they do not enforce access. Community artifacts must
+  use a separately sandboxed executor (for example `sandboxed_wasm`) before they
+  can be treated as confined.
 * A hook that runs and reports `ok:false` yields `outcome="failed"` with a
   `{"error": ...}` problem payload (no output-schema validation, per the
   receipt rule that only successful results are schema-checked).

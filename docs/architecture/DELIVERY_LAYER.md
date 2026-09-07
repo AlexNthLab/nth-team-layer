@@ -317,8 +317,11 @@ found and fixed 2 design-level findings:
 | BB-o | `AdapterHookRejected` conflated transient failures (timeout, crash, spawn) with permanent ones (digest mismatch, protocol violations) — outbox-style callers could not decide on retries | the exception now carries `retryable`; timeout/crash/spawn are retryable, everything else permanent |
 
 Maintainability notes carried as documented boundaries rather than fixes:
-the runner is Python-artifact-only in v1 (`python -I`), and the subprocess
-is process isolation, not a capability sandbox.
+the local runner is Python-artifact-only in v1 (`python -I`), disabled by
+default, and requires an explicit unsafe-local-execution opt-in. The separate
+process, timeout, and bounded stdio are operational controls, not an OS or
+capability sandbox; untrusted artifacts require a separately sandboxed
+executor.
 
 Upstream note (pre-existing, unrelated to this PR): the live-HTTP harness
 in `test_trade_rule_agreement.py` acquires ports with a bind(0)-close-
