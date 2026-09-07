@@ -9,6 +9,65 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- Nostr adapter core (Phase 2, segment N1): `nth_dao/nostr/` wraps the
+  maintained `nostr-sdk` binding (optional extra `nth-dao[nostr]`) for the
+  internet relay tier. NTH Ed25519 identities sign NostrKeyBinding documents
+  asserting secp256k1 key ownership (design doc §6.3); delivery envelopes
+  travel as kind-30078 (NIP-78) events whose content is the canonical
+  envelope JSON and whose `d` tag pins the message_id. Receipt-side
+  verification is two-tier (nostr-sdk checks the relay-tier event
+  signature, the delivery layer re-validates the envelope author signature)
+  and fails closed on tamper, wrong kind, unsigned envelopes, d-tag
+  addressing mismatches, and non-integer timestamps (the timestamp is
+  actually applied — deterministic event ids are pinned by tests).
+- Nostr relay client (Phase 2 N2) and delivery transport (N3):
+  `NostrRelayClient` wraps the borrowed async `nostr_sdk.Client` on a
+  background loop thread (same bridge as the gossip adapter) with publish
+  (relay-OK bounded wait) and kind-filtered subscription delivery;
+  `NostrTransport` plugs the public relay tier into the delivery router
+  (broadcast, PRIVACY_PUBLIC_RELAY, external_infrastructure) with
+  fail-closed envelope re-validation. Tested against an in-process fake
+  NIP-01 relay (`tests/fake_nostr_relay.py`): publish round-trip, hostile
+  relay rejection, private-tier refusal, relay URL policy, and long-lived
+  subscription delivery.
+
+- Trade adapter runtime (Slice B): `nth_dao/trade_rules/adapter_runtime.py`
+  executes an approved, digest-pinned adapter artifact as a bounded
+  subprocess speaking `nth-trade-adapter-rpc/1` — a minimal MCP-shaped
+  JSON-lines stdio protocol (digest handshake, hook invocation, result).
+  It is disabled by default. Explicitly enabled reviewed artifacts run with
+  bounded wall time, concurrency, and stdio plus pre-spawn digest
+  verification. These are operational controls, not a security sandbox;
+  CPU, memory, filesystem, network, and subprocess capabilities require an
+  external sandbox. Protocol violations fail closed.
+
+- Phase 1 real transports for the delivery layer: `WebSocketGossipTransport`
+  wraps the existing signed P2P `GossipNode` as a synchronous delivery
+  Transport (background loop bridge, node-signed gossip messages carrying
+  author-signed envelopes, trusted-pubkey passthrough, `TeamChannel`
+  truncation bypassed via a signing shim channel), and
+  `FederationTransport` + stdlib `FederationIngestServer` push signed
+  envelopes to known peers over bounded HTTPS/loopback HTTP (strict URL
+  policy, capped responses, no redirects, concurrency gate, Content-Length
+  bounds with a bounded 413 drain). ACKs travel back as `delivery.ack`
+  envelopes unwrapped by `ack_from_envelope` (author must be the ACK
+  receiver). End-to-end integration tests run the full
+  outbox → router → real wire → inbox → signed-ACK-return → delivered flow
+  for both transports, plus router policy selection and gossip→federation
+  fallback. Tests include signature interop, raw-socket hostile
+  Content-Length and client-side validation pins. `GossipNode.start()` now
+  reports the actual bound port when constructed with `port=0`.
+
+- Delivery layer Phase 0 (`nth_dao/delivery/`), the transport-agnostic signed
+  envelope spine: `TransportEnvelope v1`, signed receiver ACKs, crash-safe
+  bounded outbox/inbox journals, policy routing, and loopback, file-bundle,
+  HTTPS federation, WebSocket gossip, and public Nostr adapters. Forwarded ACK
+  digests are accepted only for valid hop-count mutations. `PluginDeliveryRuntime`
+  is the durable bridge to the Host-governed transport capability and persists
+  a complete leased batch before acknowledging its provider. Ten fixed
+  `delivery_envelope_v1` and `delivery_ack_v1` conformance vectors cover wire
+  bytes, content binding, signatures, time, version, and tamper failures.
+
 - A Host-only, immutable Intent acceptance policy snapshot that binds one exact
   reviewed draft to direct member DIDs, roles, monotonic revocations,
   membership/revocation source digests, solver classes, automation ceilings,

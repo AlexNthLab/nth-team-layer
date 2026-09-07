@@ -135,6 +135,7 @@ class GossipNode:
         trust_graph=None,  # 可选 TrustGraph：启用 web-of-trust 传递信任
         wot_max_depth: int = 2,
         max_peers: Optional[int] = None,  # 入站 peer 上限;None→env/MAX_PEERS
+        connect_proxy: "str | bool | None" = True,
     ):
         """
         Args:
@@ -159,6 +160,9 @@ class GossipNode:
         self.port = port
         self.require_signature = require_signature
         self.allow_tofu = allow_tofu
+        if not isinstance(connect_proxy, (str, bool)) and connect_proxy is not None:
+            raise ValueError("connect_proxy must be a URL, boolean, or None")
+        self.connect_proxy = connect_proxy
 
         # Peer 连接
         self.peers: Dict[str, websockets.WebSocketServerProtocol] = {}
@@ -269,7 +273,14 @@ class GossipNode:
             self.host,
             self.port,
         )
-        url = f"ws://{self.host}:{self.port}"
+        # For port=0, publish the OS-assigned port so peers can use the URL.
+        bound_port = self.port
+        if bound_port == 0 and self._server is not None:
+            for sock in self._server.sockets:
+                bound_port = sock.getsockname()[1]
+                break
+        url = f"ws://{self.host}:{bound_port}"
+        self._bound_url = url
 
         #  bootstrap peers
         for peer_url in self.bootstrap_urls:
@@ -316,7 +327,16 @@ class GossipNode:
         """
         _ws_required("connect")
         try:
-            ws = await ws_connect(url)
+            # websockets 15+ discovers OS proxies by default. Delivery peers
+            # can explicitly disable that without mutating process-global
+            # NO_PROXY; older supported versions had no proxy parameter and
+            # already connected directly.
+            import inspect
+
+            kwargs = {}
+            if "proxy" in inspect.signature(ws_connect).parameters:
+                kwargs["proxy"] = self.connect_proxy
+            ws = await ws_connect(url, **kwargs)
         except Exception as e:
             logger.warning("connect %s failed: %s", url, e)
             return False
@@ -453,6 +473,8 @@ class GossipNode:
         scope: str = "team",
         content_type: str = "text",
         mentions: Optional[List[str]] = None,
+        *,
+        require_delivery: bool = False,
     ) -> dict:
         """ channel + gossip  peer
 
@@ -472,11 +494,13 @@ class GossipNode:
         self._seen.append(msg_dict["msg_id"])
 
         # gossip  peer
-        await self.gossip(msg_dict)
+        delivered = await self.gossip(msg_dict)
+        if require_delivery and delivered == 0:
+            raise RuntimeError("no connected peer accepted the gossip message")
 
         return msg_dict
 
-    async def gossip(self, msg_dict: dict) -> None:
+    async def gossip(self, msg_dict: dict) -> int:
         """ gossip  peer channel"""
         tasks = []
         for ws in self.peers.values():
@@ -484,14 +508,18 @@ class GossipNode:
                 "type": "gossip",
                 "message": msg_dict,
             }))
-        if tasks:
-            await asyncio.gather(*tasks, return_exceptions=True)
+        if not tasks:
+            return 0
+        outcomes = await asyncio.gather(*tasks, return_exceptions=True)
+        return sum(not isinstance(outcome, Exception) for outcome in outcomes)
 
     async def direct_message(
         self,
         to_agent: str,
         content: str,
         content_type: str = "text",
+        *,
+        relay_if_unknown: bool = True,
     ) -> Optional[dict]:
         """ peer DM channel"""
         msg = self.channel.dm(to_agent, content, content_type)
@@ -506,6 +534,8 @@ class GossipNode:
             })
             return msg_dict
 
+        if not relay_if_unknown:
+            return None
         # peer    peer gossip
         await self.gossip(msg_dict)
         return msg_dict
@@ -521,7 +551,8 @@ class GossipNode:
 
     @property
     def url(self) -> str:
-        return f"ws://{self.host}:{self.port}"
+        # Return the actual bound URL after start(), including for port=0.
+        return getattr(self, "_bound_url", f"ws://{self.host}:{self.port}")
 
     #
 
@@ -768,6 +799,22 @@ class GossipNode:
                         msg_id[:8],
                     )
 
+        # Delivery-layer direct messages carry a signed target marker. They
+        # are accepted only by that exact peer and are never relayed onward;
+        # otherwise an apparently unicast DID envelope would leak across the
+        # gossip mesh on its second hop.
+        metadata = msg_dict.get("metadata", {})
+        if not isinstance(metadata, dict):
+            logger.warning("dropping msg %s with malformed metadata", msg_id[:8])
+            return
+        direct_to = metadata.get("nth_delivery_direct_to")
+        if direct_to is not None:
+            if not isinstance(direct_to, str) or direct_to != str(self.identity.agent_id):
+                logger.warning(
+                    "dropping direct msg %s addressed to another peer", msg_id[:8]
+                )
+                return
+
         # 通过 → 入本地 channel ledger
         self._mark_seen(msg_id)
         self._channel_append(msg_dict)
@@ -779,8 +826,10 @@ class GossipNode:
             except Exception:
                 logger.exception("on_message callback raised")
 
-        # 中继给其它 peer
-        await self._relay(msg_dict, exclude=relay_peer_id)
+        # Direct delivery stops at its signed recipient. Public gossip may
+        # continue through the mesh.
+        if direct_to is None:
+            await self._relay(msg_dict, exclude=relay_peer_id)
 
     async def _relay(self, msg_dict: dict, exclude: str = "") -> None:
         """ peer"""
@@ -840,10 +889,7 @@ class GossipNode:
     @staticmethod
     async def _send_json(ws, data: dict) -> None:
         payload = json.dumps(data, ensure_ascii=False)
-        try:
-            await ws.send(payload)
-        except (OSError, RuntimeError) as e:
-            logger.debug("send_json failed: %s", e)
+        await ws.send(payload)
 
 
 # ───────────────────── 模块级辅助 ─────────────────────

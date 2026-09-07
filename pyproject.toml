@@ -48,6 +48,8 @@ p2p = ["websockets>=13.0,<17.0"] # optional signed WebSocket gossip transport
 trade-validation = ["jsonschema>=4.22"] # execute Rule Hook JSON Schemas
 ux = ["qrcode[pil]>=7.4"]        # optional QR code rendering for invitations
 
+nostr = ["nostr-sdk>=0.45,<0.46"] # optional Nostr relay tier (Phase 2)
+
 # Backend-specific (only install what you use):
 anthropic = ["anthropic>=0.40.0"]
 claude = [
