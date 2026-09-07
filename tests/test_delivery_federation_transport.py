@@ -21,7 +21,7 @@ from nth_dao.delivery.transports.federation import (
     validate_peer_url,
 )
 from nth_dao.delivery.transports.file_bundle import FileBundleTransport
-from nth_dao.nostr import NostrKeys
+from nth_dao.nostr import NostrAdapterUnavailable, NostrKeys
 
 pytest.importorskip("nacl")
 
@@ -55,8 +55,10 @@ def _envelope(alice_identity, payload=None):
 
 @pytest.fixture()
 def nostr_keys():
-
-    return NostrKeys.generate()
+    try:
+        return NostrKeys.generate()
+    except NostrAdapterUnavailable:
+        pytest.skip("nostr optional extra is not installed")
 
 
 @pytest.fixture()
@@ -105,6 +107,11 @@ class TestFederationTransport:
         with pytest.raises(ValueError, match="peer_urls"):
             FederationTransport(peer_urls=[])
 
+    @pytest.mark.parametrize("timeout", [True, float("nan"), float("inf"), 0])
+    def test_timeout_must_be_a_finite_number(self, timeout):
+        with pytest.raises(ValueError, match="timeout"):
+            FederationTransport(peer_urls=["https://a.example.com"], timeout=timeout)
+
     def test_rejects_duplicate_peers(self):
         with pytest.raises(ValueError, match="duplicates"):
             FederationTransport(peer_urls=["https://a.example.com", "https://a.example.com"])
@@ -118,10 +125,64 @@ class TestFederationTransport:
     def test_capabilities_declare_broadcast_push(self):
         transport = FederationTransport(peer_urls=["https://a.example.com"])
         caps = transport.capabilities
+        assert caps.unicast is False
         assert caps.broadcast is True
         assert caps.realtime is False
         assert caps.privacy_level == 1
         assert transport.poll() == []
+
+    def test_direct_recipient_requires_an_explicit_route(
+        self, server, alice_identity, bob_identity
+    ):
+        httpd, inbox = server
+        transport = FederationTransport(peer_urls=[httpd.url])
+        envelope = _envelope(alice_identity)
+        envelope = sign_envelope(
+            alice_identity,
+            kind=envelope.kind,
+            recipient=bob_identity.as_did(),
+            payload=envelope.payload,
+            created_at_ms=NOW_MS,
+            expires_at_ms=NOW_MS + 120_000,
+        )
+        result = transport.send(envelope)
+        assert not result.accepted
+        assert result.error_code == "recipient-route-required"
+        assert inbox.entry_count() == 0
+
+    def test_direct_recipient_uses_only_its_bound_endpoint(
+        self, tmp_path, alice_identity, bob_identity
+    ):
+        from nth_dao.identity import AgentIdentity
+
+        carol_identity = AgentIdentity.generate(label="carol")
+        bob_inbox = DeliveryInbox(tmp_path / "bob-direct", clock=lambda: NOW_MS + 1)
+        carol_inbox = DeliveryInbox(tmp_path / "carol-direct", clock=lambda: NOW_MS + 1)
+        bob_server = FederationIngestServer(bob_inbox, host="127.0.0.1", port=0)
+        carol_server = FederationIngestServer(carol_inbox, host="127.0.0.1", port=0)
+        bob_server.start()
+        carol_server.start()
+        try:
+            transport = FederationTransport(
+                peer_urls=[carol_server.url],
+                recipient_urls={bob_identity.as_did(): bob_server.url},
+            )
+            assert transport.capabilities.unicast is True
+            envelope = sign_envelope(
+                alice_identity,
+                kind="channel.message",
+                recipient=bob_identity.as_did(),
+                payload={"body": "bob only"},
+                created_at_ms=NOW_MS,
+                expires_at_ms=NOW_MS + 120_000,
+            )
+            assert transport.send(envelope).accepted
+            assert bob_inbox.seen(envelope.message_id)
+            assert not carol_inbox.seen(envelope.message_id)
+            assert carol_identity.as_did() != bob_identity.as_did()
+        finally:
+            carol_server.stop()
+            bob_server.stop()
 
 
 class TestIngestServer:
@@ -168,6 +229,39 @@ class TestIngestServer:
             raise AssertionError("expected HTTP 400")
         except urllib.error.HTTPError as exc:
             assert exc.code == 400
+
+    def test_noncanonical_json_never_bypasses_wire_check(self, server, alice_identity):
+        import urllib.error
+        import urllib.request
+
+        httpd, inbox = server
+        envelope = _envelope(alice_identity)
+        noncanonical = json.dumps(envelope.to_dict(), indent=2).encode("utf-8")
+        request = urllib.request.Request(
+            httpd.ingest_url,
+            data=noncanonical,
+            method="POST",
+            headers={"Content-Type": "application/json"},
+        )
+        with pytest.raises(urllib.error.HTTPError) as raised:
+            urllib.request.urlopen(request, timeout=5)
+        assert raised.value.code == 422
+        assert inbox.entry_count() == 0
+
+    def test_ingest_query_is_not_an_alias_for_exact_endpoint(self, server):
+        import urllib.error
+        import urllib.request
+
+        httpd, _ = server
+        request = urllib.request.Request(
+            httpd.ingest_url + "?shadow=1",
+            data=b"{}",
+            method="POST",
+            headers={"Content-Type": "application/json"},
+        )
+        with pytest.raises(urllib.error.HTTPError) as raised:
+            urllib.request.urlopen(request, timeout=5)
+        assert raised.value.code == 404
 
     def test_unknown_path_404(self, server):
         import urllib.error

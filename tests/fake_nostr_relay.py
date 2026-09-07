@@ -10,7 +10,7 @@ adapter) on a loopback port:
   ``["EOSE", sub]``
 * ``["CLOSE", sub]``  → drop the subscription
 
-Filters are matched on ``kind`` and ``#d`` tag only — enough for the
+Filters are matched on ``kind``, author, and tag selectors — enough for the
 delivery-layer tests, deliberately not a full NIP-01 filter engine.
 """
 
@@ -39,7 +39,9 @@ class FakeNostrRelay:
         self._lock = threading.Lock()
         self._events: List[dict] = []       # stored events (json dicts)
         self._seen_event_ids: Set[str] = set()
-        self._subscriptions: Dict[str, dict] = {}  # sub_id → filter json
+        # NIP-01 subscription identifiers are scoped to one relay connection.
+        # Different clients routinely choose the same identifier.
+        self._subscriptions: Dict[Any, Dict[str, dict]] = {}
         self._reject_next = False           # hostile-relay test switch
         self._connections: Set[Any] = set()
 
@@ -126,14 +128,17 @@ class FakeNostrRelay:
                     await self._handle_event(websocket, message[1])
                 elif command == "REQ" and len(message) >= 3:
                     await self._handle_req(websocket, message[1], message[2])
-                elif command == "CLOSE":
+                elif command == "CLOSE" and len(message) >= 2:
                     with self._lock:
-                        self._subscriptions.pop(message[1], None)
+                        subscriptions = self._subscriptions.get(websocket)
+                        if subscriptions is not None:
+                            subscriptions.pop(message[1], None)
         except Exception:  # noqa: BLE001 - connection errors end the handler
             pass
         finally:
             with self._lock:
                 self._connections.discard(websocket)
+                self._subscriptions.pop(websocket, None)
 
     async def _handle_event(self, websocket: Any, event: dict) -> None:
         event_id = event.get("id", "")
@@ -155,20 +160,23 @@ class FakeNostrRelay:
             if event_id not in self._seen_event_ids:
                 self._events.append(event)
                 self._seen_event_ids.add(event_id)
-            subscribers = dict(self._subscriptions)
+            subscribers = [
+                (connection, sub_id, filter_json)
+                for connection, subscriptions in self._subscriptions.items()
+                for sub_id, filter_json in subscriptions.items()
+            ]
         await websocket.send(json.dumps(["OK", event_id, True, ""]))
         # fan out to matching subscriptions
-        for sub_id, filter_json in subscribers.items():
+        for connection, sub_id, filter_json in subscribers:
             if self._matches(filter_json, event):
-                for connection in list(self._connections):
-                    try:
-                        await connection.send(json.dumps(["EVENT", sub_id, event]))
-                    except Exception:  # noqa: BLE001
-                        pass
+                try:
+                    await connection.send(json.dumps(["EVENT", sub_id, event]))
+                except Exception:  # noqa: BLE001 - peer may disconnect mid-fanout
+                    pass
 
     async def _handle_req(self, websocket: Any, sub_id: str, filter_json: dict) -> None:
         with self._lock:
-            self._subscriptions[sub_id] = filter_json
+            self._subscriptions.setdefault(websocket, {})[sub_id] = filter_json
             matching = [e for e in self._events if self._matches(filter_json, e)]
         for event in matching:
             await websocket.send(json.dumps(["EVENT", sub_id, event]))
@@ -179,6 +187,9 @@ class FakeNostrRelay:
         kinds = filter_json.get("kinds")
         if kinds and event.get("kind") not in kinds:
             return False
+        authors = filter_json.get("authors")
+        if authors and event.get("pubkey") not in authors:
+            return False
         d_tag_values = filter_json.get("#d")
         if d_tag_values is not None:
             tags = event.get("tags", [])
@@ -187,5 +198,17 @@ class FakeNostrRelay:
                 None,
             )
             if event_d not in d_tag_values:
+                return False
+        for key, expected_values in filter_json.items():
+            if not key.startswith("#") or key == "#d":
+                continue
+            tag_name = key[1:]
+            tags = event.get("tags", [])
+            actual_values = {
+                tag[1]
+                for tag in tags
+                if isinstance(tag, list) and len(tag) >= 2 and tag[0] == tag_name
+            }
+            if not actual_values.intersection(expected_values):
                 return False
         return True

@@ -65,6 +65,7 @@ except ImportError:  # pragma: no cover
     _NOSTR_AVAILABLE = False
 
 NOSTR_EVENT_KIND = 30078          # NIP-78 parameterized app-data event
+NOSTR_NAMESPACE = "nth-dao-delivery-v1"
 BINDING_KIND = "nth-nostr-key-binding-v1"
 BINDING_MAX_AGE_MS = 365 * 24 * 60 * 60 * 1000  # one year
 _ENVELOPE_EVENT_D_TAG = "d"
@@ -144,7 +145,13 @@ class NostrKeyBinding:
 
 
 def _check_binding_shape(binding: NostrKeyBinding, *, now_ms: int) -> str:
-    if binding.nth_did != binding.nth_did.strip() or not binding.nth_did.startswith("did:key:"):
+    if isinstance(now_ms, bool) or not isinstance(now_ms, int) or now_ms <= 0:
+        return "now_ms must be a positive integer"
+    if (
+        not isinstance(binding.nth_did, str)
+        or binding.nth_did != binding.nth_did.strip()
+        or not binding.nth_did.startswith("did:key:")
+    ):
         return "nth_did must be a did:key DID"
     if (
         not isinstance(binding.nostr_pubkey, str)
@@ -196,13 +203,24 @@ def verify_key_binding_standalone(
     from ``binding.nth_did`` — no identity object required, which is exactly
     what a publishing process has."""
 
-    from nth_dao.did_key import decode_ed25519_did_key_hex
+    from nth_dao.did_key import DIDKeyError, decode_ed25519_did_key_hex
     from nth_dao.identity import AgentID, AgentIdentity
 
     reason = _check_binding_shape(binding, now_ms=now_ms)
     if reason != "ok":
         return False, reason
-    pubkey_hex = decode_ed25519_did_key_hex(binding.nth_did) or ""
+    if (
+        not isinstance(binding.signature, str)
+        or len(binding.signature) != 128
+        or any(character not in "0123456789abcdef" for character in binding.signature)
+    ):
+        return False, "binding signature must be 128-char lowercase hex"
+    try:
+        pubkey_hex = decode_ed25519_did_key_hex(binding.nth_did) or ""
+    except (DIDKeyError, TypeError, ValueError) as exc:
+        return False, f"binding nth_did is invalid: {exc}"
+    if len(pubkey_hex) != 64:
+        return False, "binding nth_did is not an Ed25519 did:key"
     agent_id = AgentID.from_pubkey(pubkey_hex)
     probe = AgentIdentity(
         agent_id=agent_id,
@@ -308,6 +326,7 @@ def envelope_event(
         _EventBuilder(_Kind(NOSTR_EVENT_KIND), content)
         .tags([
             _Tag.parse([_ENVELOPE_EVENT_D_TAG, envelope.message_id]),
+            _Tag.parse(["t", NOSTR_NAMESPACE]),
             expiration_tag,
         ])
         .custom_created_at(_Timestamp.from_secs(created_at_seconds))
@@ -329,6 +348,8 @@ def envelope_from_event(event: Any) -> TransportEnvelope:
         raise TransportEnvelopeRejected("nostr event signature verification failed")
     if event.kind().as_u16() != NOSTR_EVENT_KIND:
         raise TransportEnvelopeRejected("wrong nostr event kind")
+    if NOSTR_NAMESPACE not in _extract_tag_values(event, "t"):
+        raise TransportEnvelopeRejected("nostr event is outside the NTH namespace")
     # the d tag is the parameterized-replaceable addressing key: an event
     # whose d tag does not name the carried envelope's message_id is either
     # misrouted or a hostile slot-collision (round-12 bug BB-q)
@@ -348,6 +369,8 @@ def envelope_from_event(event: Any) -> TransportEnvelope:
         RecursionError,
     ) as exc:
         raise TransportEnvelopeRejected(f"content is not an envelope: {exc}") from exc
+    if canonical_json(envelope.to_dict()).decode("utf-8") != content:
+        raise TransportEnvelopeRejected("nostr envelope content is not canonical JSON")
     ok, reason = validate_envelope(envelope, require_signature=True)
     if not ok:
         logger.warning("rejecting nostr envelope event: %s", reason)
@@ -373,10 +396,23 @@ def _extract_d_tag(event: Any) -> "str | None":
     return None
 
 
+def _extract_tag_values(event: Any, name: str) -> list[str]:
+    values: list[str] = []
+    try:
+        for tag in event.tags():
+            tag_items = tag.to_vec()
+            if len(tag_items) >= 2 and tag_items[0] == name:
+                values.append(tag_items[1])
+    except Exception:  # noqa: BLE001 - malformed tags fail closed at the caller
+        return []
+    return values
+
+
 __all__ = [
     "BINDING_KIND",
     "BINDING_MAX_AGE_MS",
     "NOSTR_EVENT_KIND",
+    "NOSTR_NAMESPACE",
     "NostrAdapterUnavailable",
     "NostrKeyBinding",
     "NostrKeys",

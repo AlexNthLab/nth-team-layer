@@ -22,7 +22,7 @@ from nth_dao.delivery.transports.base import (  # noqa: E402
 )
 from nth_dao.delivery.transports.nostr import NostrTransport  # noqa: E402
 from nth_dao.identity import AgentIdentity  # noqa: E402
-from nth_dao.nostr import NostrKeys  # noqa: E402
+from nth_dao.nostr import NostrKeyBinding, NostrKeys, sign_key_binding  # noqa: E402
 
 
 def _wait_until(predicate, timeout=10.0, interval=0.05):
@@ -58,25 +58,35 @@ def _envelope(alice_identity, payload=None):
     )
 
 
+def _transport(identity, fake_relay, *, keys=None, trusted_bindings=None):
+    keys = keys or NostrKeys.generate()
+    binding = sign_key_binding(
+        identity, nostr_keys=keys, created_at_ms=int(time.time() * 1000)
+    )
+    return NostrTransport(
+        keys,
+        relay_urls=[fake_relay.url],
+        binding=binding,
+        trusted_bindings=trusted_bindings,
+    ), binding
+
+
 class TestNostrTransport:
     def test_capabilities_declare_public_broadcast(self, alice_identity, fake_relay):
-        transport = NostrTransport(
-            NostrKeys.generate(), relay_urls=[fake_relay.url]
-        )
+        transport, _ = _transport(alice_identity, fake_relay)
         caps = transport.capabilities
         assert caps.broadcast is True
         assert caps.privacy_level == PRIVACY_PUBLIC_RELAY
         assert caps.external_infrastructure is True
 
-    @pytest.mark.xfail(reason="nostr-sdk 0.45 ClientEventStream.next() pattern "
-                              "shared with N2; publish path fully tested",
-                       strict=False)
     def test_send_and_poll_roundtrip(self, alice_identity, fake_relay):
-        sender = NostrTransport(
-            NostrKeys.generate(), relay_urls=[fake_relay.url]
+        sender, sender_binding = _transport(alice_identity, fake_relay)
+        receiver_identity = AgentIdentity.generate(label="receiver")
+        receiver, _ = _transport(
+            receiver_identity,
+            fake_relay,
+            trusted_bindings=[sender_binding],
         )
-        receiver_keys = NostrKeys.generate()
-        receiver = NostrTransport(receiver_keys, relay_urls=[fake_relay.url])
         sender.start()
         receiver.start()
         try:
@@ -84,7 +94,7 @@ class TestNostrTransport:
             envelope = _envelope(alice_identity, payload={"n": 1})
             result = sender.send(envelope)
             assert result.accepted, result.error_code
-            assert _wait_until(lambda: len(receiver.poll()) >= 1)
+            assert _wait_until(lambda: receiver._relay_client.queue_depth() >= 1)
             polled = receiver.poll()
             assert polled[0].message_id == envelope.message_id
         finally:
@@ -94,9 +104,7 @@ class TestNostrTransport:
     def test_private_did_recipient_rejected(self, alice_identity, fake_relay):
         from nth_dao.identity import AgentIdentity
 
-        transport = NostrTransport(
-            NostrKeys.generate(), relay_urls=[fake_relay.url]
-        )
+        transport, _ = _transport(alice_identity, fake_relay)
         transport.start()
         try:
             bob = AgentIdentity.generate(label="bob")
@@ -140,19 +148,125 @@ class TestBindingThroughTransport:
         finally:
             transport.stop()
 
-    def test_transport_without_binding_still_publishes(self, alice_identity, fake_relay):
-        """No binding → publish succeeds but the event is 'unbound' and strict
-        allowlist receivers will drop it. This is documented, not an error."""
-
+    def test_transport_without_binding_is_rejected(self, alice_identity, fake_relay):
         keys = NostrKeys.generate()
-        transport = NostrTransport(keys, relay_urls=[fake_relay.url])
-        transport.start()
-        try:
-            envelope = _envelope(alice_identity)
-            result = transport.send(envelope)
-            assert result.accepted
-        finally:
-            transport.stop()
+        with pytest.raises(TypeError, match="binding"):
+            NostrTransport(keys, relay_urls=[fake_relay.url])
+
+    def test_forged_binding_is_rejected(self, alice_identity, fake_relay):
+        keys = NostrKeys.generate()
+        forged = NostrKeyBinding(
+            nth_did=alice_identity.as_did(),
+            nostr_pubkey=keys.public_key_hex,
+            created_at_ms=int(time.time() * 1000),
+            signature="0" * 128,
+        )
+        with pytest.raises(ValueError, match="signature verification failed"):
+            NostrTransport(keys, relay_urls=[fake_relay.url], binding=forged)
+
+    def test_same_time_rotation_conflict_is_rejected(
+        self, alice_identity, fake_relay
+    ):
+        created_at_ms = int(time.time() * 1000)
+        old_keys = NostrKeys.generate()
+        new_keys = NostrKeys.generate()
+        old_binding = sign_key_binding(
+            alice_identity,
+            nostr_keys=old_keys,
+            created_at_ms=created_at_ms,
+        )
+        new_binding = sign_key_binding(
+            alice_identity,
+            nostr_keys=new_keys,
+            created_at_ms=created_at_ms,
+        )
+        with pytest.raises(ValueError, match="conflicting Nostr bindings"):
+            NostrTransport(
+                old_keys,
+                relay_urls=[fake_relay.url],
+                binding=old_binding,
+                trusted_bindings=[new_binding],
+            )
+
+    def test_unknown_nostr_author_is_dropped(
+        self, alice_identity, fake_relay
+    ):
+        from nth_dao.nostr import envelope_event
+
+        receiver_identity = AgentIdentity.generate(label="receiver")
+        receiver, _ = _transport(receiver_identity, fake_relay)
+        unknown_keys = NostrKeys.generate()
+        event = envelope_event(
+            _envelope(alice_identity),
+            unknown_keys,
+            created_at_seconds=int(time.time()),
+        )
+        with receiver._relay_client._queue_lock:
+            receiver._relay_client._queue.append(event)
+        assert receiver.poll() == []
+
+    def test_trusted_relay_key_cannot_speak_for_another_did(
+        self, alice_identity, fake_relay
+    ):
+        from nth_dao.nostr import envelope_event
+
+        mallory_identity = AgentIdentity.generate(label="mallory")
+        mallory_keys = NostrKeys.generate()
+        mallory_binding = sign_key_binding(
+            mallory_identity,
+            nostr_keys=mallory_keys,
+            created_at_ms=int(time.time() * 1000),
+        )
+        receiver_identity = AgentIdentity.generate(label="receiver")
+        receiver, _ = _transport(
+            receiver_identity,
+            fake_relay,
+            trusted_bindings=[mallory_binding],
+        )
+        event = envelope_event(
+            _envelope(alice_identity),
+            mallory_keys,
+            created_at_seconds=int(time.time()),
+        )
+        with receiver._relay_client._queue_lock:
+            receiver._relay_client._queue.append(event)
+        assert receiver.poll() == []
+
+    def test_only_latest_binding_for_a_did_is_accepted(
+        self, alice_identity, fake_relay
+    ):
+        from nth_dao.nostr import envelope_event
+
+        now_ms = int(time.time() * 1000)
+        old_keys = NostrKeys.generate()
+        new_keys = NostrKeys.generate()
+        old_binding = sign_key_binding(
+            alice_identity,
+            nostr_keys=old_keys,
+            created_at_ms=now_ms - 1_000,
+        )
+        new_binding = sign_key_binding(
+            alice_identity,
+            nostr_keys=new_keys,
+            created_at_ms=now_ms,
+        )
+        receiver_identity = AgentIdentity.generate(label="receiver")
+        receiver, _ = _transport(
+            receiver_identity,
+            fake_relay,
+            trusted_bindings=[old_binding, new_binding],
+        )
+        envelope = _envelope(alice_identity)
+        old_event = envelope_event(
+            envelope, old_keys, created_at_seconds=int(time.time())
+        )
+        new_event = envelope_event(
+            envelope, new_keys, created_at_seconds=int(time.time())
+        )
+        with receiver._relay_client._queue_lock:
+            receiver._relay_client._queue.extend([old_event, new_event])
+        accepted = receiver.poll(max_items=2)
+        assert [item.message_id for item in accepted] == [envelope.message_id]
 
 
 # ─────────────────── adversarial review round 16 (bug DD-d) ───────────────────
@@ -169,7 +283,14 @@ class TestSubscriptionFailureDegradation:
         from nth_dao.nostr import NostrKeys
 
         keys = NostrKeys.generate()
-        transport = NostrTransport(keys, relay_urls=[fake_relay.url])
+        binding = sign_key_binding(
+            alice_identity,
+            nostr_keys=keys,
+            created_at_ms=int(time.time() * 1000),
+        )
+        transport = NostrTransport(
+            keys, relay_urls=[fake_relay.url], binding=binding
+        )
         transport.start()
 
         def broken_subscribe(*args, **kwargs):

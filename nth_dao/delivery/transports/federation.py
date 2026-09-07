@@ -29,12 +29,13 @@ from __future__ import annotations
 import http.server
 import json
 import logging
+import math
 import socketserver
 import threading
 import time
 import urllib.error
 import urllib.request
-from typing import List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 from urllib.parse import urlsplit
 
 from nth_dao.canonical_json import canonical_json
@@ -46,10 +47,10 @@ from nth_dao.delivery.acknowledgement import (
 from nth_dao.delivery.envelope import (
     MAX_ENVELOPE_BYTES,
     TransportEnvelope,
-    TransportEnvelopeRejected,
     validate_envelope,
 )
 from nth_dao.delivery.inbox import DeliveryInbox
+from nth_dao.did_key import is_did_key
 from nth_dao.delivery.transports.base import (
     PRIVACY_PEER,
     SendResult,
@@ -179,23 +180,44 @@ class FederationTransport(Transport):
     def __init__(
         self,
         *,
-        peer_urls: List[str],
+        peer_urls: Optional[List[str]] = None,
+        recipient_urls: Optional[Dict[str, str]] = None,
         name: str = "federation-https",
         timeout: float = DEFAULT_TIMEOUT,
         verify_tls: bool = True,
     ) -> None:
-        if not 0.1 <= float(timeout) <= 30.0:
+        if (
+            isinstance(timeout, bool)
+            or not isinstance(timeout, (int, float))
+            or not math.isfinite(float(timeout))
+            or not 0.1 <= float(timeout) <= 30.0
+        ):
             raise ValueError("timeout must be between 0.1 and 30 seconds")
-        if not peer_urls or len(peer_urls) > MAX_PEER_URLS:
-            raise ValueError(f"peer_urls must hold 1..{MAX_PEER_URLS} entries")
+        if peer_urls is not None and not isinstance(peer_urls, list):
+            raise ValueError("peer_urls must be a list")
+        if recipient_urls is not None and not isinstance(recipient_urls, dict):
+            raise ValueError("recipient_urls must be a DID-to-URL mapping")
+        peer_urls = peer_urls or []
+        recipient_urls = recipient_urls or {}
+        if not peer_urls and not recipient_urls:
+            raise ValueError("peer_urls or recipient_urls must contain a route")
+        if len(peer_urls) + len(recipient_urls) > MAX_PEER_URLS:
+            raise ValueError(f"federation routes are capped at {MAX_PEER_URLS}")
+        if not isinstance(verify_tls, bool):
+            raise ValueError("verify_tls must be a boolean")
         self._peers = [validate_peer_url(url) + INGEST_PATH for url in peer_urls]
         if len(set(self._peers)) != len(self._peers):
             raise ValueError("peer_urls must not contain duplicates")
+        self._recipient_routes: Dict[str, str] = {}
+        for recipient_did, url in recipient_urls.items():
+            if not isinstance(recipient_did, str) or not is_did_key(recipient_did):
+                raise ValueError("recipient_urls keys must be Ed25519 did:key values")
+            self._recipient_routes[recipient_did] = validate_peer_url(url) + INGEST_PATH
         self._timeout = float(timeout)
         self._verify_tls = verify_tls
         self.capabilities = TransportCapabilities(
             name=name,
-            unicast=False,
+            unicast=bool(self._recipient_routes),
             broadcast=True,
             realtime=False,
             privacy_level=PRIVACY_PEER,
@@ -209,14 +231,25 @@ class FederationTransport(Transport):
         ok, reason = validate_envelope(envelope, require_signature=True)
         if not ok:
             return SendResult(accepted=False, error_code=f"invalid-envelope: {reason}")
+        if envelope.recipient.startswith("did:key:"):
+            direct_url = self._recipient_routes.get(envelope.recipient)
+            if direct_url is None:
+                return SendResult(
+                    accepted=False, error_code="recipient-route-required"
+                )
+            target_urls = [direct_url]
+        else:
+            target_urls = list(
+                dict.fromkeys([*self._peers, *self._recipient_routes.values()])
+            )
         body = canonical_json(envelope.to_dict())
         accepted_any = False
         # the per-peer timeout bounds one POST; this overall budget bounds the
         # whole fan-out so a long peer list cannot stall a send for minutes
         overall_deadline = time.monotonic() + self._timeout * 4
-        for url in self._peers:
+        for index, url in enumerate(target_urls):
             if time.monotonic() > overall_deadline:
-                skipped = len(self._peers) - self._peers.index(url)
+                skipped = len(target_urls) - index
                 logger.warning("federation fan-out deadline exceeded; %d peers skipped",
                                skipped)
                 break
@@ -244,7 +277,9 @@ class FederationTransport(Transport):
         return []
 
     def health(self) -> TransportHealth:
-        return TransportHealth(reachable=bool(self._peers))
+        return TransportHealth(
+            reachable=bool(self._peers or self._recipient_routes)
+        )
 
 
 class _IngestHandler(http.server.BaseHTTPRequestHandler):
@@ -286,10 +321,16 @@ class _IngestHandler(http.server.BaseHTTPRequestHandler):
             self.server.gate.release()  # type: ignore[attr-defined]
 
     def _do_post(self) -> None:
-        if self.path.split("?")[0] != INGEST_PATH:
+        if self.path != INGEST_PATH:
             self._respond(404, {"accepted": False, "reason": "unknown path"})
             return
-        raw_length = self.headers.get("Content-Length")
+        transfer_encoding = self.headers.get("Transfer-Encoding")
+        content_lengths = self.headers.get_all("Content-Length", failobj=[])
+        if transfer_encoding is not None or len(content_lengths) != 1:
+            self._respond(400, {"accepted": False, "reason": "ambiguous body framing"})
+            self.close_connection = True
+            return
+        raw_length = content_lengths[0]
         # strict ASCII digits: unicode isdigit() chars like the superscript ²
         # pass isdigit() but explode int() (round-8 review bug AJ)
         if raw_length is None or not (raw_length.isascii() and raw_length.isdigit()):
@@ -306,13 +347,24 @@ class _IngestHandler(http.server.BaseHTTPRequestHandler):
             self.close_connection = True
             return
         body = self.rfile.read(length)
+        if len(body) != length:
+            self._respond(400, {"accepted": False, "reason": "incomplete request body"})
+            self.close_connection = True
+            return
         try:
-            parsed = json.loads(body.decode("utf-8"))
-            envelope = TransportEnvelope.from_dict(parsed)
-        except (json.JSONDecodeError, UnicodeDecodeError, TransportEnvelopeRejected, TypeError):
+            encoded = body.decode("utf-8")
+        except UnicodeDecodeError:
             self._respond(400, {"accepted": False, "reason": "malformed envelope"})
             return
-        decision = self._inbox.accept(envelope)
+        try:
+            json.loads(encoded)
+        except (json.JSONDecodeError, RecursionError):
+            self._respond(400, {"accepted": False, "reason": "malformed envelope"})
+            return
+        # Preserve the exact received representation. Passing a pre-parsed
+        # object would bypass DeliveryInbox's canonical-wire check and make
+        # duplicate-key or whitespace variants indistinguishable.
+        decision = self._inbox.accept(encoded)
         if decision.accepted:
             self._respond(
                 200,

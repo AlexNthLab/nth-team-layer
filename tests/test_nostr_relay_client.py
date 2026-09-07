@@ -102,6 +102,19 @@ class TestRelayUrlValidation:
         with pytest.raises(ValueError, match="credentials"):
             NostrRelayClient(keys=None, relay_urls=["wss://u:p@relay.example.com"])
 
+    @pytest.mark.parametrize(
+        "url",
+        [
+            " wss://relay.example.com",
+            "wss://relay.example.com#fragment",
+        ],
+    )
+    def test_ambiguous_urls_rejected(self, url):
+        from nth_dao.nostr import NostrRelayClient
+
+        with pytest.raises(ValueError):
+            NostrRelayClient(keys=None, relay_urls=[url])
+
     def test_empty_and_duplicate_rejected(self):
         from nth_dao.nostr import NostrRelayClient
 
@@ -112,6 +125,16 @@ class TestRelayUrlValidation:
                 keys=None,
                 relay_urls=["wss://a.example.com", "wss://a.example.com"],
             )
+
+    @pytest.mark.parametrize(
+        "url",
+        ["wss://", "wss://relay.example.com:0", "wss://relay.example.com:99999"],
+    )
+    def test_invalid_authority_rejected(self, url):
+        from nth_dao.nostr import NostrRelayClient
+
+        with pytest.raises(ValueError):
+            NostrRelayClient(keys=None, relay_urls=[url])
 
 
 class TestPublishRoundTrip:
@@ -142,9 +165,6 @@ class TestPublishRoundTrip:
 
 
 class TestSubscription:
-    @pytest.mark.xfail(reason="nostr-sdk 0.45 ClientEventStream.next() semantics "
-                              "need refinement; publish path is fully tested",
-                       strict=False)
     def test_subscribed_events_delivered(self, nostr_keys, fake_relay, alice_identity):
         from nth_dao.nostr import NostrRelayClient
 
@@ -174,6 +194,53 @@ class TestSubscription:
             assert restored.message_id == envelope.message_id
         finally:
             client.stop()
+
+    def test_stop_cancels_subscription_pump(self, nostr_keys, fake_relay):
+        from nth_dao.nostr import NostrRelayClient
+
+        client = NostrRelayClient(nostr_keys, relay_urls=[fake_relay.url])
+        client.start()
+        client.subscribe_events(kinds=[30078])
+        client.stop()
+        assert client._stream_task is None
+        assert client._subscription_id is None
+        assert client._thread is None
+
+    @pytest.mark.parametrize(
+        "kwargs",
+        [
+            {"kinds": []},
+            {"kinds": [True]},
+            {"kinds": [1, 1]},
+            {"kinds": [70_000]},
+            {"kinds": [1], "authors": ["A" * 64]},
+            {"kinds": [1], "namespace": "bad\nnamespace"},
+            {"kinds": [1], "callback": "not-callable"},
+        ],
+    )
+    def test_subscription_inputs_are_bounded(
+        self, nostr_keys, fake_relay, kwargs
+    ):
+        from nth_dao.nostr import NostrRelayClient
+
+        client = NostrRelayClient(nostr_keys, relay_urls=[fake_relay.url])
+        client.start()
+        try:
+            with pytest.raises((TypeError, ValueError)):
+                client.subscribe_events(**kwargs)
+        finally:
+            client.stop()
+
+    @pytest.mark.parametrize("value", [True, float("nan"), float("inf"), "1"])
+    def test_publish_timeout_shape_rejected(self, nostr_keys, fake_relay, value):
+        from nth_dao.nostr import NostrRelayClient
+
+        with pytest.raises((TypeError, ValueError)):
+            NostrRelayClient(
+                nostr_keys,
+                relay_urls=[fake_relay.url],
+                publish_timeout=value,
+            )
 
 
 class TestHostileRelay:

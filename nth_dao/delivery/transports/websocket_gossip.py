@@ -31,6 +31,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+import math
 import threading
 import uuid
 from collections import deque
@@ -50,13 +51,15 @@ from nth_dao.delivery.transports.base import (
     TransportCapabilities,
     TransportHealth,
 )
+from nth_dao.did_key import DIDKeyError, decode_ed25519_did_key_hex
 from nth_dao.gossip import GossipNode
-from nth_dao.identity import AgentIdentity
+from nth_dao.identity import AgentID, AgentIdentity
 
 logger = logging.getLogger("nth_dao.delivery")
 
 GOSSIP_SCOPE = "dao"
 GOSSIP_CONTENT_TYPE = "json"
+GOSSIP_DIRECT_RECIPIENT_KEY = "nth_delivery_direct_to"
 _INBOUND_QUEUE_SIZE = 4_096
 _MAX_TRUSTED_PEERS = 1_024
 _DEFAULT_SEND_TIMEOUT = 10.0
@@ -125,8 +128,12 @@ class _EnvelopeChannel:
     ) -> ChannelMessage:
         """GossipNode.direct_message calls this; route to send with a DM scope."""
 
-        return self.send(content=content, scope=f"dm:{self.agent_id}--{to_agent}",
-                         content_type=content_type)
+        return self.send(
+            content=content,
+            scope=f"dm:{self.agent_id}--{to_agent}",
+            content_type=content_type,
+            metadata={GOSSIP_DIRECT_RECIPIENT_KEY: to_agent},
+        )
 
     def _append(self, msg: ChannelMessage) -> None:  # pragma: no cover - shim
         """Inbound ledger hook: intentionally a no-op (inbox persists)."""
@@ -146,10 +153,42 @@ class WebSocketGossipTransport(Transport):
         name: str = "gossip-ws",
         send_timeout: float = _DEFAULT_SEND_TIMEOUT,
         wot_max_depth: int = 2,
+        trust_graph: Any = None,
+        allow_tofu: bool = False,
     ) -> None:
+        if trusted_pubkeys is not None and not isinstance(trusted_pubkeys, dict):
+            raise ValueError("trusted_pubkeys must be a mapping")
         if trusted_pubkeys is not None and len(trusted_pubkeys) > _MAX_TRUSTED_PEERS:
             raise ValueError(f"trusted_pubkeys is capped at {_MAX_TRUSTED_PEERS} peers")
-        if not 0.1 <= float(send_timeout) <= 60.0:
+        for agent_id, pubkey_hex in (trusted_pubkeys or {}).items():
+            if (
+                not isinstance(agent_id, str)
+                or not agent_id
+                or len(agent_id) > 256
+                or not isinstance(pubkey_hex, str)
+                or len(pubkey_hex) != 64
+            ):
+                raise ValueError("trusted_pubkeys contains an invalid identity binding")
+            try:
+                bytes.fromhex(pubkey_hex)
+            except ValueError as exc:
+                raise ValueError(
+                    "trusted_pubkeys contains an invalid identity binding"
+                ) from exc
+        if not isinstance(allow_tofu, bool):
+            raise ValueError("allow_tofu must be a boolean")
+        if (
+            isinstance(wot_max_depth, bool)
+            or not isinstance(wot_max_depth, int)
+            or not 1 <= wot_max_depth <= 5
+        ):
+            raise ValueError("wot_max_depth must be an integer within [1, 5]")
+        if (
+            isinstance(send_timeout, bool)
+            or not isinstance(send_timeout, (int, float))
+            or not math.isfinite(float(send_timeout))
+            or not 0.1 <= float(send_timeout) <= 60.0
+        ):
             raise ValueError("send_timeout must be between 0.1 and 60 seconds")
         self._identity = identity
         self._host = host
@@ -157,6 +196,9 @@ class WebSocketGossipTransport(Transport):
         self._trusted = dict(trusted_pubkeys or {})
         self._bootstrap = list(bootstrap_peers or [])
         self._send_timeout = float(send_timeout)
+        self._wot_max_depth = wot_max_depth
+        self._trust_graph = trust_graph
+        self._allow_tofu = allow_tofu
         self.capabilities = TransportCapabilities(
             name=name,
             unicast=True,
@@ -173,34 +215,23 @@ class WebSocketGossipTransport(Transport):
         self._started = threading.Event()
         self._start_error: Optional[str] = None
         self._running = False
+        self._lifecycle_lock = threading.RLock()
+        self._url = ""
         self._inbox: deque = deque(maxlen=_INBOUND_QUEUE_SIZE)
         self._inbox_lock = threading.Lock()
         self.dropped_inbound = 0
 
     # ─────────────────────── lifecycle ───────────────────────
 
-    def start(self) -> str:
-        """Start the background loop and the gossip node; return its URL."""
+    def start(self) -> None:
+        """Start the background loop and gossip node."""
 
+        with self._lifecycle_lock:
+            self._start_locked()
+
+    def _start_locked(self) -> None:
         if self._running:
-            return self._node.url if self._node else ""
-        # macOS/Windows system proxies happily intercept loopback WebSockets
-        # and break local gossip with 503s. Merge a loopback bypass into any
-        # user-configured no_proxy (websockets consults urllib's
-        # proxy_bypass, which honours it); users who explicitly WANT the
-        # proxy in the path must exclude loopback themselves — this
-        # transport cannot function through a loopback proxy.
-        import os
-
-        for variable in ("no_proxy", "NO_PROXY"):
-            current = os.environ.get(variable, "")
-            entries = [
-                entry.strip() for entry in current.split(",") if entry.strip()
-            ]
-            for required in ("127.0.0.1", "localhost"):
-                if required not in entries:
-                    entries.append(required)
-            os.environ[variable] = ",".join(entries)
+            return
         # restart hygiene: a previous run leaves _started set and possibly a
         # stale _start_error — clear both or start() would return before the
         # new node has bound its port (round-5 review bug U)
@@ -215,6 +246,10 @@ class WebSocketGossipTransport(Transport):
                 bootstrap_peers=self._bootstrap,
                 trusted_pubkeys=self._trusted,
                 require_signature=True,
+                wot_max_depth=self._wot_max_depth,
+                trust_graph=self._trust_graph,
+                allow_tofu=self._allow_tofu,
+                connect_proxy=None,
             )
         except Exception as exc:
             # lifecycle errors speak one type: an unsignable identity, a bad
@@ -234,7 +269,6 @@ class WebSocketGossipTransport(Transport):
             self._shutdown_loop()
             raise GossipTransportError(f"gossip node failed to start: {self._start_error}")
         self._running = True
-        return self._node.url
 
     def _shutdown_loop(self) -> None:
         """Stop and join a loop thread that never reached the running state."""
@@ -254,12 +288,9 @@ class WebSocketGossipTransport(Transport):
 
         async def _boot() -> None:
             try:
-                url = await self._node.start()
-                for peer in self._bootstrap:
-                    try:
-                        await self._node.connect(peer)
-                    except Exception as exc:  # noqa: BLE001 - bootstrap is best-effort
-                        logger.warning("bootstrap connect %s failed: %s", peer, exc)
+                node = self._node
+                assert node is not None
+                url = await node.start()
                 self._url = url
                 self._start_error = None
             except Exception as exc:  # noqa: BLE001 - surfaced via the event
@@ -281,16 +312,17 @@ class WebSocketGossipTransport(Transport):
             loop.close()
 
     def stop(self) -> None:
-        if not self._running or self._loop is None or self._node is None:
-            return
-        try:
-            stopper = asyncio.run_coroutine_threadsafe(self._node.stop(), self._loop)
-            stopper.result(timeout=5.0)
-        except Exception as exc:  # noqa: BLE001 - stop must never raise
-            logger.warning("gossip node stop failed: %s", exc)
-        finally:
-            self._running = False
-            self._shutdown_loop()
+        with self._lifecycle_lock:
+            if not self._running or self._loop is None or self._node is None:
+                return
+            try:
+                stopper = asyncio.run_coroutine_threadsafe(self._node.stop(), self._loop)
+                stopper.result(timeout=5.0)
+            except Exception as exc:  # noqa: BLE001 - stop must never raise
+                logger.warning("gossip node stop failed: %s", exc)
+            finally:
+                self._running = False
+                self._shutdown_loop()
 
     # ─────────────────────── Transport API ───────────────────────
 
@@ -309,16 +341,49 @@ class WebSocketGossipTransport(Transport):
             return SendResult(accepted=False, error_code="no-connected-peers")
         content = canonical_json(envelope.to_dict()).decode("utf-8")
         try:
-            fut = asyncio.run_coroutine_threadsafe(
-                self._node.broadcast(content, scope=GOSSIP_SCOPE,
-                                     content_type=GOSSIP_CONTENT_TYPE),
-                self._loop,
-            )
-            fut.result(timeout=self._send_timeout)
+            if envelope.recipient.startswith("did:key:"):
+                try:
+                    recipient_pubkey = decode_ed25519_did_key_hex(envelope.recipient)
+                    recipient_agent = str(AgentID.from_pubkey(recipient_pubkey))
+                except (DIDKeyError, ValueError) as exc:
+                    return SendResult(
+                        accepted=False,
+                        error_code=f"invalid-recipient-did: {exc}"[:200],
+                    )
+                fut = asyncio.run_coroutine_threadsafe(
+                    self._node.direct_message(
+                        recipient_agent,
+                        content,
+                        GOSSIP_CONTENT_TYPE,
+                        relay_if_unknown=False,
+                    ),
+                    self._loop,
+                )
+                delivered = fut.result(timeout=self._send_timeout)
+                if delivered is None:
+                    return SendResult(
+                        accepted=False, error_code="recipient-not-directly-connected"
+                    )
+            else:
+                fut = asyncio.run_coroutine_threadsafe(
+                    self._node.broadcast(
+                        content,
+                        scope=GOSSIP_SCOPE,
+                        content_type=GOSSIP_CONTENT_TYPE,
+                        require_delivery=True,
+                    ),
+                    self._loop,
+                )
+                fut.result(timeout=self._send_timeout)
         except asyncio.TimeoutError:
+            fut.cancel()
             return SendResult(accepted=False, error_code="gossip-send-timeout")
         except Exception as exc:  # noqa: BLE001 - transport bugs are failures
             logger.warning("gossip send failed: %s", exc)
+            if self._node.peer_count() == 0:
+                return SendResult(
+                    accepted=False, error_code="no-connected-peers"
+                )
             return SendResult(accepted=False, error_code="gossip-send-error")
         # post-broadcast honesty check: if every peer vanished between the
         # pre-check and the actual gossip, nothing was delivered — report
@@ -329,6 +394,8 @@ class WebSocketGossipTransport(Transport):
         return SendResult(accepted=True)
 
     def poll(self, *, max_items: int = 64) -> List[TransportEnvelope]:
+        if isinstance(max_items, bool) or not isinstance(max_items, int) or max_items < 1:
+            raise ValueError("max_items must be a positive integer")
         items: List[TransportEnvelope] = []
         with self._inbox_lock:
             while self._inbox and len(items) < max_items:
@@ -361,6 +428,17 @@ class WebSocketGossipTransport(Transport):
                 return
             parsed = json.loads(content)
             envelope = TransportEnvelope.from_dict(parsed)
+            if canonical_json(envelope.to_dict()).decode("utf-8") != content:
+                logger.warning("gossip envelope is not canonical JSON; dropping")
+                return
+            if (
+                envelope.recipient.startswith("did:key:")
+                and envelope.recipient != self._identity.as_did()
+            ):
+                logger.warning(
+                    "gossip direct envelope targets another identity; dropping"
+                )
+                return
         except (
             json.JSONDecodeError,
             UnicodeDecodeError,

@@ -98,7 +98,9 @@ class TestFederationEndToEnd:
             # ── alice's router carries her outbound federation traffic ──
             alice_router = DeliveryRouter(clock=lambda: NOW_MS)
             alice_router.register(
-                FederationTransport(peer_urls=[bob_server.url], name="fed-to-bob")
+                FederationTransport(
+                    recipient_urls={bob_did: bob_server.url}, name="fed-to-bob"
+                )
             )
 
             envelope = sign_envelope(
@@ -125,7 +127,9 @@ class TestFederationEndToEnd:
             # 3. bob signs the ACK and sends it back through his own router
             bob_router = DeliveryRouter(clock=lambda: NOW_MS)
             bob_router.register(
-                FederationTransport(peer_urls=[alice_server.url], name="fed-to-alice")
+                FederationTransport(
+                    recipient_urls={alice_did: alice_server.url}, name="fed-to-alice"
+                )
             )
             ack = sign_ack(
                 bob_identity,
@@ -163,7 +167,9 @@ class TestFederationEndToEnd:
         server = FederationIngestServer(bob_inbox, host="127.0.0.1", port=0)
         server.start()
         try:
-            transport = FederationTransport(peer_urls=[server.url])
+            transport = FederationTransport(
+                recipient_urls={bob_identity.as_did(): server.url}
+            )
             hostile = sign_envelope(
                 alice_identity,  # valid signature, but not allowlisted
                 kind="channel.message",

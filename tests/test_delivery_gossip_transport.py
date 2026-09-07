@@ -128,8 +128,24 @@ class TestGossipTransportLifecycle:
         caps = alice_transport.capabilities
         assert caps.realtime is True
         assert caps.broadcast is True
+        assert caps.unicast is True
         assert caps.privacy_level == PRIVACY_PEER
         assert caps.external_infrastructure is False
+
+    def test_tofu_is_explicit_not_default(self, alice_identity, bob_identity):
+        from nth_dao.delivery.transports.websocket_gossip import WebSocketGossipTransport
+
+        alice = WebSocketGossipTransport(alice_identity, port=0)
+        bob = WebSocketGossipTransport(bob_identity, port=0)
+        try:
+            alice.start()
+            bob.start()
+            assert asyncio_run(bob, alice.url) is False
+            assert alice.peer_count() == 0
+            assert bob.peer_count() == 0
+        finally:
+            bob.stop()
+            alice.stop()
 
 
 class TestGossipWire:
@@ -155,6 +171,72 @@ class TestGossipWire:
         received = bob.poll()
         assert len(received) == 1
         assert received[0].message_id == envelope.message_id
+
+    def test_direct_did_never_falls_back_to_broadcast(
+        self,
+        alice_identity,
+        bob_identity,
+        alice_transport,
+        bob_transport_factory,
+    ):
+        from nth_dao.identity import AgentIdentity
+
+        bob = bob_transport_factory("127.0.0.1", None)
+        bob.start()
+        assert asyncio_run(bob, alice_transport.url) is True
+        assert _wait_until(lambda: alice_transport.peer_count() >= 1)
+
+        relay_calls = []
+        original_relay = bob._node._relay
+
+        async def observe_relay(message, exclude=""):
+            relay_calls.append((message, exclude))
+            return await original_relay(message, exclude=exclude)
+
+        bob._node._relay = observe_relay
+
+        direct = _envelope(
+            alice_identity,
+            payload={"body": "bob only"},
+            recipient=bob_identity.as_did(),
+        )
+        assert alice_transport.send(direct).accepted
+        assert _wait_until(lambda: len(bob._inbox) == 1)
+        assert bob.poll()[0].message_id == direct.message_id
+        assert relay_calls == []
+
+        unknown = AgentIdentity.generate(label="unknown")
+        not_connected = _envelope(
+            alice_identity,
+            payload={"body": "must not leak"},
+            recipient=unknown.as_did(),
+        )
+        result = alice_transport.send(not_connected)
+        assert not result.accepted
+        assert result.error_code == "recipient-not-directly-connected"
+        time.sleep(0.1)
+        assert bob.poll() == []
+
+    def test_direct_outer_target_cannot_override_inner_recipient(
+        self, alice_identity, bob_identity, alice_transport
+    ):
+        from nth_dao.identity import AgentIdentity
+
+        carol = AgentIdentity.generate(label="carol")
+        envelope = _envelope(
+            alice_identity,
+            payload={"body": "for carol"},
+            recipient=carol.as_did(),
+        )
+        alice_transport._on_gossip_message(
+            {
+                "content": json.dumps(
+                    envelope.to_dict(), separators=(",", ":"), sort_keys=True
+                )
+            },
+            relay_peer_id=str(bob_identity.agent_id),
+        )
+        assert alice_transport.poll() == []
 
     def test_non_envelope_gossip_ignored(self, alice_identity, alice_transport, bob_transport_factory):
         bob = bob_transport_factory("127.0.0.1", None)
@@ -220,12 +302,14 @@ class TestRestart:
         from nth_dao.delivery.transports.websocket_gossip import WebSocketGossipTransport
 
         transport = WebSocketGossipTransport(alice_identity, port=0)
-        url1 = transport.start()
+        transport.start()
+        url1 = transport.url
         assert url1.startswith("ws://")
         transport.stop()
         assert transport.health().reachable is False
 
-        url2 = transport.start()
+        transport.start()
+        url2 = transport.url
         assert url2.startswith("ws://")
         assert url2 != url1  # fresh bind on a fresh ephemeral port
         assert transport.health().reachable is True
@@ -248,17 +332,21 @@ class TestMidflightPeerDrop:
 
         real_broadcast = alice_transport._node.broadcast
 
-        async def vanishing_broadcast(content, scope="dao", content_type="json"):
+        async def vanishing_broadcast(
+            content, scope="dao", content_type="json", **kwargs
+        ):
             # every peer disconnects inside the send window
             alice_transport._node.peers.clear()
-            return await real_broadcast(content, scope=scope, content_type=content_type)
+            return await real_broadcast(
+                content, scope=scope, content_type=content_type, **kwargs
+            )
 
         # instance attribute shadows the bound method (called without self)
         alice_transport._node.broadcast = vanishing_broadcast
 
         # pretend one peer is connected so the pre-check passes
         class _FakeSocket:
-            def close(self):
+            async def close(self):
                 pass
 
         alice_transport._node.peers["p1"] = _FakeSocket()
@@ -270,10 +358,11 @@ class TestMidflightPeerDrop:
 # ─────────────────── adversarial review round 6 (bug X) ───────────────────
 
 
-class TestNoProxyMerge:
-    def test_existing_no_proxy_gains_loopback_entries(self, alice_identity, monkeypatch):
-        """Bug X: a user with an existing no_proxy that lacks loopback must
-        still get the loopback bypass merged in (append, not setdefault)."""
+class TestProxyIsolation:
+    def test_start_does_not_mutate_process_proxy_environment(
+        self, alice_identity, monkeypatch
+    ):
+        """Starting one transport must not alter networking for the process."""
 
         import os
 
@@ -288,10 +377,8 @@ class TestNoProxyMerge:
             pass  # lifecycle not under test here
         finally:
             transport.stop()
-        current = os.environ["no_proxy"]
-        entries = {entry.strip() for entry in current.split(",")}
-        assert {"foo.example.com", "127.0.0.1", "localhost"} <= entries
-        # idempotent: starting again must not duplicate entries
+        assert os.environ["no_proxy"] == "foo.example.com"
+        assert os.environ["NO_PROXY"] == "foo.example.com"
         transport2 = WebSocketGossipTransport(alice_identity, port=0)
         try:
             transport2.start()
@@ -299,8 +386,8 @@ class TestNoProxyMerge:
             transport2.stop()
             raise
         transport2.stop()
-        entries2 = {entry.strip() for entry in os.environ["no_proxy"].split(",")}
-        assert entries2 == entries
+        assert os.environ["no_proxy"] == "foo.example.com"
+        assert os.environ["NO_PROXY"] == "foo.example.com"
 
 
 # ─────────────────── adversarial review round 7 ───────────────────

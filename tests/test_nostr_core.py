@@ -197,14 +197,17 @@ class TestDTagAddressing:
 
         from nostr_sdk import EventBuilder, Kind, Tag
 
-        from nth_dao.nostr import envelope_event, envelope_from_event
+        from nth_dao.nostr import NOSTR_NAMESPACE, envelope_event, envelope_from_event
 
         envelope = _envelope(alice_identity, payload={"n": 1})
         event = envelope_event(envelope, nostr_keys, created_at_seconds=NOW_MS // 1000)
         hostile = EventBuilder(
             Kind(30078),
             json.dumps(envelope.to_dict(), separators=(",", ":"), sort_keys=True),
-        ).tags([Tag.parse(["d", "someone-elses-message-id"])])
+        ).tags([
+            Tag.parse(["d", "someone-elses-message-id"]),
+            Tag.parse(["t", NOSTR_NAMESPACE]),
+        ])
         hostile_event = hostile.finalize(nostr_keys.raw)
         with pytest.raises(Exception, match="d tag does not address"):
             envelope_from_event(hostile_event)
@@ -294,15 +297,15 @@ class TestHardening:
 
         import json as jsonlib
 
-        from nostr_sdk import EventBuilder, Kind
+        from nostr_sdk import EventBuilder, Kind, Tag
 
-        from nth_dao.nostr import envelope_from_event
+        from nth_dao.nostr import NOSTR_NAMESPACE, envelope_from_event
 
         envelope = _envelope(alice_identity)
         event = EventBuilder(
             Kind(30078),
             jsonlib.dumps(envelope.to_dict(), separators=(",", ":"), sort_keys=True),
-        ).finalize(nostr_keys.raw)
+        ).tags([Tag.parse(["t", NOSTR_NAMESPACE])]).finalize(nostr_keys.raw)
         with pytest.raises(Exception, match="d tag does not address"):
             envelope_from_event(event)
 

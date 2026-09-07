@@ -219,6 +219,8 @@ class DeliveryRouter:
                 capabilities = transport.capabilities
                 if policy.allowed_transports and name not in policy.allowed_transports:
                     continue
+                if envelope.recipient.startswith("did:key:") and not capabilities.unicast:
+                    continue
                 if capabilities.privacy_level < policy.privacy_floor:
                     continue
                 if policy.require_ack and capabilities.ack_mode != TRANSPORT_ACK_HOST:

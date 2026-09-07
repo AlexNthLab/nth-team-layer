@@ -206,6 +206,24 @@ class TestRouter:
         with pytest.raises(Exception, match="hop_limit"):
             router.send(envelope, RoutePolicy(max_hop_limit=1))
 
+    def test_direct_recipient_never_uses_broadcast_only_transport(self, alice_identity):
+        from nth_dao.identity import AgentIdentity
+
+        router = DeliveryRouter()
+        broadcast = _StaticTransport("broadcast")
+        broadcast.capabilities = TransportCapabilities(
+            name="broadcast",
+            unicast=False,
+            broadcast=True,
+        )
+        router.register(broadcast)
+        recipient = AgentIdentity.generate(label="recipient").as_did()
+
+        result = router.send(_envelope(alice_identity, recipient=recipient))
+
+        assert not result.accepted
+        assert broadcast.sent == []
+
     def test_oversized_envelope_skips_transport(self, alice_identity):
         router = DeliveryRouter()
         router.register(_StaticTransport("tiny", max_bytes=10))
