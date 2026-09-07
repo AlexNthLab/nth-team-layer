@@ -9,6 +9,7 @@ import pytest
 from nth_dao.canonical_json import canonical_json
 from nth_dao.delivery.acknowledgement import sign_ack
 from nth_dao.delivery.envelope import (
+    TransportEnvelopeRejected,
     envelope_digest,
     sign_envelope,
 )
@@ -268,15 +269,17 @@ class TestIngestServer:
         import urllib.request
 
         httpd, _ = server
-        request = urllib.request.Request(
-            httpd.url + "/elsewhere", data=b"{}", method="POST",
-            headers={"Content-Type": "application/json"},
-        )
-        try:
-            urllib.request.urlopen(request, timeout=5)
-            raise AssertionError("expected HTTP 404")
-        except urllib.error.HTTPError as exc:
-            assert exc.code == 404
+        for _ in range(5):
+            request = urllib.request.Request(
+                httpd.url + "/elsewhere",
+                data=b"{}",
+                method="POST",
+                headers={"Content-Type": "application/json"},
+            )
+            with pytest.raises(urllib.error.HTTPError) as raised:
+                urllib.request.urlopen(request, timeout=5)
+            assert raised.value.code == 404
+            assert raised.value.headers["Connection"] == "close"
 
     def test_oversized_body_413(self, server):
         import urllib.error
@@ -505,7 +508,10 @@ class TestBindingEnforcement:
             created_at_ms=int(time_mod.time() * 1000),
         )
         envelope = _envelope(alice_identity)
-        with pytest.raises(Exception, match="does not name the publishing key"):
+        with pytest.raises(
+            TransportEnvelopeRejected,
+            match="does not name the publishing key",
+        ):
             envelope_event(
                 envelope,
                 nostr_keys,
@@ -529,7 +535,7 @@ class TestBindingEnforcement:
         )
         forged = replace(binding, signature="00" * 64)
         envelope = _envelope(alice_identity)
-        with pytest.raises(Exception, match="binding invalid"):
+        with pytest.raises(TransportEnvelopeRejected, match="binding invalid"):
             envelope_event(
                 envelope,
                 nostr_keys,

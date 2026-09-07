@@ -48,7 +48,7 @@ from nth_dao.delivery.envelope import (
 )
 
 try:  # pragma: no cover - exercised via importorskip in tests
-    import nostr_sdk as _nostr_sdk
+    import nostr_sdk as _nostr_sdk  # type: ignore[import-untyped]
     from nostr_sdk import Event as _Event
     from nostr_sdk import EventBuilder as _EventBuilder
     from nostr_sdk import Keys as _Keys

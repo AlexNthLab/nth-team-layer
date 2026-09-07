@@ -17,6 +17,7 @@ from __future__ import annotations
 import hashlib
 import json
 from pathlib import Path
+from typing import Any, Dict
 
 from ..identity import canonical_json
 from ._gen_mandate_vectors import build_mandate_vectors
@@ -54,7 +55,7 @@ def _seed_keypair(seed_hex: str) -> dict:
 
 def gen_canonical_json() -> list:
     """Verify the canonical JSON encoder is byte-identical across implementations."""
-    cases = [
+    cases: list[Dict[str, Any]] = [
         {
             "id": "canon-001",
             "description": "Empty object",
@@ -105,7 +106,7 @@ def gen_fingerprint() -> list:
     """SHA-256(pubkey_hex)[:16] is the fingerprint of cryptographic agent_ids."""
     alice = _seed_keypair(ALICE_SEED_HEX)
     bob   = _seed_keypair(BOB_SEED_HEX)
-    cases = [
+    cases: list[Dict[str, Any]] = [
         {
             "id": "fp-001",
             "description": "Fingerprint of a known Ed25519 pubkey",
@@ -123,7 +124,9 @@ def gen_fingerprint() -> list:
         },
     ]
     for c in cases:
-        payload = c["input"]["pubkey_hex"] or c["input"]["agent_id"]
+        inputs = c["input"]
+        assert isinstance(inputs, dict)
+        payload = inputs["pubkey_hex"] or inputs["agent_id"]
         c["expected_fingerprint"] = hashlib.sha256(payload.encode("utf-8")).hexdigest()[:16]
     return cases
 
@@ -1046,8 +1049,93 @@ def gen_delivery_envelope_v1() -> list:
     return vectors
 
 
+def gen_delivery_ack_v1() -> list:
+    """DeliveryAck v1: canonical bytes, signature, binding, and negatives."""
+
+    try:
+        from nacl.signing import SigningKey
+    except ImportError:
+        return []
+    from copy import deepcopy
+
+    from ..delivery.acknowledgement import (
+        DeliveryAck,
+        ack_digest,
+        sign_ack,
+        validate_ack,
+    )
+    from ..identity import AgentID, AgentIdentity
+
+    signing_key = SigningKey(bytes.fromhex(BOB_SEED_HEX))
+    verify_bytes = signing_key.verify_key.encode()
+    identity = AgentIdentity(
+        agent_id=AgentID.from_pubkey(verify_bytes.hex()),
+        label="vector-bob",
+        _signing_key=bytes.fromhex(BOB_SEED_HEX),
+        _verify_key=verify_bytes,
+    )
+    ack = sign_ack(
+        identity,
+        message_id="sha256:" + "1" * 64,
+        envelope_sha256="sha256:" + "2" * 64,
+        received_at_ms=1_750_000_002_000,
+    )
+    wire = ack.to_dict()
+    verification_time_ms = 1_750_000_003_000
+    vectors = [
+        {
+            "id": "delivery-ack-001",
+            "description": "Signed ACK validates and has stable canonical bytes",
+            "input": deepcopy(wire),
+            "verification_time_ms": verification_time_ms,
+            "expected_valid": True,
+            "expected_reason": "ok",
+            "expected_canonical_hex": canonical_json(wire).hex(),
+            "expected_ack_sha256": ack_digest(ack),
+        }
+    ]
+
+    def _negative(vector_id: str, description: str, mutate) -> dict:
+        data = deepcopy(wire)
+        mutate(data)
+        return {
+            "id": vector_id,
+            "description": description,
+            "input": data,
+            "verification_time_ms": verification_time_ms,
+            "expected_valid": False,
+            "expected_reason": validate_ack(
+                DeliveryAck.from_dict(data),
+                now_ms=verification_time_ms,
+            )[1],
+        }
+
+    vectors.append(
+        _negative(
+            "delivery-ack-002",
+            "Tampered envelope digest invalidates the receiver signature",
+            lambda data: data.__setitem__("envelope_sha256", "sha256:" + "3" * 64),
+        )
+    )
+    vectors.append(
+        _negative(
+            "delivery-ack-003",
+            "A future-dated ACK outside clock skew fails closed",
+            lambda data: data.__setitem__("received_at_ms", 1_750_001_000_000),
+        )
+    )
+    vectors.append(
+        _negative(
+            "delivery-ack-004",
+            "An unknown protocol version fails closed",
+            lambda data: data.__setitem__("version", 2),
+        )
+    )
+    return vectors
+
+
 def regenerate(path: Path = VECTORS_PATH) -> None:
-    vectors = {
+    vectors: Dict[str, Any] = {
         "format": "nth-dao-conformance-v1",
         "schema_version": 1,
         "generated_at": VECTOR_GENERATED_AT,
@@ -1070,6 +1158,7 @@ def regenerate(path: Path = VECTORS_PATH) -> None:
             "trade_offer_announcement_v1": gen_trade_offer_announcement_v1(),
             "trade_offer_head_proof_v1":   gen_trade_offer_head_proof_v1(),
             "delivery_envelope_v1":        gen_delivery_envelope_v1(),
+            "delivery_ack_v1":             gen_delivery_ack_v1(),
         },
     }
     path.parent.mkdir(parents=True, exist_ok=True)

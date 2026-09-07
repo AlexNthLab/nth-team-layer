@@ -52,7 +52,14 @@ class TestMeshPipeline:
         bob_did = bob_identity.as_did()
 
         # ── alice: outbox + router with a mesh transport ──
-        alice_outbox = DurableOutbox(tmp_path / "alice", clock=lambda: NOW_MS)
+        alice_outbox = DurableOutbox(
+            tmp_path / "alice",
+            clock=lambda: NOW_MS,
+            authorize_ack=lambda ack, queued: (
+                ack.receiver_did == bob_did and queued.recipient == "dao:core",
+                "receiver is not authorized for this shared recipient",
+            ),
+        )
         alice_router = DeliveryRouter(clock=lambda: NOW_MS)
         alice_wire = LoopbackWire()
         alice_ep = LoopbackEndpoint(alice_wire, "alice", mode=MODE_MESH)
@@ -209,6 +216,7 @@ class TestFileBundlePipeline:
     def test_full_pipeline_file_bundle(self, tmp_path, alice_identity, bob_identity):
         from nth_dao.delivery.transports.file_bundle import FileBundleTransport
 
+        bob_did = bob_identity.as_did()
         exchange = tmp_path / "usb-stick"
         sender = FileBundleTransport(
             exchange, alice_identity, state_dir=exchange / ".state-alice", clock=lambda: NOW_MS
@@ -221,7 +229,14 @@ class TestFileBundlePipeline:
             created_at_ms=NOW_MS,
             expires_at_ms=NOW_MS + 86_400_000,
         )
-        alice_outbox = DurableOutbox(tmp_path / "alice", clock=lambda: NOW_MS)
+        alice_outbox = DurableOutbox(
+            tmp_path / "alice",
+            clock=lambda: NOW_MS,
+            authorize_ack=lambda ack, queued: (
+                ack.receiver_did == bob_did and queued.recipient == "dao:core",
+                "receiver is not authorized for this shared recipient",
+            ),
+        )
         alice_outbox.enqueue(envelope)
         assert sender.send(envelope).accepted
 

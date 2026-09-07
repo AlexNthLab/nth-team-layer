@@ -21,7 +21,7 @@ from typing import Any, Callable, List, Optional
 from nth_dao.nostr import NostrAdapterUnavailable
 
 try:  # pragma: no cover - importorskip in tests
-    import nostr_sdk as _ns
+    import nostr_sdk as _ns  # type: ignore[import-untyped]
 
     from nostr_sdk import Client as _Client
     from nostr_sdk import Filter as _Filter

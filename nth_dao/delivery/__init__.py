@@ -33,6 +33,14 @@ from nth_dao.delivery.envelope import (
     sign_envelope,
     validate_envelope,
 )
+from nth_dao.delivery.acknowledgement import (
+    DeliveryAck,
+    DeliveryAckRejected,
+    sign_ack,
+    validate_ack,
+)
+from nth_dao.delivery.inbox import DeliveryInbox, InboxDecision
+from nth_dao.delivery.outbox import DurableOutbox, OutboxRecord
 from nth_dao.delivery.policy import (
     CENTRALIZED_POLICY,
     DECENTRALIZED_POLICY,
@@ -45,6 +53,11 @@ from nth_dao.delivery.router import (
     ReceivedEnvelope,
     RouteAttempt,
     RoutingResult,
+)
+from nth_dao.delivery.plugin_runtime import (
+    PluginDeliveryRuntime,
+    PluginDeliveryRuntimeError,
+    PluginReceiveResult,
 )
 
 __all__ = [
@@ -59,7 +72,16 @@ __all__ = [
     "MAX_PAYLOAD_DEPTH",
     "MAX_TTL_MS",
     "OFFLINE_POLICY",
+    "DeliveryAck",
+    "DeliveryAckRejected",
+    "DeliveryInbox",
     "DeliveryRouter",
+    "DurableOutbox",
+    "InboxDecision",
+    "OutboxRecord",
+    "PluginDeliveryRuntime",
+    "PluginDeliveryRuntimeError",
+    "PluginReceiveResult",
     "ReceivedEnvelope",
     "RouteAttempt",
     "RoutePolicy",
@@ -70,6 +92,8 @@ __all__ = [
     "envelope_digest",
     "forward_envelope",
     "new_nonce",
+    "sign_ack",
     "sign_envelope",
+    "validate_ack",
     "validate_envelope",
 ]

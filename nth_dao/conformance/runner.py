@@ -663,6 +663,68 @@ def check_delivery_envelope_v1(vectors: List[dict]) -> List[ConformanceFailure]:
     return failures
 
 
+def check_delivery_ack_v1(vectors: List[dict]) -> List[ConformanceFailure]:
+    """Verify DeliveryAck v1 canonical bytes, digest, and validation gates."""
+
+    from ..delivery.acknowledgement import (
+        DeliveryAck,
+        ack_digest,
+        validate_ack,
+    )
+
+    failures: List[ConformanceFailure] = []
+    for vector in vectors:
+        try:
+            ack = DeliveryAck.from_dict(vector["input"])
+            ok, reason = validate_ack(
+                ack,
+                now_ms=vector["verification_time_ms"],
+            )
+        except (KeyError, TypeError, ValueError) as exc:
+            ack, ok, reason = None, False, str(exc)
+        expected = (vector["expected_valid"], vector.get("expected_reason"))
+        actual = (ok, reason)
+        if actual != expected:
+            failures.append(
+                ConformanceFailure(
+                    vector_id=vector.get("id", "delivery-ack:invalid"),
+                    category="delivery_ack_v1",
+                    description="validation result",
+                    expected=expected,
+                    actual=actual,
+                )
+            )
+            continue
+        if ack is None:
+            continue
+        expected_canonical = vector.get("expected_canonical_hex")
+        if (
+            expected_canonical is not None
+            and canonical_json(ack.to_dict()).hex() != expected_canonical
+        ):
+            failures.append(
+                ConformanceFailure(
+                    vector_id=vector["id"],
+                    category="delivery_ack_v1",
+                    description="canonical ACK bytes",
+                    expected=expected_canonical,
+                    actual=canonical_json(ack.to_dict()).hex(),
+                )
+            )
+        expected_digest = vector.get("expected_ack_sha256")
+        if expected_digest is not None and ack_digest(ack) != expected_digest:
+            failures.append(
+                ConformanceFailure(
+                    vector_id=vector["id"],
+                    category="delivery_ack_v1",
+                    description="ACK digest",
+                    expected=expected_digest,
+                    actual=ack_digest(ack),
+                )
+            )
+    return failures
+
+
 _CHECKERS: Dict[str, Callable[[List[dict]], List[ConformanceFailure]]] = {
     "canonical_json":              check_canonical_json,
     "fingerprint":                 check_fingerprint,
@@ -686,6 +748,7 @@ _CHECKERS: Dict[str, Callable[[List[dict]], List[ConformanceFailure]]] = {
     "trade_offer_announcement_v1": check_trade_offer_announcement_v1,
     "trade_offer_head_proof_v1":   check_trade_offer_head_proof_v1,
     "delivery_envelope_v1":        check_delivery_envelope_v1,
+    "delivery_ack_v1":             check_delivery_ack_v1,
 }
 
 

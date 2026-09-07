@@ -1,6 +1,6 @@
 """HTTPS federation transport — push signed envelopes to known peer nodes.
 
-Phase 1 of the integration design doc §8.1: "已知节点 ... HTTPS federation".
+Phase 1 uses HTTPS federation between explicitly known peers.
 Borrowing rule: the URL policy mirrors ``nth_dao.commerce.outbox``
 (``_normalize_target_url``), the bounded HTTP style mirrors
 ``nth_dao.integrations.node_client`` (urllib + strict timeout + capped
@@ -66,6 +66,7 @@ MAX_PEER_URLS = 64
 MAX_PEER_URL_CHARS = 2048
 DEFAULT_TIMEOUT = 5.0
 MAX_RESPONSE_BYTES = 64 * 1024
+UNKNOWN_PATH_DRAIN_MAX_BYTES = 64 * 1024
 BODY_SLACK_BYTES = 64 * 1024
 ACCEPTED_STATUSES = (200, 202)
 
@@ -302,6 +303,8 @@ class _IngestHandler(http.server.BaseHTTPRequestHandler):
         self.send_response(status)
         self.send_header("Content-Type", "application/json")
         self.send_header("Content-Length", str(len(body)))
+        if self.close_connection:
+            self.send_header("Connection", "close")
         self.end_headers()
         self.wfile.write(body)
 
@@ -322,6 +325,8 @@ class _IngestHandler(http.server.BaseHTTPRequestHandler):
 
     def _do_post(self) -> None:
         if self.path != INGEST_PATH:
+            self._drain_small_declared_body()
+            self.close_connection = True
             self._respond(404, {"accepted": False, "reason": "unknown path"})
             return
         transfer_encoding = self.headers.get("Transfer-Encoding")
@@ -334,6 +339,7 @@ class _IngestHandler(http.server.BaseHTTPRequestHandler):
         # strict ASCII digits: unicode isdigit() chars like the superscript ²
         # pass isdigit() but explode int() (round-8 review bug AJ)
         if raw_length is None or not (raw_length.isascii() and raw_length.isdigit()):
+            self.close_connection = True
             self._respond(400, {"accepted": False, "reason": "Content-Length required"})
             return
         length = int(raw_length)
@@ -394,6 +400,26 @@ class _IngestHandler(http.server.BaseHTTPRequestHandler):
             if not chunk:
                 break
             remaining -= len(chunk)
+
+    def _drain_small_declared_body(self) -> None:
+        """Drain a bounded, unambiguous body before closing an error response.
+
+        Windows may reset a connection that is closed with unread request
+        bytes, hiding the intended HTTP status from the client. Unknown paths
+        never justify parsing an unbounded or ambiguously framed body.
+        """
+
+        if self.headers.get("Transfer-Encoding") is not None:
+            return
+        content_lengths = self.headers.get_all("Content-Length", failobj=[])
+        if len(content_lengths) != 1:
+            return
+        raw_length = content_lengths[0]
+        if raw_length is None or not (raw_length.isascii() and raw_length.isdigit()):
+            return
+        length = int(raw_length)
+        if 0 < length <= UNKNOWN_PATH_DRAIN_MAX_BYTES:
+            self._drain(length, bound=UNKNOWN_PATH_DRAIN_MAX_BYTES)
 
 
 class FederationIngestServer:

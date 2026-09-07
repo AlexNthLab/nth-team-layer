@@ -15,6 +15,7 @@ import pytest
 from nth_dao.canonical_json import canonical_json
 from nth_dao.delivery.acknowledgement import sign_ack
 from nth_dao.delivery.envelope import (
+    TransportEnvelopeRejected,
     envelope_digest,
     forward_envelope,
     sign_envelope,
@@ -105,8 +106,19 @@ class TestEnqueue:
     def test_enqueue_unsigned_rejected(self, outbox, alice_identity):
         envelope = _envelope(alice_identity)
         envelope.signature = ""
-        with pytest.raises(Exception, match="signature"):
+        with pytest.raises(TransportEnvelopeRejected, match="signature"):
             outbox.enqueue(envelope)
+
+    def test_enqueue_rejects_creation_beyond_clock_skew(
+        self, outbox, alice_identity
+    ):
+        envelope = _envelope(
+            alice_identity,
+            created_at_ms=NOW_MS + 600_000,
+        )
+        with pytest.raises(TransportEnvelopeRejected, match="future beyond clock skew"):
+            outbox.enqueue(envelope)
+        assert outbox.get(envelope.message_id) is None
 
     def test_capacity_fail_closed(self, tmp_path, alice_identity):
         outbox = DurableOutbox(
@@ -281,6 +293,29 @@ class TestAckDelivery:
             outbox.handle_ack(ack, now_ms=NOW_MS)
         assert outbox.get(envelope.message_id).state == OUTBOX_STATE_QUEUED
 
+    def test_ack_accepts_digest_of_valid_forwarded_copy_and_survives_reload(
+        self, tmp_path, alice_identity, bob_identity
+    ):
+        directory = tmp_path / "delivery"
+        outbox = DurableOutbox(directory, clock=lambda: NOW_MS)
+        envelope = _envelope(
+            alice_identity,
+            recipient=bob_identity.as_did(),
+            hop_limit=3,
+        )
+        outbox.enqueue(envelope)
+        forwarded = forward_envelope(forward_envelope(envelope))
+        ack = sign_ack(
+            bob_identity,
+            message_id=envelope.message_id,
+            envelope_sha256=envelope_digest(forwarded),
+            received_at_ms=NOW_MS,
+        )
+
+        assert outbox.handle_ack(ack, now_ms=NOW_MS).state == OUTBOX_STATE_DELIVERED
+        reloaded = DurableOutbox(directory, clock=lambda: NOW_MS)
+        assert reloaded.get(envelope.message_id).state == OUTBOX_STATE_DELIVERED
+
     def test_shared_recipient_ack_requires_explicit_authorization(
         self, tmp_path, alice_identity, bob_identity
     ):
@@ -318,7 +353,7 @@ class TestAckDelivery:
             received_at_ms=NOW_MS,
         )
         ack.receiver_did = alice_identity.as_did()  # claims alice signed it — she did not
-        with pytest.raises(Exception, match="invalid delivery ack"):
+        with pytest.raises(TransportEnvelopeRejected, match="invalid delivery ack"):
             outbox.handle_ack(ack, now_ms=NOW_MS)
 
     def test_ack_unknown_message_rejected(self, outbox, bob_identity):

@@ -330,14 +330,16 @@ class DurableOutbox:
         being parked as dead records.
         """
 
-        ok, reason = validate_envelope(envelope, require_signature=True)
-        if not ok:
-            raise TransportEnvelopeRejected(reason)
         now = _validate_operation_time(
             self._clock() if now_ms is None else now_ms, "now_ms"
         )
-        if envelope.expires_at_ms <= now:
-            raise TransportEnvelopeRejected("envelope expired")
+        ok, reason = validate_envelope(
+            envelope,
+            now_ms=now,
+            require_signature=True,
+        )
+        if not ok:
+            raise TransportEnvelopeRejected(reason)
         envelope_json = canonical_json(envelope.to_dict()).decode("utf-8")
         if len(envelope_json.encode("utf-8")) > MAX_ENVELOPE_BYTES:
             raise TransportEnvelopeRejected("envelope exceeds the wire byte limit")
@@ -449,11 +451,11 @@ class DurableOutbox:
                 record = self._records.get(ack.message_id)
                 if record is None:
                     raise DeliveryOutboxError("ack for unknown message_id")
-                if ack.envelope_sha256 != record.envelope_sha256:
-                    raise DeliveryOutboxError(
-                        "ack envelope_sha256 does not match the queued envelope"
-                    )
                 envelope = _record_envelope(record)
+                if not _ack_digest_matches_envelope(ack.envelope_sha256, envelope):
+                    raise DeliveryOutboxError(
+                        "ack envelope_sha256 does not match a valid forwarded envelope"
+                    )
                 if record.state == OUTBOX_STATE_DELIVERED:
                     if ack.receiver_did != record.delivered_by:
                         raise DeliveryOutboxError(
@@ -680,9 +682,11 @@ def _fold_event(records: Dict[str, OutboxRecord], event: Dict[str, Any]) -> None
         ok, reason = validate_ack(ack, now_ms=at_ms)
         if not ok:
             raise DeliveryOutboxCorrupt(f"delivered event ACK is invalid: {reason}")
-        if ack.message_id != message_id or ack.envelope_sha256 != record.envelope_sha256:
-            raise DeliveryOutboxCorrupt("delivered event ACK binding mismatch")
         envelope = _record_envelope(record)
+        if ack.message_id != message_id or not _ack_digest_matches_envelope(
+            ack.envelope_sha256, envelope
+        ):
+            raise DeliveryOutboxCorrupt("delivered event ACK binding mismatch")
         if (
             envelope.recipient.startswith("did:key:")
             and ack.receiver_did != envelope.recipient
@@ -735,6 +739,22 @@ def _copy_record(record: OutboxRecord) -> OutboxRecord:
         delivered_at_ms=record.delivered_at_ms,
         last_error_code=record.last_error_code,
     )
+
+
+def _ack_digest_matches_envelope(
+    acknowledged_digest: str,
+    envelope: TransportEnvelope,
+) -> bool:
+    """Accept only origin bytes or a valid hop-count-only forwarded copy."""
+
+    start_hop = envelope.routing["hop_count"]
+    hop_limit = envelope.routing["hop_limit"]
+    for hop_count in range(start_hop, hop_limit + 1):
+        candidate = envelope.to_dict()
+        candidate["routing"]["hop_count"] = hop_count
+        if envelope_digest(candidate) == acknowledged_digest:
+            return True
+    return False
 
 
 def _record_envelope(record: OutboxRecord) -> TransportEnvelope:

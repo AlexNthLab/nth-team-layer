@@ -273,7 +273,7 @@ class GossipNode:
             self.host,
             self.port,
         )
-        # port=0 时回填 OS 实际分配的端口，让 url 可直接用于 peer 连接
+        # For port=0, publish the OS-assigned port so peers can use the URL.
         bound_port = self.port
         if bound_port == 0 and self._server is not None:
             for sock in self._server.sockets:
@@ -551,7 +551,7 @@ class GossipNode:
 
     @property
     def url(self) -> str:
-        # start() 后返回 OS 实际绑定端口的 url（port=0 场景）
+        # Return the actual bound URL after start(), including for port=0.
         return getattr(self, "_bound_url", f"ws://{self.host}:{self.port}")
 
     #

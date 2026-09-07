@@ -12,6 +12,8 @@ import time
 
 import pytest
 
+from nth_dao.delivery.envelope import TransportEnvelopeRejected
+
 pytest.importorskip("nostr_sdk")
 pytest.importorskip("nacl")
 
@@ -157,7 +159,7 @@ class TestEnvelopeEvent:
             separators=(",", ":"), sort_keys=True,
         )
         tampered = type(event).from_json(jsonlib.dumps(document))
-        with pytest.raises(Exception):
+        with pytest.raises(TransportEnvelopeRejected):
             envelope_from_event(tampered)
 
     def test_unsigned_envelope_rejected_before_event(self, alice_identity, nostr_keys):
@@ -176,7 +178,7 @@ class TestEnvelopeEvent:
 
         envelope = _envelope(alice_identity)
         event = EventBuilder(Kind(1), jsonlib_content(envelope)).finalize(nostr_keys.raw)
-        with pytest.raises(Exception, match="wrong nostr event kind"):
+        with pytest.raises(TransportEnvelopeRejected, match="wrong nostr event kind"):
             envelope_from_event(event)
 
 
@@ -209,7 +211,7 @@ class TestDTagAddressing:
             Tag.parse(["t", NOSTR_NAMESPACE]),
         ])
         hostile_event = hostile.finalize(nostr_keys.raw)
-        with pytest.raises(Exception, match="d tag does not address"):
+        with pytest.raises(TransportEnvelopeRejected, match="d tag does not address"):
             envelope_from_event(hostile_event)
         # the honest event still verifies end to end
         assert envelope_from_event(event).message_id == envelope.message_id
@@ -306,7 +308,7 @@ class TestHardening:
             Kind(30078),
             jsonlib.dumps(envelope.to_dict(), separators=(",", ":"), sort_keys=True),
         ).tags([Tag.parse(["t", NOSTR_NAMESPACE])]).finalize(nostr_keys.raw)
-        with pytest.raises(Exception, match="d tag does not address"):
+        with pytest.raises(TransportEnvelopeRejected, match="d tag does not address"):
             envelope_from_event(event)
 
 

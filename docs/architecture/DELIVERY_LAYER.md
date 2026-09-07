@@ -1,7 +1,7 @@
-# Delivery Layer (Phase 0) — Implementation Notes
+# Delivery Layer v1
 
-Status: implemented against the integration design doc (2026-07-26 审阅稿)
-Scope: `nth_dao/delivery/` — transport-agnostic signed envelope delivery
+Status: implemented and tested
+Scope: `nth_dao/delivery/` - transport-agnostic signed envelope delivery
 
 ## What This Is
 
@@ -44,6 +44,29 @@ DeliveryRouter  (policy-scored; no fixed fallback order)
 | `delivery/transports/base.py` | `Transport` ABC + capabilities + health |
 | `delivery/transports/loopback.py` | hub (central relay) / mesh (federated broadcast) in-process endpoints |
 | `delivery/transports/file_bundle.py` | signed file-bundle exchange (USB / shared dir / manual carry) |
+| `delivery/plugin_runtime.py` | durable bridge to the Host-governed `org.nth-dao.transport.delivery` capability |
+
+## Control Plane
+
+`PluginHost` is the normative lifecycle and authorization boundary for
+production transport providers. Providers are reached only through a revocable
+`ProviderBinding` and an `InvocationAuthority` whose destination resource scope
+is checked by the Host. `PluginDeliveryRuntime` composes that governed provider
+with `DurableOutbox` and `DeliveryInbox`:
+
+1. A sender durably enqueues the signed envelope before invoking `send`.
+2. A receiver obtains an exclusive leased batch through the Host.
+3. Every item is independently revalidated and persisted by `DeliveryInbox`.
+4. The runtime acknowledges the provider lease only after the complete batch is
+   durable. A crash before acknowledgement causes safe redelivery and inbox
+   deduplication.
+
+The classes implementing the lower-level `Transport` ABC remain useful for
+adapters, isolated tests, and migration. They do not grant plugin authority and
+must not be treated as a second governance plane. A network transport becomes a
+production provider only after it implements the plugin capability and is
+explicitly installed, authorized, and enabled by the Host. The built-in
+loopback provider is installed disabled by default.
 
 ## Wire Contract (v1)
 
@@ -58,9 +81,10 @@ DeliveryRouter  (policy-scored; no fixed fallback order)
   `routing.hop_count`.
 * Relays may only change `routing.hop_count`, bounded by the signed
   `routing.hop_limit`; `forward_envelope` fails closed at the budget.
-* ACKs are signed by the receiver and bind `message_id` + the exact wire
-  digest received. Senders match ACKs by `message_id`; a forwarded copy
-  legitimately acknowledges the same message identity.
+* ACKs are signed by the receiver and bind `message_id` plus the exact wire
+  digest received. Senders accept only the origin digest or a digest obtained
+  by changing `hop_count` within the author-signed hop limit. A relay cannot
+  use the mutable hop field to authorize any other envelope change.
 
 ### Limits (fail closed, all pinned by vectors/tests)
 
@@ -96,7 +120,7 @@ plugin transport wire limit), `MAX_PAYLOAD_DEPTH=16`, `MAX_TTL_MS=7 days`,
 6. **Live cross-process dedup.** Inbox/outbox re-fold their journal when an
    mtime/size change from another process is observed, so dedup works
    across processes without a broker.
-7. **bitchat borrowings, per design doc §四.** Controlled-flood prerequisites
+7. **bitchat borrowings.** Controlled-flood prerequisites
    (hop TTL, content-addressed dedup, jitter budget left to transports),
    courier-style store-and-carry (file bundle is the v1 courier), and
    router-tiering are absorbed into the envelope + router contracts; no
@@ -114,14 +138,21 @@ plugin transport wire limit), `MAX_PAYLOAD_DEPTH=16`, `MAX_TTL_MS=7 days`,
 | oversized / deep flooding | byte + depth caps in envelope and inbox |
 | crash between write and ack | journal-first + fsync; torn-tail recovery |
 | clock skew attack | future-dated creation beyond 5 min rejected |
-| local journal tampering | outbox content binding (`message_id` ⇄ wire digest) fails closed |
+| accidental journal corruption | strict event shapes, canonical bytes, signature revalidation, and content binding fail closed |
+
+The JSONL journals are crash-safe durability records, not tamper-evident
+ledgers. A principal that can rewrite local files can delete or reorder journal
+events. Deployments that include a hostile local-user threat must place the
+workspace behind OS access controls and replicate audit evidence to an
+independent signed or immutable store.
 
 ## Conformance
 
-`delivery_envelope_v1` category in `nth_dao/conformance/vectors.json`
-(6 vectors: canonical bytes, content address, wire digest, and the four
-negative gates with pinned reason strings). A non-Python port is
-wire-compatible when `run_all_vectors()` reports zero failures.
+`delivery_envelope_v1` and `delivery_ack_v1` categories in
+`nth_dao/conformance/vectors.json` contain ten fixed vectors covering canonical
+bytes, content addresses, wire digests, signatures, time bounds, version
+gates, and tamper failures. A non-Python port is wire-compatible when its
+equivalent runner reports zero failures.
 
 ## Phase 1 — Real Transports (implemented)
 
@@ -150,7 +181,7 @@ between the two real transports, gossip→federation fallback inside one
 `send()`, and authorize-hook rejection at the ingest door (valid signature,
 no allowlist entry → 422 → `peers-unreachable`).
 
-## Phase 2 — Nostr relay tier (in progress)
+## Phase 2 - Nostr Relay Tier
 
 `nth_dao/nostr/` wraps the maintained `nostr-sdk` binding (optional extra
 `nth-dao[nostr]`): secp256k1 BIP340 keys, NIP-01 events, and relay wire
@@ -164,10 +195,9 @@ timestamps fixed). Relay client (N2) and transport adapter (N3)
 implemented: `NostrRelayClient` bridges the borrowed async relay pool on a
 background thread (same pattern as the gossip adapter); `NostrTransport`
 plugs into the delivery router with `PRIVACY_PUBLIC_RELAY` + broadcast
-capabilities. Tested against an in-process fake NIP-01 relay: publish
-round-trip, hostile-relay rejection, private-tier refusal. Subscription
-stream semantics (nostr-sdk 0.45 `ClientEventStream`) need refinement and
-are pinned xfail.
+capabilities. Tested against an in-process fake NIP-01 relay: long-lived
+subscription delivery, publish round-trip, hostile-relay rejection, key-binding
+rotation/conflict handling, and private-tier refusal.
 
 ## Adversarial Review Record
 
@@ -383,8 +413,9 @@ one borrowed-layer latent bug:
 | V | `WebSocketGossipTransport.start()` returned `GossipNode.url` — the constructor-valued property (`ws://host:0` under ephemeral ports) instead of the bound URL | adapter returns the URL captured from `start()`; `GossipNode` now records the bound-port URL in `start()` and its `url` property reports it |
 | — | macOS/Windows system proxies intercept loopback WebSockets (503 through the proxy) | adapter `start()` sets `no_proxy` for loopback via `setdefault`, honouring pre-existing user configuration |
 
-## Not In Scope (per design doc Phase gating)
+## Remaining Boundaries
 
-WebSocket gossip / HTTPS federation adapters (Phase 1), Nostr (Phase 2),
-BLE spike (Phase 3), sealed Courier with X25519 (Phase 4), cross-node
-claim semantics (Phase 5).
+The current Nostr tier is public-only. Private payload encryption, BLE, sealed
+courier transport, and cross-node claim semantics remain outside delivery v1.
+Network adapters that still expose only the low-level `Transport` ABC must be
+wrapped as governed plugin providers before they are enabled by default.

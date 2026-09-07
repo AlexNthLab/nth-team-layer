@@ -1,6 +1,4 @@
-"""WebSocket gossip transport — wraps the existing P2P gossip as a delivery
-Transport (Phase 1 of the integration design doc §8.1: "先接入已经存在且可
-稳定测试的 WebSocket ...").
+"""WebSocket gossip transport wrapping the existing P2P gossip layer.
 
 Borrowing rule: this adapter adds NO new wire protocol. It reuses
 ``nth_dao.gossip.GossipNode`` (signed challenge-response handshake, replay

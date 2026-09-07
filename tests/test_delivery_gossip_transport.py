@@ -457,7 +457,7 @@ class TestInterop:
             _verify_key=bytes.fromhex(pubkeyless.pubkey_hex),
         )
         transport = WebSocketGossipTransport(verify_only, port=0)
-        with pytest.raises(GossipTransportError, match="需要 identity 能签名|sign"):
+        with pytest.raises(GossipTransportError, match="identity"):
             transport.start()
 
     def test_send_unsigned_envelope_rejected_client_side(self, alice_identity, alice_transport):

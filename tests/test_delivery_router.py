@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import pytest
 
-from nth_dao.delivery.envelope import sign_envelope
+from nth_dao.delivery.envelope import TransportEnvelopeRejected, sign_envelope
 from nth_dao.delivery.policy import (
     CENTRALIZED_POLICY,
     DECENTRALIZED_POLICY,
@@ -32,6 +32,7 @@ from nth_dao.delivery.transports.loopback import (
     MODE_MESH,
     LoopbackEndpoint,
     LoopbackWire,
+    LoopbackWireError,
 )
 
 pytest.importorskip("nacl")
@@ -203,7 +204,7 @@ class TestRouter:
         router = DeliveryRouter()
         router.register(_StaticTransport("peer"))
         envelope = _envelope(alice_identity, hop_limit=2)
-        with pytest.raises(Exception, match="hop_limit"):
+        with pytest.raises(TransportEnvelopeRejected, match="hop_limit"):
             router.send(envelope, RoutePolicy(max_hop_limit=1))
 
     def test_direct_recipient_never_uses_broadcast_only_transport(self, alice_identity):
@@ -379,6 +380,6 @@ class TestLoopbackModes:
     def test_double_attach_rejected(self):
         wire = LoopbackWire()
         LoopbackEndpoint(wire, "dup")
-        with pytest.raises(Exception, match="attached twice"):
+        with pytest.raises(LoopbackWireError, match="attached twice"):
             LoopbackEndpoint(wire, "dup")
         assert wire.endpoint_ids() == ["dup"]
