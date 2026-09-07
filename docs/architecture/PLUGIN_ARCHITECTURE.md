@@ -705,6 +705,18 @@ A future model-backed resolver must declare its real network, subprocess,
 privacy, and retention profile and remain an untrusted hint producer; sharing
 the wire shape does not grant it authority.
 
+The reviewed `org.nth-dao.intent.review-solver` is the corresponding disabled,
+offline `intent.solver` conformance sample. Its input requires a valid signed
+IntentEnvelope plus exact Host authority bindings to the acceptance audit,
+governing policy, proposal idempotency key, and invocation-materialized evidence. It
+returns an unsigned `claim_status=unverified` proposal with no authority or
+execution flags. Host invocation binding identifies the live plugin call but is
+not a detached signature. Model-backed solvers, durable proposal storage,
+deterministic proposal policy, selection, and promotion remain unimplemented.
+Application integration must use the Host-owned governed invocation builder;
+copying audit, policy, or time fields into a raw request is not authorization.
+See [Intent Solver Proposal v1](INTENT_SOLVER.md).
+
 Migration order:
 
 1. plugin manifest, capability contract, registry, and lifecycle tests;
@@ -723,8 +735,10 @@ Migration order:
 7. non-authoritative Intent resolver v1 and disabled literal reference
    (implemented; signed envelope v1 wire/signature/context checks implemented;
    local acceptance journal with nonce/revision CAS, opt-in signed Spine anchors,
-   and a content-addressed local membership/role/revocation policy gate implemented;
-   persistent policy-head coordination, solvers, governance ingestion, and UI remain);
+   a content-addressed local membership/role/revocation policy gate, and a
+   disabled review-only SolverProposal boundary implemented; model-backed
+   solvers, governance ingestion, proposal policy/selection/promotion, and UI
+   remain);
 8. settlement and payment providers only after OS confinement, complete
    package verification, durable idempotency and mandate-bound commit tests
    exist.

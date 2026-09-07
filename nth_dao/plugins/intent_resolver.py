@@ -18,6 +18,7 @@ from typing import Any, Dict
 from nth_dao.canonical_json import canonical_json
 
 from .contracts import CapabilityContract, schema_digest
+from .host import InvocationAuthority, PluginAuthorizationError
 from .schema import PluginSchemaError, validate_instance
 
 
@@ -288,6 +289,22 @@ def intent_resolver_request_digest(value: Mapping[str, Any]) -> str:
     return "sha256:" + hashlib.sha256(canonical_json(dict(value))).hexdigest()
 
 
+def validate_intent_resolver_authority(
+    _request: Mapping[str, Any],
+    authority: InvocationAuthority,
+) -> None:
+    """Require narrow local authority for non-authoritative resolution."""
+
+    if not isinstance(authority, InvocationAuthority):
+        raise PluginAuthorizationError("intent resolver requires local invocation authority")
+    if INTENT_RESOLVER_CAPABILITY_ID not in authority.capability_ids:
+        raise PluginAuthorizationError("intent resolver authority lacks capability scope")
+    if authority.mandate_digest or authority.idempotency_key or authority.resource_ids:
+        raise PluginAuthorizationError(
+            "intent resolver must not receive mandate, idempotency, or resource authority"
+        )
+
+
 def intent_resolver_invocation_context_digest(value: Mapping[str, Any]) -> str:
     """Content-address one exact Host invocation context projection."""
 
@@ -514,6 +531,11 @@ def intent_resolver_protocol_document() -> Dict[str, Any]:
         "draft_schema": deepcopy(INTENT_DRAFT_SCHEMA),
         "error_model": {},
         "input_schema": deepcopy(INTENT_RESOLVER_INPUT_SCHEMA),
+        "invocation_authority": {
+            "business_scope": "mandate-idempotency-and-resources-forbidden",
+            "capability_scope": INTENT_RESOLVER_CAPABILITY_ID,
+            "principal": "host-selected-local-attribution",
+        },
         "invocation_context_binding": {
             "digest": "sha256-canonical-json",
             "fields": [
@@ -584,6 +606,13 @@ def intent_resolver_wire_vectors() -> Dict[str, Any]:
     invocation_context_digest = intent_resolver_invocation_context_digest(
         invocation_context
     )
+    invocation_authority = {
+        "capability_ids": [INTENT_RESOLVER_CAPABILITY_ID],
+        "idempotency_key": "",
+        "mandate_digest": "",
+        "principal": "vector-principal",
+        "resource_ids": [],
+    }
     draft = {
         "assumptions": [],
         "attachments": deepcopy(request["attachments"]),
@@ -690,7 +719,49 @@ def intent_resolver_wire_vectors() -> Dict[str, Any]:
     replayed_context["principal"] = "different-principal"
     boolean_size_request = deepcopy(request)
     boolean_size_request["attachments"][0]["size_bytes"] = True
+    wrong_capability_authority = {
+        **invocation_authority,
+        "capability_ids": ["org.example.other"],
+    }
+    mandate_authority = {
+        **invocation_authority,
+        "mandate_digest": "sha256:" + ("3" * 64),
+    }
+    idempotency_authority = {
+        **invocation_authority,
+        "idempotency_key": "intent-request:smuggled",
+    }
+    resource_authority = {
+        **invocation_authority,
+        "resource_ids": ["sha256:" + ("4" * 64)],
+    }
     vectors = {
+        "negative_authorities": [
+            {
+                "authority": wrong_capability_authority,
+                "expected_error_contains": "lacks capability scope",
+                "name": "resolver-authority-requires-capability",
+                "request": request,
+            },
+            {
+                "authority": mandate_authority,
+                "expected_error_contains": "must not receive",
+                "name": "resolver-authority-rejects-mandate",
+                "request": request,
+            },
+            {
+                "authority": idempotency_authority,
+                "expected_error_contains": "must not receive",
+                "name": "resolver-authority-rejects-idempotency",
+                "request": request,
+            },
+            {
+                "authority": resource_authority,
+                "expected_error_contains": "must not receive",
+                "name": "resolver-authority-rejects-resources",
+                "request": request,
+            },
+        ],
         "negative_context_bindings": [
             {
                 "context": replayed_context,
@@ -788,11 +859,13 @@ def intent_resolver_wire_vectors() -> Dict[str, Any]:
         ],
         "positive_exchanges": [
             {
+                "authority": invocation_authority,
                 "context": invocation_context,
                 "request": {"operation": "probe"},
                 "response": probe,
             },
             {
+                "authority": invocation_authority,
                 "context": invocation_context,
                 "request": request,
                 "response": response,
@@ -1048,6 +1121,7 @@ __all__ = [
     "intent_resolver_vector_documents",
     "intent_resolver_wire_vectors",
     "validate_intent_draft",
+    "validate_intent_resolver_authority",
     "validate_intent_resolver_exchange",
     "validate_intent_resolver_context_binding",
     "validate_intent_resolver_input",

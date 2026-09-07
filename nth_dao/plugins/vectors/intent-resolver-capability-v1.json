@@ -16,7 +16,7 @@
     "version": "1.0.0"
   },
   "draft_schema": "intent-draft-schema-v1.json",
-  "expected_protocol_digest": "sha256:57f7a4d53bbe24233fc6f83f0b882c9bcbc4a65df823b4f5e05b5fa833094841",
+  "expected_protocol_digest": "sha256:4ae40eea18ba6acddcb4ff4534ee739d15d85d1f8878ae8930b764a8a9c82d5b",
   "format": "nth-dao-plugin-capability-conformance-v1",
   "input_schema": "intent-resolver-input-schema-v1.json",
   "operation_vectors": "intent-resolver-wire-cases-v1.json",

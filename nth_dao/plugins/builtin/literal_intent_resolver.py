@@ -33,6 +33,7 @@ from nth_dao.plugins.intent_resolver import (
     INTENT_RESOLVER_OUTPUT_SCHEMA,
     intent_resolver_invocation_context_digest,
     intent_resolver_request_digest,
+    validate_intent_resolver_authority,
     validate_intent_resolver_context_binding,
     validate_intent_resolver_exchange,
     validate_intent_resolver_input,
@@ -264,6 +265,7 @@ def register_literal_intent_resolver(host: PluginHost) -> PluginManifest:
                 input_validator=validate_intent_resolver_input,
                 output_validator=validate_intent_resolver_output,
                 exchange_validator=validate_intent_resolver_exchange,
+                authority_validator=validate_intent_resolver_authority,
                 response_context_validator=_validate_response_context,
             )
         },

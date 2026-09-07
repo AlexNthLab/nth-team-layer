@@ -1,0 +1,16 @@
+{
+  "capability_id": "org.nth-dao.intent.propose",
+  "version": "1.0.0",
+  "input_schema_digest": "sha256:1f88394b274703c5ee44974dcc652c5390116cc775d0d246853937f7545b62fb",
+  "output_schema_digest": "sha256:9fc8c56dcd72b573cae7d7630d0bcb27221cf5a4d7f7caae88d5021a15b9bb9a",
+  "effects": [
+    "none"
+  ],
+  "consistency": "C0",
+  "privacy": "confidential",
+  "security": "untrusted-hint",
+  "cardinality": "many",
+  "deterministic": false,
+  "retention": "none",
+  "failure_semantics": "retry-safe"
+}

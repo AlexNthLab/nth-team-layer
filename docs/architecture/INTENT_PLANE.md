@@ -93,6 +93,14 @@ integration, cross-node acceptance and business promotion remain deferred.
 - remains a claim, not a verified fact;
 - can be rejected, refuted, or superseded.
 
+The first closed solver boundary is now implemented as
+`org.nth-dao.intent.propose` v1; see [Intent Solver Proposal v1](INTENT_SOLVER.md).
+It requires a valid signed Envelope plus exact Host bindings to the local
+acceptance audit, governing policy snapshot, idempotency key, and
+content-addressed evidence. The shipped review-only provider is installed
+disabled and performs no inference. Its output remains unsigned,
+non-executable, unverified, and selection-required.
+
 ### PolicyDecision
 
 - produced by deterministic code, not a language model;
@@ -166,16 +174,23 @@ Implemented now:
   to direct member DIDs, roles, revocation state, solver/automation limits, and
   membership/revocation source digests; its content address is retained in new
   acceptance contexts.
+- a closed, non-executable `SolverProposal` v1 capability with exact signed
+  Envelope, acceptance-audit, policy, idempotency, Host authority, invocation,
+  and evidence binding;
+- checked-in Python/Node conformance vectors and a disabled, offline,
+  zero-permission review-only solver reference provider.
 
 Not implemented now:
 
-- model-backed interpretation, solver, or deterministic policy providers;
+- model-backed interpretation or solver providers, and deterministic proposal
+  policy providers;
 - automatic creation of Tasks, Missions, Agreements, Offers, or Mandates;
 - capability grants, signing, payment, execution, or approval through a draft;
 - UI promotion, visible acceptance diff, or persistent unsigned draft storage;
-- automatic governance-source ingestion, delegation, persistent current-policy
-  head coordination, cross-store locking, automatic audit publication or
-  cross-node acceptance. Live
+- automatic governance-source ingestion, delegation, cross-store locking,
+  automatic audit publication or cross-node acceptance; durable proposal
+  storage, signed detached solver provenance, proposal selection, refutation,
+  supersession, or business promotion. Live
   business promotion remains disabled until these boundaries are integrated.
 
 Those omissions are security boundaries. They must not be filled by routing a

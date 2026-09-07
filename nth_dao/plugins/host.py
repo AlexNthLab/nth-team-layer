@@ -1540,11 +1540,13 @@ class PluginHost:
                     or item._input_validator is None
                     or item._output_validator is None
                     or item._exchange_validator is None
+                    or item._authority_validator is None
                     or item._response_context_validator is None
                 ):
                     raise PluginContractError(
                         f"context-bound capability {capability_id!r} requires a required "
-                        "context digest and input, output, exchange, and response context validators"
+                        "context digest and input, output, exchange, authority, and response "
+                        "context validators"
                     )
             checked[capability_id] = item
         return checked
