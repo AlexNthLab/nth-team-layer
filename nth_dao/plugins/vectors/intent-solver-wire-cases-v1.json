@@ -1,0 +1,1202 @@
+{
+  "format": "org.nth-dao.intent-solver-conformance.v1",
+  "protocol_digest": "sha256:793a52fad468bc86253a12ee1fa86b811bca1fe43df1396e9e7b51768d263395",
+  "positive_inputs": [
+    {
+      "operation": "probe"
+    },
+    {
+      "acceptance_audit_digest": "sha256:8031a68365829a2d5df1aff65df44f893c2050b43f187bca1a744cf9845ee49e",
+      "evidence": [
+        {
+          "content_base64": "UFVCTElDLU5USC1URVNULU9OTFk6aW50ZW50LXNvbHZlci1ob3N0LWV2aWRlbmNlLXYx",
+          "digest": "sha256:4e425181a64a0911b9c3ccd94a11c2666d08f4272e0be4b6f43695d5c9bb9f36",
+          "media_type": "text/plain",
+          "observed_at_ms": 1500,
+          "provenance": "invocation-materialized",
+          "source_kind": "artifact",
+          "source_ref": "artifact:public-test-requirements",
+          "verification_status": "content-verified"
+        }
+      ],
+      "expires_at_ms": 60000,
+      "intent_envelope_digest": "sha256:2c488d061eeecbeb840c07931632cfbb394137fd02cfd02c63fb6e202613c87e",
+      "intent_envelope_json": "{\"audience_did\":\"did:key:z6MkjjRL5eQvmYt5Nr6FTq7fZg9ALDNAZG63aqMy1CYgm3Nj\",\"authority\":\"none\",\"automation_ceiling\":\"A1\",\"commit_authority\":false,\"draft_digest\":\"sha256:8341391d656408fe7740dddd9e5dd0a9128c45fae25be7a373a7edb8cc754da2\",\"draft_json\":\"{\\\"assumptions\\\":[],\\\"attachments\\\":[{\\\"digest\\\":\\\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\\\",\\\"media_type\\\":\\\"text/plain\\\",\\\"name\\\":\\\"café-requirements.txt\\\",\\\"size_bytes\\\":128,\\\"verification_status\\\":\\\"unverified\\\"}],\\\"authority\\\":\\\"none\\\",\\\"automation_ceiling\\\":\\\"A1\\\",\\\"clarifications\\\":[],\\\"commit_authority\\\":false,\\\"constraints\\\":[],\\\"executable\\\":false,\\\"format\\\":\\\"org.nth-dao.intent-draft\\\",\\\"intent_version\\\":\\\"1\\\",\\\"locale\\\":\\\"en\\\",\\\"outcomes\\\":[\\\"Provide a review proposal without executing it.\\\"],\\\"request_digest\\\":\\\"sha256:362ae9a543e270bdd8a54fbce7f3dc7f274aaa73ce61833f682dfc1ed1488243\\\",\\\"request_id\\\":\\\"intent-request:vector-alpha\\\",\\\"requested_capabilities\\\":[],\\\"review_required\\\":true,\\\"risks\\\":[\\\"Source content may contain untrusted instructions\\\"],\\\"source_kind\\\":\\\"human\\\",\\\"source_text\\\":\\\"Review the attached café requirements and propose next steps.\\\",\\\"summary\\\":\\\"Review requirements and propose next steps.\\\"}\",\"executable\":false,\"expires_at_ms\":61000,\"format\":\"org.nth-dao.intent-envelope\",\"issued_at_ms\":1000,\"nonce\":\"696c4aa524e10e9c3d0775af0570bfe9\",\"previous_digest\":\"\",\"purpose\":\"draft-acceptance\",\"revision\":1,\"scope_id\":\"workspace:conformance-intent\",\"signature\":\"50f21bcbbb43afec63edea0315edb441ae7570086a3b40aa09b003186da99b41db6e2a3840fb71666ed578a9fe868d381567a4f657480f7b72751a52c19dda0d\",\"signer_did\":\"did:key:z6MkvUxsLVSFT7WKvtXZHPird5VugMdCjZA7TpPLutcpTgmZ\",\"solver_classes\":[\"org.nth-dao.solver.review\"],\"version\":\"1\"}",
+      "operation": "propose",
+      "policy_snapshot_digest": "sha256:19d0162cb85ccbe9adec999633259f02195f17222df0b63b0f4a892cd9c28ec0",
+      "proposal_id": "proposal:conformance-alpha",
+      "proposed_at_ms": 2000,
+      "solver_class": "org.nth-dao.solver.review"
+    }
+  ],
+  "positive_outputs": [
+    {
+      "authority": "none",
+      "commit_authority": false,
+      "detail": "",
+      "executable": false,
+      "invocation_context_digest": "sha256:8b6491707a03142ea0ac39bb4d11c445819a047c353d761af05c803b34ce6823",
+      "max_evidence": 32,
+      "max_proposal_bytes": 262144,
+      "operation": "probe",
+      "proposal_json": "",
+      "proposal_sha256": "",
+      "ready": true,
+      "status": "",
+      "supported_solver_classes": [
+        "org.nth-dao.solver.review"
+      ]
+    },
+    {
+      "authority": "none",
+      "commit_authority": false,
+      "detail": "",
+      "executable": false,
+      "invocation_context_digest": "sha256:cf5767adc1f21cf7fe60b819c2258845e07e7a633be36eb2ce8ef54786592d07",
+      "max_evidence": 32,
+      "max_proposal_bytes": 262144,
+      "operation": "propose",
+      "proposal_json": "{\"acceptance_audit_digest\":\"sha256:8031a68365829a2d5df1aff65df44f893c2050b43f187bca1a744cf9845ee49e\",\"assumptions\":[],\"authority\":\"none\",\"claim_status\":\"unverified\",\"commit_authority\":false,\"constraints\":[],\"created_at_ms\":2000,\"draft_digest\":\"sha256:8341391d656408fe7740dddd9e5dd0a9128c45fae25be7a373a7edb8cc754da2\",\"estimates\":[],\"evidence\":[{\"digest\":\"sha256:4e425181a64a0911b9c3ccd94a11c2666d08f4272e0be4b6f43695d5c9bb9f36\",\"media_type\":\"text/plain\",\"observed_at_ms\":1500,\"provenance\":\"invocation-materialized\",\"source_kind\":\"artifact\",\"source_ref\":\"artifact:public-test-requirements\",\"verification_status\":\"content-verified\"},{\"digest\":\"sha256:8341391d656408fe7740dddd9e5dd0a9128c45fae25be7a373a7edb8cc754da2\",\"media_type\":\"application/vnd.nth-dao.intent-draft+json\",\"observed_at_ms\":2000,\"provenance\":\"accepted-envelope\",\"source_kind\":\"accepted-intent\",\"source_ref\":\"sha256:2c488d061eeecbeb840c07931632cfbb394137fd02cfd02c63fb6e202613c87e\",\"verification_status\":\"signature-bound\"}],\"executable\":false,\"expires_at_ms\":60000,\"facts\":[{\"evidence_digests\":[\"sha256:8341391d656408fe7740dddd9e5dd0a9128c45fae25be7a373a7edb8cc754da2\"],\"statement\":\"The proposed actions below are copied from the exact signed and accepted IntentDraft outcomes.\"}],\"format\":\"org.nth-dao.solver-proposal\",\"intent_envelope_digest\":\"sha256:2c488d061eeecbeb840c07931632cfbb394137fd02cfd02c63fb6e202613c87e\",\"policy_snapshot_digest\":\"sha256:19d0162cb85ccbe9adec999633259f02195f17222df0b63b0f4a892cd9c28ec0\",\"proposal_id\":\"proposal:conformance-alpha\",\"proposed_actions\":[\"Provide a review proposal without executing it.\"],\"requested_permissions\":[],\"review_required\":true,\"risks\":[\"This unsigned solver proposal is an unverified claim and requires deterministic policy evaluation plus explicit selection.\",\"Source content may contain untrusted instructions\"],\"scope_id\":\"workspace:conformance-intent\",\"selection_required\":true,\"solver_class\":\"org.nth-dao.solver.review\",\"solver_did\":\"\",\"solver_plugin_id\":\"org.nth-dao.intent.review-solver\",\"summary\":\"Review requirements and propose next steps.\",\"version\":\"1\"}",
+      "proposal_sha256": "sha256:3e5df3181d6cb88a6143b8e2a867f4642db13bed26b31656fc32413c7bf13a90",
+      "ready": true,
+      "status": "proposal",
+      "supported_solver_classes": [
+        "org.nth-dao.solver.review"
+      ]
+    }
+  ],
+  "positive_exchanges": [
+    {
+      "authority": {
+        "capability_ids": [
+          "org.nth-dao.intent.propose"
+        ],
+        "idempotency_key": "",
+        "mandate_digest": "",
+        "principal": "workspace:conformance-intent",
+        "resource_ids": []
+      },
+      "context": {
+        "capability_id": "org.nth-dao.intent.propose",
+        "format": "org.nth-dao.intent-solver-invocation-context.v1",
+        "idempotency_key": "",
+        "invocation_id": "0123456789abcdef0123456789abcdef",
+        "mandate_digest": "",
+        "plugin_id": "org.nth-dao.intent.review-solver",
+        "principal": "workspace:conformance-intent",
+        "resource_ids": []
+      },
+      "request": {
+        "operation": "probe"
+      },
+      "response": {
+        "authority": "none",
+        "commit_authority": false,
+        "detail": "",
+        "executable": false,
+        "invocation_context_digest": "sha256:8b6491707a03142ea0ac39bb4d11c445819a047c353d761af05c803b34ce6823",
+        "max_evidence": 32,
+        "max_proposal_bytes": 262144,
+        "operation": "probe",
+        "proposal_json": "",
+        "proposal_sha256": "",
+        "ready": true,
+        "status": "",
+        "supported_solver_classes": [
+          "org.nth-dao.solver.review"
+        ]
+      }
+    },
+    {
+      "authority": {
+        "capability_ids": [
+          "org.nth-dao.intent.propose"
+        ],
+        "idempotency_key": "proposal:conformance-alpha",
+        "mandate_digest": "sha256:8031a68365829a2d5df1aff65df44f893c2050b43f187bca1a744cf9845ee49e",
+        "principal": "workspace:conformance-intent",
+        "resource_ids": [
+          "sha256:19d0162cb85ccbe9adec999633259f02195f17222df0b63b0f4a892cd9c28ec0",
+          "sha256:2c488d061eeecbeb840c07931632cfbb394137fd02cfd02c63fb6e202613c87e",
+          "sha256:4e425181a64a0911b9c3ccd94a11c2666d08f4272e0be4b6f43695d5c9bb9f36"
+        ]
+      },
+      "context": {
+        "capability_id": "org.nth-dao.intent.propose",
+        "format": "org.nth-dao.intent-solver-invocation-context.v1",
+        "idempotency_key": "proposal:conformance-alpha",
+        "invocation_id": "0123456789abcdef0123456789abcdef",
+        "mandate_digest": "sha256:8031a68365829a2d5df1aff65df44f893c2050b43f187bca1a744cf9845ee49e",
+        "plugin_id": "org.nth-dao.intent.review-solver",
+        "principal": "workspace:conformance-intent",
+        "resource_ids": [
+          "sha256:19d0162cb85ccbe9adec999633259f02195f17222df0b63b0f4a892cd9c28ec0",
+          "sha256:2c488d061eeecbeb840c07931632cfbb394137fd02cfd02c63fb6e202613c87e",
+          "sha256:4e425181a64a0911b9c3ccd94a11c2666d08f4272e0be4b6f43695d5c9bb9f36"
+        ]
+      },
+      "request": {
+        "acceptance_audit_digest": "sha256:8031a68365829a2d5df1aff65df44f893c2050b43f187bca1a744cf9845ee49e",
+        "evidence": [
+          {
+            "content_base64": "UFVCTElDLU5USC1URVNULU9OTFk6aW50ZW50LXNvbHZlci1ob3N0LWV2aWRlbmNlLXYx",
+            "digest": "sha256:4e425181a64a0911b9c3ccd94a11c2666d08f4272e0be4b6f43695d5c9bb9f36",
+            "media_type": "text/plain",
+            "observed_at_ms": 1500,
+            "provenance": "invocation-materialized",
+            "source_kind": "artifact",
+            "source_ref": "artifact:public-test-requirements",
+            "verification_status": "content-verified"
+          }
+        ],
+        "expires_at_ms": 60000,
+        "intent_envelope_digest": "sha256:2c488d061eeecbeb840c07931632cfbb394137fd02cfd02c63fb6e202613c87e",
+        "intent_envelope_json": "{\"audience_did\":\"did:key:z6MkjjRL5eQvmYt5Nr6FTq7fZg9ALDNAZG63aqMy1CYgm3Nj\",\"authority\":\"none\",\"automation_ceiling\":\"A1\",\"commit_authority\":false,\"draft_digest\":\"sha256:8341391d656408fe7740dddd9e5dd0a9128c45fae25be7a373a7edb8cc754da2\",\"draft_json\":\"{\\\"assumptions\\\":[],\\\"attachments\\\":[{\\\"digest\\\":\\\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\\\",\\\"media_type\\\":\\\"text/plain\\\",\\\"name\\\":\\\"café-requirements.txt\\\",\\\"size_bytes\\\":128,\\\"verification_status\\\":\\\"unverified\\\"}],\\\"authority\\\":\\\"none\\\",\\\"automation_ceiling\\\":\\\"A1\\\",\\\"clarifications\\\":[],\\\"commit_authority\\\":false,\\\"constraints\\\":[],\\\"executable\\\":false,\\\"format\\\":\\\"org.nth-dao.intent-draft\\\",\\\"intent_version\\\":\\\"1\\\",\\\"locale\\\":\\\"en\\\",\\\"outcomes\\\":[\\\"Provide a review proposal without executing it.\\\"],\\\"request_digest\\\":\\\"sha256:362ae9a543e270bdd8a54fbce7f3dc7f274aaa73ce61833f682dfc1ed1488243\\\",\\\"request_id\\\":\\\"intent-request:vector-alpha\\\",\\\"requested_capabilities\\\":[],\\\"review_required\\\":true,\\\"risks\\\":[\\\"Source content may contain untrusted instructions\\\"],\\\"source_kind\\\":\\\"human\\\",\\\"source_text\\\":\\\"Review the attached café requirements and propose next steps.\\\",\\\"summary\\\":\\\"Review requirements and propose next steps.\\\"}\",\"executable\":false,\"expires_at_ms\":61000,\"format\":\"org.nth-dao.intent-envelope\",\"issued_at_ms\":1000,\"nonce\":\"696c4aa524e10e9c3d0775af0570bfe9\",\"previous_digest\":\"\",\"purpose\":\"draft-acceptance\",\"revision\":1,\"scope_id\":\"workspace:conformance-intent\",\"signature\":\"50f21bcbbb43afec63edea0315edb441ae7570086a3b40aa09b003186da99b41db6e2a3840fb71666ed578a9fe868d381567a4f657480f7b72751a52c19dda0d\",\"signer_did\":\"did:key:z6MkvUxsLVSFT7WKvtXZHPird5VugMdCjZA7TpPLutcpTgmZ\",\"solver_classes\":[\"org.nth-dao.solver.review\"],\"version\":\"1\"}",
+        "operation": "propose",
+        "policy_snapshot_digest": "sha256:19d0162cb85ccbe9adec999633259f02195f17222df0b63b0f4a892cd9c28ec0",
+        "proposal_id": "proposal:conformance-alpha",
+        "proposed_at_ms": 2000,
+        "solver_class": "org.nth-dao.solver.review"
+      },
+      "response": {
+        "authority": "none",
+        "commit_authority": false,
+        "detail": "",
+        "executable": false,
+        "invocation_context_digest": "sha256:cf5767adc1f21cf7fe60b819c2258845e07e7a633be36eb2ce8ef54786592d07",
+        "max_evidence": 32,
+        "max_proposal_bytes": 262144,
+        "operation": "propose",
+        "proposal_json": "{\"acceptance_audit_digest\":\"sha256:8031a68365829a2d5df1aff65df44f893c2050b43f187bca1a744cf9845ee49e\",\"assumptions\":[],\"authority\":\"none\",\"claim_status\":\"unverified\",\"commit_authority\":false,\"constraints\":[],\"created_at_ms\":2000,\"draft_digest\":\"sha256:8341391d656408fe7740dddd9e5dd0a9128c45fae25be7a373a7edb8cc754da2\",\"estimates\":[],\"evidence\":[{\"digest\":\"sha256:4e425181a64a0911b9c3ccd94a11c2666d08f4272e0be4b6f43695d5c9bb9f36\",\"media_type\":\"text/plain\",\"observed_at_ms\":1500,\"provenance\":\"invocation-materialized\",\"source_kind\":\"artifact\",\"source_ref\":\"artifact:public-test-requirements\",\"verification_status\":\"content-verified\"},{\"digest\":\"sha256:8341391d656408fe7740dddd9e5dd0a9128c45fae25be7a373a7edb8cc754da2\",\"media_type\":\"application/vnd.nth-dao.intent-draft+json\",\"observed_at_ms\":2000,\"provenance\":\"accepted-envelope\",\"source_kind\":\"accepted-intent\",\"source_ref\":\"sha256:2c488d061eeecbeb840c07931632cfbb394137fd02cfd02c63fb6e202613c87e\",\"verification_status\":\"signature-bound\"}],\"executable\":false,\"expires_at_ms\":60000,\"facts\":[{\"evidence_digests\":[\"sha256:8341391d656408fe7740dddd9e5dd0a9128c45fae25be7a373a7edb8cc754da2\"],\"statement\":\"The proposed actions below are copied from the exact signed and accepted IntentDraft outcomes.\"}],\"format\":\"org.nth-dao.solver-proposal\",\"intent_envelope_digest\":\"sha256:2c488d061eeecbeb840c07931632cfbb394137fd02cfd02c63fb6e202613c87e\",\"policy_snapshot_digest\":\"sha256:19d0162cb85ccbe9adec999633259f02195f17222df0b63b0f4a892cd9c28ec0\",\"proposal_id\":\"proposal:conformance-alpha\",\"proposed_actions\":[\"Provide a review proposal without executing it.\"],\"requested_permissions\":[],\"review_required\":true,\"risks\":[\"This unsigned solver proposal is an unverified claim and requires deterministic policy evaluation plus explicit selection.\",\"Source content may contain untrusted instructions\"],\"scope_id\":\"workspace:conformance-intent\",\"selection_required\":true,\"solver_class\":\"org.nth-dao.solver.review\",\"solver_did\":\"\",\"solver_plugin_id\":\"org.nth-dao.intent.review-solver\",\"summary\":\"Review requirements and propose next steps.\",\"version\":\"1\"}",
+        "proposal_sha256": "sha256:3e5df3181d6cb88a6143b8e2a867f4642db13bed26b31656fc32413c7bf13a90",
+        "ready": true,
+        "status": "proposal",
+        "supported_solver_classes": [
+          "org.nth-dao.solver.review"
+        ]
+      }
+    }
+  ],
+  "negative_inputs": [
+    {
+      "name": "unknown-field",
+      "input": {
+        "acceptance_audit_digest": "sha256:8031a68365829a2d5df1aff65df44f893c2050b43f187bca1a744cf9845ee49e",
+        "evidence": [
+          {
+            "content_base64": "UFVCTElDLU5USC1URVNULU9OTFk6aW50ZW50LXNvbHZlci1ob3N0LWV2aWRlbmNlLXYx",
+            "digest": "sha256:4e425181a64a0911b9c3ccd94a11c2666d08f4272e0be4b6f43695d5c9bb9f36",
+            "media_type": "text/plain",
+            "observed_at_ms": 1500,
+            "provenance": "invocation-materialized",
+            "source_kind": "artifact",
+            "source_ref": "artifact:public-test-requirements",
+            "verification_status": "content-verified"
+          }
+        ],
+        "expires_at_ms": 60000,
+        "intent_envelope_digest": "sha256:2c488d061eeecbeb840c07931632cfbb394137fd02cfd02c63fb6e202613c87e",
+        "intent_envelope_json": "{\"audience_did\":\"did:key:z6MkjjRL5eQvmYt5Nr6FTq7fZg9ALDNAZG63aqMy1CYgm3Nj\",\"authority\":\"none\",\"automation_ceiling\":\"A1\",\"commit_authority\":false,\"draft_digest\":\"sha256:8341391d656408fe7740dddd9e5dd0a9128c45fae25be7a373a7edb8cc754da2\",\"draft_json\":\"{\\\"assumptions\\\":[],\\\"attachments\\\":[{\\\"digest\\\":\\\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\\\",\\\"media_type\\\":\\\"text/plain\\\",\\\"name\\\":\\\"café-requirements.txt\\\",\\\"size_bytes\\\":128,\\\"verification_status\\\":\\\"unverified\\\"}],\\\"authority\\\":\\\"none\\\",\\\"automation_ceiling\\\":\\\"A1\\\",\\\"clarifications\\\":[],\\\"commit_authority\\\":false,\\\"constraints\\\":[],\\\"executable\\\":false,\\\"format\\\":\\\"org.nth-dao.intent-draft\\\",\\\"intent_version\\\":\\\"1\\\",\\\"locale\\\":\\\"en\\\",\\\"outcomes\\\":[\\\"Provide a review proposal without executing it.\\\"],\\\"request_digest\\\":\\\"sha256:362ae9a543e270bdd8a54fbce7f3dc7f274aaa73ce61833f682dfc1ed1488243\\\",\\\"request_id\\\":\\\"intent-request:vector-alpha\\\",\\\"requested_capabilities\\\":[],\\\"review_required\\\":true,\\\"risks\\\":[\\\"Source content may contain untrusted instructions\\\"],\\\"source_kind\\\":\\\"human\\\",\\\"source_text\\\":\\\"Review the attached café requirements and propose next steps.\\\",\\\"summary\\\":\\\"Review requirements and propose next steps.\\\"}\",\"executable\":false,\"expires_at_ms\":61000,\"format\":\"org.nth-dao.intent-envelope\",\"issued_at_ms\":1000,\"nonce\":\"696c4aa524e10e9c3d0775af0570bfe9\",\"previous_digest\":\"\",\"purpose\":\"draft-acceptance\",\"revision\":1,\"scope_id\":\"workspace:conformance-intent\",\"signature\":\"50f21bcbbb43afec63edea0315edb441ae7570086a3b40aa09b003186da99b41db6e2a3840fb71666ed578a9fe868d381567a4f657480f7b72751a52c19dda0d\",\"signer_did\":\"did:key:z6MkvUxsLVSFT7WKvtXZHPird5VugMdCjZA7TpPLutcpTgmZ\",\"solver_classes\":[\"org.nth-dao.solver.review\"],\"version\":\"1\"}",
+        "operation": "propose",
+        "policy_snapshot_digest": "sha256:19d0162cb85ccbe9adec999633259f02195f17222df0b63b0f4a892cd9c28ec0",
+        "proposal_id": "proposal:conformance-alpha",
+        "proposed_at_ms": 2000,
+        "solver_class": "org.nth-dao.solver.review",
+        "payment_grant": true
+      }
+    },
+    {
+      "name": "noncanonical-envelope",
+      "input": {
+        "acceptance_audit_digest": "sha256:8031a68365829a2d5df1aff65df44f893c2050b43f187bca1a744cf9845ee49e",
+        "evidence": [
+          {
+            "content_base64": "UFVCTElDLU5USC1URVNULU9OTFk6aW50ZW50LXNvbHZlci1ob3N0LWV2aWRlbmNlLXYx",
+            "digest": "sha256:4e425181a64a0911b9c3ccd94a11c2666d08f4272e0be4b6f43695d5c9bb9f36",
+            "media_type": "text/plain",
+            "observed_at_ms": 1500,
+            "provenance": "invocation-materialized",
+            "source_kind": "artifact",
+            "source_ref": "artifact:public-test-requirements",
+            "verification_status": "content-verified"
+          }
+        ],
+        "expires_at_ms": 60000,
+        "intent_envelope_digest": "sha256:2c488d061eeecbeb840c07931632cfbb394137fd02cfd02c63fb6e202613c87e",
+        "intent_envelope_json": "{\"audience_did\": \"did:key:z6MkjjRL5eQvmYt5Nr6FTq7fZg9ALDNAZG63aqMy1CYgm3Nj\", \"authority\": \"none\", \"automation_ceiling\": \"A1\", \"commit_authority\": false, \"draft_digest\": \"sha256:8341391d656408fe7740dddd9e5dd0a9128c45fae25be7a373a7edb8cc754da2\", \"draft_json\": \"{\\\"assumptions\\\":[],\\\"attachments\\\":[{\\\"digest\\\":\\\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\\\",\\\"media_type\\\":\\\"text/plain\\\",\\\"name\\\":\\\"café-requirements.txt\\\",\\\"size_bytes\\\":128,\\\"verification_status\\\":\\\"unverified\\\"}],\\\"authority\\\":\\\"none\\\",\\\"automation_ceiling\\\":\\\"A1\\\",\\\"clarifications\\\":[],\\\"commit_authority\\\":false,\\\"constraints\\\":[],\\\"executable\\\":false,\\\"format\\\":\\\"org.nth-dao.intent-draft\\\",\\\"intent_version\\\":\\\"1\\\",\\\"locale\\\":\\\"en\\\",\\\"outcomes\\\":[\\\"Provide a review proposal without executing it.\\\"],\\\"request_digest\\\":\\\"sha256:362ae9a543e270bdd8a54fbce7f3dc7f274aaa73ce61833f682dfc1ed1488243\\\",\\\"request_id\\\":\\\"intent-request:vector-alpha\\\",\\\"requested_capabilities\\\":[],\\\"review_required\\\":true,\\\"risks\\\":[\\\"Source content may contain untrusted instructions\\\"],\\\"source_kind\\\":\\\"human\\\",\\\"source_text\\\":\\\"Review the attached café requirements and propose next steps.\\\",\\\"summary\\\":\\\"Review requirements and propose next steps.\\\"}\", \"executable\": false, \"expires_at_ms\": 61000, \"format\": \"org.nth-dao.intent-envelope\", \"issued_at_ms\": 1000, \"nonce\": \"696c4aa524e10e9c3d0775af0570bfe9\", \"previous_digest\": \"\", \"purpose\": \"draft-acceptance\", \"revision\": 1, \"scope_id\": \"workspace:conformance-intent\", \"signature\": \"50f21bcbbb43afec63edea0315edb441ae7570086a3b40aa09b003186da99b41db6e2a3840fb71666ed578a9fe868d381567a4f657480f7b72751a52c19dda0d\", \"signer_did\": \"did:key:z6MkvUxsLVSFT7WKvtXZHPird5VugMdCjZA7TpPLutcpTgmZ\", \"solver_classes\": [\"org.nth-dao.solver.review\"], \"version\": \"1\"}",
+        "operation": "propose",
+        "policy_snapshot_digest": "sha256:19d0162cb85ccbe9adec999633259f02195f17222df0b63b0f4a892cd9c28ec0",
+        "proposal_id": "proposal:conformance-alpha",
+        "proposed_at_ms": 2000,
+        "solver_class": "org.nth-dao.solver.review"
+      }
+    },
+    {
+      "name": "signature-tampered-envelope",
+      "input": {
+        "acceptance_audit_digest": "sha256:8031a68365829a2d5df1aff65df44f893c2050b43f187bca1a744cf9845ee49e",
+        "evidence": [
+          {
+            "content_base64": "UFVCTElDLU5USC1URVNULU9OTFk6aW50ZW50LXNvbHZlci1ob3N0LWV2aWRlbmNlLXYx",
+            "digest": "sha256:4e425181a64a0911b9c3ccd94a11c2666d08f4272e0be4b6f43695d5c9bb9f36",
+            "media_type": "text/plain",
+            "observed_at_ms": 1500,
+            "provenance": "invocation-materialized",
+            "source_kind": "artifact",
+            "source_ref": "artifact:public-test-requirements",
+            "verification_status": "content-verified"
+          }
+        ],
+        "expires_at_ms": 60000,
+        "intent_envelope_digest": "sha256:2c488d061eeecbeb840c07931632cfbb394137fd02cfd02c63fb6e202613c87e",
+        "intent_envelope_json": "{\"audience_did\":\"did:key:z6MkjjRL5eQvmYt5Nr6FTq7fZg9ALDNAZG63aqMy1CYgm3Nj\",\"authority\":\"none\",\"automation_ceiling\":\"A1\",\"commit_authority\":false,\"draft_digest\":\"sha256:8341391d656408fe7740dddd9e5dd0a9128c45fae25be7a373a7edb8cc754da2\",\"draft_json\":\"{\\\"assumptions\\\":[],\\\"attachments\\\":[{\\\"digest\\\":\\\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\\\",\\\"media_type\\\":\\\"text/plain\\\",\\\"name\\\":\\\"café-requirements.txt\\\",\\\"size_bytes\\\":128,\\\"verification_status\\\":\\\"unverified\\\"}],\\\"authority\\\":\\\"none\\\",\\\"automation_ceiling\\\":\\\"A1\\\",\\\"clarifications\\\":[],\\\"commit_authority\\\":false,\\\"constraints\\\":[],\\\"executable\\\":false,\\\"format\\\":\\\"org.nth-dao.intent-draft\\\",\\\"intent_version\\\":\\\"1\\\",\\\"locale\\\":\\\"en\\\",\\\"outcomes\\\":[\\\"Provide a review proposal without executing it.\\\"],\\\"request_digest\\\":\\\"sha256:362ae9a543e270bdd8a54fbce7f3dc7f274aaa73ce61833f682dfc1ed1488243\\\",\\\"request_id\\\":\\\"intent-request:vector-alpha\\\",\\\"requested_capabilities\\\":[],\\\"review_required\\\":true,\\\"risks\\\":[\\\"Source content may contain untrusted instructions\\\"],\\\"source_kind\\\":\\\"human\\\",\\\"source_text\\\":\\\"Review the attached café requirements and propose next steps.\\\",\\\"summary\\\":\\\"Review requirements and propose next steps.\\\"}\",\"executable\":false,\"expires_at_ms\":61000,\"format\":\"org.nth-dao.intent-envelope\",\"issued_at_ms\":1000,\"nonce\":\"696c4aa524e10e9c3d0775af0570bfe9\",\"previous_digest\":\"\",\"purpose\":\"draft-acceptance\",\"revision\":1,\"scope_id\":\"workspace:tampered\",\"signature\":\"50f21bcbbb43afec63edea0315edb441ae7570086a3b40aa09b003186da99b41db6e2a3840fb71666ed578a9fe868d381567a4f657480f7b72751a52c19dda0d\",\"signer_did\":\"did:key:z6MkvUxsLVSFT7WKvtXZHPird5VugMdCjZA7TpPLutcpTgmZ\",\"solver_classes\":[\"org.nth-dao.solver.review\"],\"version\":\"1\"}",
+        "operation": "propose",
+        "policy_snapshot_digest": "sha256:19d0162cb85ccbe9adec999633259f02195f17222df0b63b0f4a892cd9c28ec0",
+        "proposal_id": "proposal:conformance-alpha",
+        "proposed_at_ms": 2000,
+        "solver_class": "org.nth-dao.solver.review"
+      }
+    },
+    {
+      "name": "unaccepted-solver-class",
+      "input": {
+        "acceptance_audit_digest": "sha256:8031a68365829a2d5df1aff65df44f893c2050b43f187bca1a744cf9845ee49e",
+        "evidence": [
+          {
+            "content_base64": "UFVCTElDLU5USC1URVNULU9OTFk6aW50ZW50LXNvbHZlci1ob3N0LWV2aWRlbmNlLXYx",
+            "digest": "sha256:4e425181a64a0911b9c3ccd94a11c2666d08f4272e0be4b6f43695d5c9bb9f36",
+            "media_type": "text/plain",
+            "observed_at_ms": 1500,
+            "provenance": "invocation-materialized",
+            "source_kind": "artifact",
+            "source_ref": "artifact:public-test-requirements",
+            "verification_status": "content-verified"
+          }
+        ],
+        "expires_at_ms": 60000,
+        "intent_envelope_digest": "sha256:2c488d061eeecbeb840c07931632cfbb394137fd02cfd02c63fb6e202613c87e",
+        "intent_envelope_json": "{\"audience_did\":\"did:key:z6MkjjRL5eQvmYt5Nr6FTq7fZg9ALDNAZG63aqMy1CYgm3Nj\",\"authority\":\"none\",\"automation_ceiling\":\"A1\",\"commit_authority\":false,\"draft_digest\":\"sha256:8341391d656408fe7740dddd9e5dd0a9128c45fae25be7a373a7edb8cc754da2\",\"draft_json\":\"{\\\"assumptions\\\":[],\\\"attachments\\\":[{\\\"digest\\\":\\\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\\\",\\\"media_type\\\":\\\"text/plain\\\",\\\"name\\\":\\\"café-requirements.txt\\\",\\\"size_bytes\\\":128,\\\"verification_status\\\":\\\"unverified\\\"}],\\\"authority\\\":\\\"none\\\",\\\"automation_ceiling\\\":\\\"A1\\\",\\\"clarifications\\\":[],\\\"commit_authority\\\":false,\\\"constraints\\\":[],\\\"executable\\\":false,\\\"format\\\":\\\"org.nth-dao.intent-draft\\\",\\\"intent_version\\\":\\\"1\\\",\\\"locale\\\":\\\"en\\\",\\\"outcomes\\\":[\\\"Provide a review proposal without executing it.\\\"],\\\"request_digest\\\":\\\"sha256:362ae9a543e270bdd8a54fbce7f3dc7f274aaa73ce61833f682dfc1ed1488243\\\",\\\"request_id\\\":\\\"intent-request:vector-alpha\\\",\\\"requested_capabilities\\\":[],\\\"review_required\\\":true,\\\"risks\\\":[\\\"Source content may contain untrusted instructions\\\"],\\\"source_kind\\\":\\\"human\\\",\\\"source_text\\\":\\\"Review the attached café requirements and propose next steps.\\\",\\\"summary\\\":\\\"Review requirements and propose next steps.\\\"}\",\"executable\":false,\"expires_at_ms\":61000,\"format\":\"org.nth-dao.intent-envelope\",\"issued_at_ms\":1000,\"nonce\":\"696c4aa524e10e9c3d0775af0570bfe9\",\"previous_digest\":\"\",\"purpose\":\"draft-acceptance\",\"revision\":1,\"scope_id\":\"workspace:conformance-intent\",\"signature\":\"50f21bcbbb43afec63edea0315edb441ae7570086a3b40aa09b003186da99b41db6e2a3840fb71666ed578a9fe868d381567a4f657480f7b72751a52c19dda0d\",\"signer_did\":\"did:key:z6MkvUxsLVSFT7WKvtXZHPird5VugMdCjZA7TpPLutcpTgmZ\",\"solver_classes\":[\"org.nth-dao.solver.review\"],\"version\":\"1\"}",
+        "operation": "propose",
+        "policy_snapshot_digest": "sha256:19d0162cb85ccbe9adec999633259f02195f17222df0b63b0f4a892cd9c28ec0",
+        "proposal_id": "proposal:conformance-alpha",
+        "proposed_at_ms": 2000,
+        "solver_class": "org.nth-dao.solver.other"
+      }
+    },
+    {
+      "name": "outside-envelope-time",
+      "input": {
+        "acceptance_audit_digest": "sha256:8031a68365829a2d5df1aff65df44f893c2050b43f187bca1a744cf9845ee49e",
+        "evidence": [
+          {
+            "content_base64": "UFVCTElDLU5USC1URVNULU9OTFk6aW50ZW50LXNvbHZlci1ob3N0LWV2aWRlbmNlLXYx",
+            "digest": "sha256:4e425181a64a0911b9c3ccd94a11c2666d08f4272e0be4b6f43695d5c9bb9f36",
+            "media_type": "text/plain",
+            "observed_at_ms": 1500,
+            "provenance": "invocation-materialized",
+            "source_kind": "artifact",
+            "source_ref": "artifact:public-test-requirements",
+            "verification_status": "content-verified"
+          }
+        ],
+        "expires_at_ms": 61001,
+        "intent_envelope_digest": "sha256:2c488d061eeecbeb840c07931632cfbb394137fd02cfd02c63fb6e202613c87e",
+        "intent_envelope_json": "{\"audience_did\":\"did:key:z6MkjjRL5eQvmYt5Nr6FTq7fZg9ALDNAZG63aqMy1CYgm3Nj\",\"authority\":\"none\",\"automation_ceiling\":\"A1\",\"commit_authority\":false,\"draft_digest\":\"sha256:8341391d656408fe7740dddd9e5dd0a9128c45fae25be7a373a7edb8cc754da2\",\"draft_json\":\"{\\\"assumptions\\\":[],\\\"attachments\\\":[{\\\"digest\\\":\\\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\\\",\\\"media_type\\\":\\\"text/plain\\\",\\\"name\\\":\\\"café-requirements.txt\\\",\\\"size_bytes\\\":128,\\\"verification_status\\\":\\\"unverified\\\"}],\\\"authority\\\":\\\"none\\\",\\\"automation_ceiling\\\":\\\"A1\\\",\\\"clarifications\\\":[],\\\"commit_authority\\\":false,\\\"constraints\\\":[],\\\"executable\\\":false,\\\"format\\\":\\\"org.nth-dao.intent-draft\\\",\\\"intent_version\\\":\\\"1\\\",\\\"locale\\\":\\\"en\\\",\\\"outcomes\\\":[\\\"Provide a review proposal without executing it.\\\"],\\\"request_digest\\\":\\\"sha256:362ae9a543e270bdd8a54fbce7f3dc7f274aaa73ce61833f682dfc1ed1488243\\\",\\\"request_id\\\":\\\"intent-request:vector-alpha\\\",\\\"requested_capabilities\\\":[],\\\"review_required\\\":true,\\\"risks\\\":[\\\"Source content may contain untrusted instructions\\\"],\\\"source_kind\\\":\\\"human\\\",\\\"source_text\\\":\\\"Review the attached café requirements and propose next steps.\\\",\\\"summary\\\":\\\"Review requirements and propose next steps.\\\"}\",\"executable\":false,\"expires_at_ms\":61000,\"format\":\"org.nth-dao.intent-envelope\",\"issued_at_ms\":1000,\"nonce\":\"696c4aa524e10e9c3d0775af0570bfe9\",\"previous_digest\":\"\",\"purpose\":\"draft-acceptance\",\"revision\":1,\"scope_id\":\"workspace:conformance-intent\",\"signature\":\"50f21bcbbb43afec63edea0315edb441ae7570086a3b40aa09b003186da99b41db6e2a3840fb71666ed578a9fe868d381567a4f657480f7b72751a52c19dda0d\",\"signer_did\":\"did:key:z6MkvUxsLVSFT7WKvtXZHPird5VugMdCjZA7TpPLutcpTgmZ\",\"solver_classes\":[\"org.nth-dao.solver.review\"],\"version\":\"1\"}",
+        "operation": "propose",
+        "policy_snapshot_digest": "sha256:19d0162cb85ccbe9adec999633259f02195f17222df0b63b0f4a892cd9c28ec0",
+        "proposal_id": "proposal:conformance-alpha",
+        "proposed_at_ms": 2000,
+        "solver_class": "org.nth-dao.solver.review"
+      }
+    },
+    {
+      "name": "boolean-time",
+      "input": {
+        "acceptance_audit_digest": "sha256:8031a68365829a2d5df1aff65df44f893c2050b43f187bca1a744cf9845ee49e",
+        "evidence": [
+          {
+            "content_base64": "UFVCTElDLU5USC1URVNULU9OTFk6aW50ZW50LXNvbHZlci1ob3N0LWV2aWRlbmNlLXYx",
+            "digest": "sha256:4e425181a64a0911b9c3ccd94a11c2666d08f4272e0be4b6f43695d5c9bb9f36",
+            "media_type": "text/plain",
+            "observed_at_ms": 1500,
+            "provenance": "invocation-materialized",
+            "source_kind": "artifact",
+            "source_ref": "artifact:public-test-requirements",
+            "verification_status": "content-verified"
+          }
+        ],
+        "expires_at_ms": 60000,
+        "intent_envelope_digest": "sha256:2c488d061eeecbeb840c07931632cfbb394137fd02cfd02c63fb6e202613c87e",
+        "intent_envelope_json": "{\"audience_did\":\"did:key:z6MkjjRL5eQvmYt5Nr6FTq7fZg9ALDNAZG63aqMy1CYgm3Nj\",\"authority\":\"none\",\"automation_ceiling\":\"A1\",\"commit_authority\":false,\"draft_digest\":\"sha256:8341391d656408fe7740dddd9e5dd0a9128c45fae25be7a373a7edb8cc754da2\",\"draft_json\":\"{\\\"assumptions\\\":[],\\\"attachments\\\":[{\\\"digest\\\":\\\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\\\",\\\"media_type\\\":\\\"text/plain\\\",\\\"name\\\":\\\"café-requirements.txt\\\",\\\"size_bytes\\\":128,\\\"verification_status\\\":\\\"unverified\\\"}],\\\"authority\\\":\\\"none\\\",\\\"automation_ceiling\\\":\\\"A1\\\",\\\"clarifications\\\":[],\\\"commit_authority\\\":false,\\\"constraints\\\":[],\\\"executable\\\":false,\\\"format\\\":\\\"org.nth-dao.intent-draft\\\",\\\"intent_version\\\":\\\"1\\\",\\\"locale\\\":\\\"en\\\",\\\"outcomes\\\":[\\\"Provide a review proposal without executing it.\\\"],\\\"request_digest\\\":\\\"sha256:362ae9a543e270bdd8a54fbce7f3dc7f274aaa73ce61833f682dfc1ed1488243\\\",\\\"request_id\\\":\\\"intent-request:vector-alpha\\\",\\\"requested_capabilities\\\":[],\\\"review_required\\\":true,\\\"risks\\\":[\\\"Source content may contain untrusted instructions\\\"],\\\"source_kind\\\":\\\"human\\\",\\\"source_text\\\":\\\"Review the attached café requirements and propose next steps.\\\",\\\"summary\\\":\\\"Review requirements and propose next steps.\\\"}\",\"executable\":false,\"expires_at_ms\":61000,\"format\":\"org.nth-dao.intent-envelope\",\"issued_at_ms\":1000,\"nonce\":\"696c4aa524e10e9c3d0775af0570bfe9\",\"previous_digest\":\"\",\"purpose\":\"draft-acceptance\",\"revision\":1,\"scope_id\":\"workspace:conformance-intent\",\"signature\":\"50f21bcbbb43afec63edea0315edb441ae7570086a3b40aa09b003186da99b41db6e2a3840fb71666ed578a9fe868d381567a4f657480f7b72751a52c19dda0d\",\"signer_did\":\"did:key:z6MkvUxsLVSFT7WKvtXZHPird5VugMdCjZA7TpPLutcpTgmZ\",\"solver_classes\":[\"org.nth-dao.solver.review\"],\"version\":\"1\"}",
+        "operation": "propose",
+        "policy_snapshot_digest": "sha256:19d0162cb85ccbe9adec999633259f02195f17222df0b63b0f4a892cd9c28ec0",
+        "proposal_id": "proposal:conformance-alpha",
+        "proposed_at_ms": true,
+        "solver_class": "org.nth-dao.solver.review"
+      }
+    },
+    {
+      "name": "evidence-provenance-conflict",
+      "input": {
+        "acceptance_audit_digest": "sha256:8031a68365829a2d5df1aff65df44f893c2050b43f187bca1a744cf9845ee49e",
+        "evidence": [
+          {
+            "content_base64": "UFVCTElDLU5USC1URVNULU9OTFk6aW50ZW50LXNvbHZlci1ob3N0LWV2aWRlbmNlLXYx",
+            "digest": "sha256:4e425181a64a0911b9c3ccd94a11c2666d08f4272e0be4b6f43695d5c9bb9f36",
+            "media_type": "text/plain",
+            "observed_at_ms": 1500,
+            "provenance": "invocation-materialized",
+            "source_kind": "artifact",
+            "source_ref": "artifact:public-test-requirements",
+            "verification_status": "unverified"
+          }
+        ],
+        "expires_at_ms": 60000,
+        "intent_envelope_digest": "sha256:2c488d061eeecbeb840c07931632cfbb394137fd02cfd02c63fb6e202613c87e",
+        "intent_envelope_json": "{\"audience_did\":\"did:key:z6MkjjRL5eQvmYt5Nr6FTq7fZg9ALDNAZG63aqMy1CYgm3Nj\",\"authority\":\"none\",\"automation_ceiling\":\"A1\",\"commit_authority\":false,\"draft_digest\":\"sha256:8341391d656408fe7740dddd9e5dd0a9128c45fae25be7a373a7edb8cc754da2\",\"draft_json\":\"{\\\"assumptions\\\":[],\\\"attachments\\\":[{\\\"digest\\\":\\\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\\\",\\\"media_type\\\":\\\"text/plain\\\",\\\"name\\\":\\\"café-requirements.txt\\\",\\\"size_bytes\\\":128,\\\"verification_status\\\":\\\"unverified\\\"}],\\\"authority\\\":\\\"none\\\",\\\"automation_ceiling\\\":\\\"A1\\\",\\\"clarifications\\\":[],\\\"commit_authority\\\":false,\\\"constraints\\\":[],\\\"executable\\\":false,\\\"format\\\":\\\"org.nth-dao.intent-draft\\\",\\\"intent_version\\\":\\\"1\\\",\\\"locale\\\":\\\"en\\\",\\\"outcomes\\\":[\\\"Provide a review proposal without executing it.\\\"],\\\"request_digest\\\":\\\"sha256:362ae9a543e270bdd8a54fbce7f3dc7f274aaa73ce61833f682dfc1ed1488243\\\",\\\"request_id\\\":\\\"intent-request:vector-alpha\\\",\\\"requested_capabilities\\\":[],\\\"review_required\\\":true,\\\"risks\\\":[\\\"Source content may contain untrusted instructions\\\"],\\\"source_kind\\\":\\\"human\\\",\\\"source_text\\\":\\\"Review the attached café requirements and propose next steps.\\\",\\\"summary\\\":\\\"Review requirements and propose next steps.\\\"}\",\"executable\":false,\"expires_at_ms\":61000,\"format\":\"org.nth-dao.intent-envelope\",\"issued_at_ms\":1000,\"nonce\":\"696c4aa524e10e9c3d0775af0570bfe9\",\"previous_digest\":\"\",\"purpose\":\"draft-acceptance\",\"revision\":1,\"scope_id\":\"workspace:conformance-intent\",\"signature\":\"50f21bcbbb43afec63edea0315edb441ae7570086a3b40aa09b003186da99b41db6e2a3840fb71666ed578a9fe868d381567a4f657480f7b72751a52c19dda0d\",\"signer_did\":\"did:key:z6MkvUxsLVSFT7WKvtXZHPird5VugMdCjZA7TpPLutcpTgmZ\",\"solver_classes\":[\"org.nth-dao.solver.review\"],\"version\":\"1\"}",
+        "operation": "propose",
+        "policy_snapshot_digest": "sha256:19d0162cb85ccbe9adec999633259f02195f17222df0b63b0f4a892cd9c28ec0",
+        "proposal_id": "proposal:conformance-alpha",
+        "proposed_at_ms": 2000,
+        "solver_class": "org.nth-dao.solver.review"
+      }
+    },
+    {
+      "name": "duplicate-evidence",
+      "input": {
+        "acceptance_audit_digest": "sha256:8031a68365829a2d5df1aff65df44f893c2050b43f187bca1a744cf9845ee49e",
+        "evidence": [
+          {
+            "content_base64": "UFVCTElDLU5USC1URVNULU9OTFk6aW50ZW50LXNvbHZlci1ob3N0LWV2aWRlbmNlLXYx",
+            "digest": "sha256:4e425181a64a0911b9c3ccd94a11c2666d08f4272e0be4b6f43695d5c9bb9f36",
+            "media_type": "text/plain",
+            "observed_at_ms": 1500,
+            "provenance": "invocation-materialized",
+            "source_kind": "artifact",
+            "source_ref": "artifact:public-test-requirements",
+            "verification_status": "content-verified"
+          },
+          {
+            "content_base64": "UFVCTElDLU5USC1URVNULU9OTFk6aW50ZW50LXNvbHZlci1ob3N0LWV2aWRlbmNlLXYx",
+            "digest": "sha256:4e425181a64a0911b9c3ccd94a11c2666d08f4272e0be4b6f43695d5c9bb9f36",
+            "media_type": "text/plain",
+            "observed_at_ms": 1500,
+            "provenance": "invocation-materialized",
+            "source_kind": "artifact",
+            "source_ref": "artifact:public-test-requirements",
+            "verification_status": "content-verified"
+          }
+        ],
+        "expires_at_ms": 60000,
+        "intent_envelope_digest": "sha256:2c488d061eeecbeb840c07931632cfbb394137fd02cfd02c63fb6e202613c87e",
+        "intent_envelope_json": "{\"audience_did\":\"did:key:z6MkjjRL5eQvmYt5Nr6FTq7fZg9ALDNAZG63aqMy1CYgm3Nj\",\"authority\":\"none\",\"automation_ceiling\":\"A1\",\"commit_authority\":false,\"draft_digest\":\"sha256:8341391d656408fe7740dddd9e5dd0a9128c45fae25be7a373a7edb8cc754da2\",\"draft_json\":\"{\\\"assumptions\\\":[],\\\"attachments\\\":[{\\\"digest\\\":\\\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\\\",\\\"media_type\\\":\\\"text/plain\\\",\\\"name\\\":\\\"café-requirements.txt\\\",\\\"size_bytes\\\":128,\\\"verification_status\\\":\\\"unverified\\\"}],\\\"authority\\\":\\\"none\\\",\\\"automation_ceiling\\\":\\\"A1\\\",\\\"clarifications\\\":[],\\\"commit_authority\\\":false,\\\"constraints\\\":[],\\\"executable\\\":false,\\\"format\\\":\\\"org.nth-dao.intent-draft\\\",\\\"intent_version\\\":\\\"1\\\",\\\"locale\\\":\\\"en\\\",\\\"outcomes\\\":[\\\"Provide a review proposal without executing it.\\\"],\\\"request_digest\\\":\\\"sha256:362ae9a543e270bdd8a54fbce7f3dc7f274aaa73ce61833f682dfc1ed1488243\\\",\\\"request_id\\\":\\\"intent-request:vector-alpha\\\",\\\"requested_capabilities\\\":[],\\\"review_required\\\":true,\\\"risks\\\":[\\\"Source content may contain untrusted instructions\\\"],\\\"source_kind\\\":\\\"human\\\",\\\"source_text\\\":\\\"Review the attached café requirements and propose next steps.\\\",\\\"summary\\\":\\\"Review requirements and propose next steps.\\\"}\",\"executable\":false,\"expires_at_ms\":61000,\"format\":\"org.nth-dao.intent-envelope\",\"issued_at_ms\":1000,\"nonce\":\"696c4aa524e10e9c3d0775af0570bfe9\",\"previous_digest\":\"\",\"purpose\":\"draft-acceptance\",\"revision\":1,\"scope_id\":\"workspace:conformance-intent\",\"signature\":\"50f21bcbbb43afec63edea0315edb441ae7570086a3b40aa09b003186da99b41db6e2a3840fb71666ed578a9fe868d381567a4f657480f7b72751a52c19dda0d\",\"signer_did\":\"did:key:z6MkvUxsLVSFT7WKvtXZHPird5VugMdCjZA7TpPLutcpTgmZ\",\"solver_classes\":[\"org.nth-dao.solver.review\"],\"version\":\"1\"}",
+        "operation": "propose",
+        "policy_snapshot_digest": "sha256:19d0162cb85ccbe9adec999633259f02195f17222df0b63b0f4a892cd9c28ec0",
+        "proposal_id": "proposal:conformance-alpha",
+        "proposed_at_ms": 2000,
+        "solver_class": "org.nth-dao.solver.review"
+      }
+    },
+    {
+      "name": "duplicate-draft-evidence",
+      "input": {
+        "acceptance_audit_digest": "sha256:8031a68365829a2d5df1aff65df44f893c2050b43f187bca1a744cf9845ee49e",
+        "evidence": [
+          {
+            "content_base64": "UFVCTElDLU5USC1URVNULU9OTFk6aW50ZW50LXNvbHZlci1ob3N0LWV2aWRlbmNlLXYx",
+            "digest": "sha256:8341391d656408fe7740dddd9e5dd0a9128c45fae25be7a373a7edb8cc754da2",
+            "media_type": "text/plain",
+            "observed_at_ms": 1500,
+            "provenance": "invocation-materialized",
+            "source_kind": "artifact",
+            "source_ref": "artifact:public-test-requirements",
+            "verification_status": "content-verified"
+          }
+        ],
+        "expires_at_ms": 60000,
+        "intent_envelope_digest": "sha256:2c488d061eeecbeb840c07931632cfbb394137fd02cfd02c63fb6e202613c87e",
+        "intent_envelope_json": "{\"audience_did\":\"did:key:z6MkjjRL5eQvmYt5Nr6FTq7fZg9ALDNAZG63aqMy1CYgm3Nj\",\"authority\":\"none\",\"automation_ceiling\":\"A1\",\"commit_authority\":false,\"draft_digest\":\"sha256:8341391d656408fe7740dddd9e5dd0a9128c45fae25be7a373a7edb8cc754da2\",\"draft_json\":\"{\\\"assumptions\\\":[],\\\"attachments\\\":[{\\\"digest\\\":\\\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\\\",\\\"media_type\\\":\\\"text/plain\\\",\\\"name\\\":\\\"café-requirements.txt\\\",\\\"size_bytes\\\":128,\\\"verification_status\\\":\\\"unverified\\\"}],\\\"authority\\\":\\\"none\\\",\\\"automation_ceiling\\\":\\\"A1\\\",\\\"clarifications\\\":[],\\\"commit_authority\\\":false,\\\"constraints\\\":[],\\\"executable\\\":false,\\\"format\\\":\\\"org.nth-dao.intent-draft\\\",\\\"intent_version\\\":\\\"1\\\",\\\"locale\\\":\\\"en\\\",\\\"outcomes\\\":[\\\"Provide a review proposal without executing it.\\\"],\\\"request_digest\\\":\\\"sha256:362ae9a543e270bdd8a54fbce7f3dc7f274aaa73ce61833f682dfc1ed1488243\\\",\\\"request_id\\\":\\\"intent-request:vector-alpha\\\",\\\"requested_capabilities\\\":[],\\\"review_required\\\":true,\\\"risks\\\":[\\\"Source content may contain untrusted instructions\\\"],\\\"source_kind\\\":\\\"human\\\",\\\"source_text\\\":\\\"Review the attached café requirements and propose next steps.\\\",\\\"summary\\\":\\\"Review requirements and propose next steps.\\\"}\",\"executable\":false,\"expires_at_ms\":61000,\"format\":\"org.nth-dao.intent-envelope\",\"issued_at_ms\":1000,\"nonce\":\"696c4aa524e10e9c3d0775af0570bfe9\",\"previous_digest\":\"\",\"purpose\":\"draft-acceptance\",\"revision\":1,\"scope_id\":\"workspace:conformance-intent\",\"signature\":\"50f21bcbbb43afec63edea0315edb441ae7570086a3b40aa09b003186da99b41db6e2a3840fb71666ed578a9fe868d381567a4f657480f7b72751a52c19dda0d\",\"signer_did\":\"did:key:z6MkvUxsLVSFT7WKvtXZHPird5VugMdCjZA7TpPLutcpTgmZ\",\"solver_classes\":[\"org.nth-dao.solver.review\"],\"version\":\"1\"}",
+        "operation": "propose",
+        "policy_snapshot_digest": "sha256:19d0162cb85ccbe9adec999633259f02195f17222df0b63b0f4a892cd9c28ec0",
+        "proposal_id": "proposal:conformance-alpha",
+        "proposed_at_ms": 2000,
+        "solver_class": "org.nth-dao.solver.review"
+      }
+    },
+    {
+      "name": "future-evidence",
+      "input": {
+        "acceptance_audit_digest": "sha256:8031a68365829a2d5df1aff65df44f893c2050b43f187bca1a744cf9845ee49e",
+        "evidence": [
+          {
+            "content_base64": "UFVCTElDLU5USC1URVNULU9OTFk6aW50ZW50LXNvbHZlci1ob3N0LWV2aWRlbmNlLXYx",
+            "digest": "sha256:4e425181a64a0911b9c3ccd94a11c2666d08f4272e0be4b6f43695d5c9bb9f36",
+            "media_type": "text/plain",
+            "observed_at_ms": 2001,
+            "provenance": "invocation-materialized",
+            "source_kind": "artifact",
+            "source_ref": "artifact:public-test-requirements",
+            "verification_status": "content-verified"
+          }
+        ],
+        "expires_at_ms": 60000,
+        "intent_envelope_digest": "sha256:2c488d061eeecbeb840c07931632cfbb394137fd02cfd02c63fb6e202613c87e",
+        "intent_envelope_json": "{\"audience_did\":\"did:key:z6MkjjRL5eQvmYt5Nr6FTq7fZg9ALDNAZG63aqMy1CYgm3Nj\",\"authority\":\"none\",\"automation_ceiling\":\"A1\",\"commit_authority\":false,\"draft_digest\":\"sha256:8341391d656408fe7740dddd9e5dd0a9128c45fae25be7a373a7edb8cc754da2\",\"draft_json\":\"{\\\"assumptions\\\":[],\\\"attachments\\\":[{\\\"digest\\\":\\\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\\\",\\\"media_type\\\":\\\"text/plain\\\",\\\"name\\\":\\\"café-requirements.txt\\\",\\\"size_bytes\\\":128,\\\"verification_status\\\":\\\"unverified\\\"}],\\\"authority\\\":\\\"none\\\",\\\"automation_ceiling\\\":\\\"A1\\\",\\\"clarifications\\\":[],\\\"commit_authority\\\":false,\\\"constraints\\\":[],\\\"executable\\\":false,\\\"format\\\":\\\"org.nth-dao.intent-draft\\\",\\\"intent_version\\\":\\\"1\\\",\\\"locale\\\":\\\"en\\\",\\\"outcomes\\\":[\\\"Provide a review proposal without executing it.\\\"],\\\"request_digest\\\":\\\"sha256:362ae9a543e270bdd8a54fbce7f3dc7f274aaa73ce61833f682dfc1ed1488243\\\",\\\"request_id\\\":\\\"intent-request:vector-alpha\\\",\\\"requested_capabilities\\\":[],\\\"review_required\\\":true,\\\"risks\\\":[\\\"Source content may contain untrusted instructions\\\"],\\\"source_kind\\\":\\\"human\\\",\\\"source_text\\\":\\\"Review the attached café requirements and propose next steps.\\\",\\\"summary\\\":\\\"Review requirements and propose next steps.\\\"}\",\"executable\":false,\"expires_at_ms\":61000,\"format\":\"org.nth-dao.intent-envelope\",\"issued_at_ms\":1000,\"nonce\":\"696c4aa524e10e9c3d0775af0570bfe9\",\"previous_digest\":\"\",\"purpose\":\"draft-acceptance\",\"revision\":1,\"scope_id\":\"workspace:conformance-intent\",\"signature\":\"50f21bcbbb43afec63edea0315edb441ae7570086a3b40aa09b003186da99b41db6e2a3840fb71666ed578a9fe868d381567a4f657480f7b72751a52c19dda0d\",\"signer_did\":\"did:key:z6MkvUxsLVSFT7WKvtXZHPird5VugMdCjZA7TpPLutcpTgmZ\",\"solver_classes\":[\"org.nth-dao.solver.review\"],\"version\":\"1\"}",
+        "operation": "propose",
+        "policy_snapshot_digest": "sha256:19d0162cb85ccbe9adec999633259f02195f17222df0b63b0f4a892cd9c28ec0",
+        "proposal_id": "proposal:conformance-alpha",
+        "proposed_at_ms": 2000,
+        "solver_class": "org.nth-dao.solver.review"
+      }
+    },
+    {
+      "name": "evidence-content-digest-mismatch",
+      "input": {
+        "acceptance_audit_digest": "sha256:8031a68365829a2d5df1aff65df44f893c2050b43f187bca1a744cf9845ee49e",
+        "evidence": [
+          {
+            "content_base64": "ZGlmZmVyZW50IGNvbnRlbnQ=",
+            "digest": "sha256:4e425181a64a0911b9c3ccd94a11c2666d08f4272e0be4b6f43695d5c9bb9f36",
+            "media_type": "text/plain",
+            "observed_at_ms": 1500,
+            "provenance": "invocation-materialized",
+            "source_kind": "artifact",
+            "source_ref": "artifact:public-test-requirements",
+            "verification_status": "content-verified"
+          }
+        ],
+        "expires_at_ms": 60000,
+        "intent_envelope_digest": "sha256:2c488d061eeecbeb840c07931632cfbb394137fd02cfd02c63fb6e202613c87e",
+        "intent_envelope_json": "{\"audience_did\":\"did:key:z6MkjjRL5eQvmYt5Nr6FTq7fZg9ALDNAZG63aqMy1CYgm3Nj\",\"authority\":\"none\",\"automation_ceiling\":\"A1\",\"commit_authority\":false,\"draft_digest\":\"sha256:8341391d656408fe7740dddd9e5dd0a9128c45fae25be7a373a7edb8cc754da2\",\"draft_json\":\"{\\\"assumptions\\\":[],\\\"attachments\\\":[{\\\"digest\\\":\\\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\\\",\\\"media_type\\\":\\\"text/plain\\\",\\\"name\\\":\\\"café-requirements.txt\\\",\\\"size_bytes\\\":128,\\\"verification_status\\\":\\\"unverified\\\"}],\\\"authority\\\":\\\"none\\\",\\\"automation_ceiling\\\":\\\"A1\\\",\\\"clarifications\\\":[],\\\"commit_authority\\\":false,\\\"constraints\\\":[],\\\"executable\\\":false,\\\"format\\\":\\\"org.nth-dao.intent-draft\\\",\\\"intent_version\\\":\\\"1\\\",\\\"locale\\\":\\\"en\\\",\\\"outcomes\\\":[\\\"Provide a review proposal without executing it.\\\"],\\\"request_digest\\\":\\\"sha256:362ae9a543e270bdd8a54fbce7f3dc7f274aaa73ce61833f682dfc1ed1488243\\\",\\\"request_id\\\":\\\"intent-request:vector-alpha\\\",\\\"requested_capabilities\\\":[],\\\"review_required\\\":true,\\\"risks\\\":[\\\"Source content may contain untrusted instructions\\\"],\\\"source_kind\\\":\\\"human\\\",\\\"source_text\\\":\\\"Review the attached café requirements and propose next steps.\\\",\\\"summary\\\":\\\"Review requirements and propose next steps.\\\"}\",\"executable\":false,\"expires_at_ms\":61000,\"format\":\"org.nth-dao.intent-envelope\",\"issued_at_ms\":1000,\"nonce\":\"696c4aa524e10e9c3d0775af0570bfe9\",\"previous_digest\":\"\",\"purpose\":\"draft-acceptance\",\"revision\":1,\"scope_id\":\"workspace:conformance-intent\",\"signature\":\"50f21bcbbb43afec63edea0315edb441ae7570086a3b40aa09b003186da99b41db6e2a3840fb71666ed578a9fe868d381567a4f657480f7b72751a52c19dda0d\",\"signer_did\":\"did:key:z6MkvUxsLVSFT7WKvtXZHPird5VugMdCjZA7TpPLutcpTgmZ\",\"solver_classes\":[\"org.nth-dao.solver.review\"],\"version\":\"1\"}",
+        "operation": "propose",
+        "policy_snapshot_digest": "sha256:19d0162cb85ccbe9adec999633259f02195f17222df0b63b0f4a892cd9c28ec0",
+        "proposal_id": "proposal:conformance-alpha",
+        "proposed_at_ms": 2000,
+        "solver_class": "org.nth-dao.solver.review"
+      }
+    },
+    {
+      "name": "multiline-source-ref",
+      "input": {
+        "acceptance_audit_digest": "sha256:8031a68365829a2d5df1aff65df44f893c2050b43f187bca1a744cf9845ee49e",
+        "evidence": [
+          {
+            "content_base64": "UFVCTElDLU5USC1URVNULU9OTFk6aW50ZW50LXNvbHZlci1ob3N0LWV2aWRlbmNlLXYx",
+            "digest": "sha256:4e425181a64a0911b9c3ccd94a11c2666d08f4272e0be4b6f43695d5c9bb9f36",
+            "media_type": "text/plain",
+            "observed_at_ms": 1500,
+            "provenance": "invocation-materialized",
+            "source_kind": "artifact",
+            "source_ref": "artifact:alpha\nforged",
+            "verification_status": "content-verified"
+          }
+        ],
+        "expires_at_ms": 60000,
+        "intent_envelope_digest": "sha256:2c488d061eeecbeb840c07931632cfbb394137fd02cfd02c63fb6e202613c87e",
+        "intent_envelope_json": "{\"audience_did\":\"did:key:z6MkjjRL5eQvmYt5Nr6FTq7fZg9ALDNAZG63aqMy1CYgm3Nj\",\"authority\":\"none\",\"automation_ceiling\":\"A1\",\"commit_authority\":false,\"draft_digest\":\"sha256:8341391d656408fe7740dddd9e5dd0a9128c45fae25be7a373a7edb8cc754da2\",\"draft_json\":\"{\\\"assumptions\\\":[],\\\"attachments\\\":[{\\\"digest\\\":\\\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\\\",\\\"media_type\\\":\\\"text/plain\\\",\\\"name\\\":\\\"café-requirements.txt\\\",\\\"size_bytes\\\":128,\\\"verification_status\\\":\\\"unverified\\\"}],\\\"authority\\\":\\\"none\\\",\\\"automation_ceiling\\\":\\\"A1\\\",\\\"clarifications\\\":[],\\\"commit_authority\\\":false,\\\"constraints\\\":[],\\\"executable\\\":false,\\\"format\\\":\\\"org.nth-dao.intent-draft\\\",\\\"intent_version\\\":\\\"1\\\",\\\"locale\\\":\\\"en\\\",\\\"outcomes\\\":[\\\"Provide a review proposal without executing it.\\\"],\\\"request_digest\\\":\\\"sha256:362ae9a543e270bdd8a54fbce7f3dc7f274aaa73ce61833f682dfc1ed1488243\\\",\\\"request_id\\\":\\\"intent-request:vector-alpha\\\",\\\"requested_capabilities\\\":[],\\\"review_required\\\":true,\\\"risks\\\":[\\\"Source content may contain untrusted instructions\\\"],\\\"source_kind\\\":\\\"human\\\",\\\"source_text\\\":\\\"Review the attached café requirements and propose next steps.\\\",\\\"summary\\\":\\\"Review requirements and propose next steps.\\\"}\",\"executable\":false,\"expires_at_ms\":61000,\"format\":\"org.nth-dao.intent-envelope\",\"issued_at_ms\":1000,\"nonce\":\"696c4aa524e10e9c3d0775af0570bfe9\",\"previous_digest\":\"\",\"purpose\":\"draft-acceptance\",\"revision\":1,\"scope_id\":\"workspace:conformance-intent\",\"signature\":\"50f21bcbbb43afec63edea0315edb441ae7570086a3b40aa09b003186da99b41db6e2a3840fb71666ed578a9fe868d381567a4f657480f7b72751a52c19dda0d\",\"signer_did\":\"did:key:z6MkvUxsLVSFT7WKvtXZHPird5VugMdCjZA7TpPLutcpTgmZ\",\"solver_classes\":[\"org.nth-dao.solver.review\"],\"version\":\"1\"}",
+        "operation": "propose",
+        "policy_snapshot_digest": "sha256:19d0162cb85ccbe9adec999633259f02195f17222df0b63b0f4a892cd9c28ec0",
+        "proposal_id": "proposal:conformance-alpha",
+        "proposed_at_ms": 2000,
+        "solver_class": "org.nth-dao.solver.review"
+      }
+    }
+  ],
+  "negative_outputs": [
+    {
+      "name": "executable-wrapper",
+      "output": {
+        "authority": "none",
+        "commit_authority": false,
+        "detail": "",
+        "executable": true,
+        "invocation_context_digest": "sha256:cf5767adc1f21cf7fe60b819c2258845e07e7a633be36eb2ce8ef54786592d07",
+        "max_evidence": 32,
+        "max_proposal_bytes": 262144,
+        "operation": "propose",
+        "proposal_json": "{\"acceptance_audit_digest\":\"sha256:8031a68365829a2d5df1aff65df44f893c2050b43f187bca1a744cf9845ee49e\",\"assumptions\":[],\"authority\":\"none\",\"claim_status\":\"unverified\",\"commit_authority\":false,\"constraints\":[],\"created_at_ms\":2000,\"draft_digest\":\"sha256:8341391d656408fe7740dddd9e5dd0a9128c45fae25be7a373a7edb8cc754da2\",\"estimates\":[],\"evidence\":[{\"digest\":\"sha256:4e425181a64a0911b9c3ccd94a11c2666d08f4272e0be4b6f43695d5c9bb9f36\",\"media_type\":\"text/plain\",\"observed_at_ms\":1500,\"provenance\":\"invocation-materialized\",\"source_kind\":\"artifact\",\"source_ref\":\"artifact:public-test-requirements\",\"verification_status\":\"content-verified\"},{\"digest\":\"sha256:8341391d656408fe7740dddd9e5dd0a9128c45fae25be7a373a7edb8cc754da2\",\"media_type\":\"application/vnd.nth-dao.intent-draft+json\",\"observed_at_ms\":2000,\"provenance\":\"accepted-envelope\",\"source_kind\":\"accepted-intent\",\"source_ref\":\"sha256:2c488d061eeecbeb840c07931632cfbb394137fd02cfd02c63fb6e202613c87e\",\"verification_status\":\"signature-bound\"}],\"executable\":false,\"expires_at_ms\":60000,\"facts\":[{\"evidence_digests\":[\"sha256:8341391d656408fe7740dddd9e5dd0a9128c45fae25be7a373a7edb8cc754da2\"],\"statement\":\"The proposed actions below are copied from the exact signed and accepted IntentDraft outcomes.\"}],\"format\":\"org.nth-dao.solver-proposal\",\"intent_envelope_digest\":\"sha256:2c488d061eeecbeb840c07931632cfbb394137fd02cfd02c63fb6e202613c87e\",\"policy_snapshot_digest\":\"sha256:19d0162cb85ccbe9adec999633259f02195f17222df0b63b0f4a892cd9c28ec0\",\"proposal_id\":\"proposal:conformance-alpha\",\"proposed_actions\":[\"Provide a review proposal without executing it.\"],\"requested_permissions\":[],\"review_required\":true,\"risks\":[\"This unsigned solver proposal is an unverified claim and requires deterministic policy evaluation plus explicit selection.\",\"Source content may contain untrusted instructions\"],\"scope_id\":\"workspace:conformance-intent\",\"selection_required\":true,\"solver_class\":\"org.nth-dao.solver.review\",\"solver_did\":\"\",\"solver_plugin_id\":\"org.nth-dao.intent.review-solver\",\"summary\":\"Review requirements and propose next steps.\",\"version\":\"1\"}",
+        "proposal_sha256": "sha256:3e5df3181d6cb88a6143b8e2a867f4642db13bed26b31656fc32413c7bf13a90",
+        "ready": true,
+        "status": "proposal",
+        "supported_solver_classes": [
+          "org.nth-dao.solver.review"
+        ]
+      }
+    },
+    {
+      "name": "wrong-proposal-digest",
+      "output": {
+        "authority": "none",
+        "commit_authority": false,
+        "detail": "",
+        "executable": false,
+        "invocation_context_digest": "sha256:cf5767adc1f21cf7fe60b819c2258845e07e7a633be36eb2ce8ef54786592d07",
+        "max_evidence": 32,
+        "max_proposal_bytes": 262144,
+        "operation": "propose",
+        "proposal_json": "{\"acceptance_audit_digest\":\"sha256:8031a68365829a2d5df1aff65df44f893c2050b43f187bca1a744cf9845ee49e\",\"assumptions\":[],\"authority\":\"none\",\"claim_status\":\"unverified\",\"commit_authority\":false,\"constraints\":[],\"created_at_ms\":2000,\"draft_digest\":\"sha256:8341391d656408fe7740dddd9e5dd0a9128c45fae25be7a373a7edb8cc754da2\",\"estimates\":[],\"evidence\":[{\"digest\":\"sha256:4e425181a64a0911b9c3ccd94a11c2666d08f4272e0be4b6f43695d5c9bb9f36\",\"media_type\":\"text/plain\",\"observed_at_ms\":1500,\"provenance\":\"invocation-materialized\",\"source_kind\":\"artifact\",\"source_ref\":\"artifact:public-test-requirements\",\"verification_status\":\"content-verified\"},{\"digest\":\"sha256:8341391d656408fe7740dddd9e5dd0a9128c45fae25be7a373a7edb8cc754da2\",\"media_type\":\"application/vnd.nth-dao.intent-draft+json\",\"observed_at_ms\":2000,\"provenance\":\"accepted-envelope\",\"source_kind\":\"accepted-intent\",\"source_ref\":\"sha256:2c488d061eeecbeb840c07931632cfbb394137fd02cfd02c63fb6e202613c87e\",\"verification_status\":\"signature-bound\"}],\"executable\":false,\"expires_at_ms\":60000,\"facts\":[{\"evidence_digests\":[\"sha256:8341391d656408fe7740dddd9e5dd0a9128c45fae25be7a373a7edb8cc754da2\"],\"statement\":\"The proposed actions below are copied from the exact signed and accepted IntentDraft outcomes.\"}],\"format\":\"org.nth-dao.solver-proposal\",\"intent_envelope_digest\":\"sha256:2c488d061eeecbeb840c07931632cfbb394137fd02cfd02c63fb6e202613c87e\",\"policy_snapshot_digest\":\"sha256:19d0162cb85ccbe9adec999633259f02195f17222df0b63b0f4a892cd9c28ec0\",\"proposal_id\":\"proposal:conformance-alpha\",\"proposed_actions\":[\"Provide a review proposal without executing it.\"],\"requested_permissions\":[],\"review_required\":true,\"risks\":[\"This unsigned solver proposal is an unverified claim and requires deterministic policy evaluation plus explicit selection.\",\"Source content may contain untrusted instructions\"],\"scope_id\":\"workspace:conformance-intent\",\"selection_required\":true,\"solver_class\":\"org.nth-dao.solver.review\",\"solver_did\":\"\",\"solver_plugin_id\":\"org.nth-dao.intent.review-solver\",\"summary\":\"Review requirements and propose next steps.\",\"version\":\"1\"}",
+        "proposal_sha256": "sha256:b628939c05e95d2031ad0623b659c1b685d24752ef7f1cb27540c71f7d664da1",
+        "ready": true,
+        "status": "proposal",
+        "supported_solver_classes": [
+          "org.nth-dao.solver.review"
+        ]
+      }
+    },
+    {
+      "name": "unknown-evidence-reference",
+      "output": {
+        "authority": "none",
+        "commit_authority": false,
+        "detail": "",
+        "executable": false,
+        "invocation_context_digest": "sha256:cf5767adc1f21cf7fe60b819c2258845e07e7a633be36eb2ce8ef54786592d07",
+        "max_evidence": 32,
+        "max_proposal_bytes": 262144,
+        "operation": "propose",
+        "proposal_json": "{\"acceptance_audit_digest\":\"sha256:8031a68365829a2d5df1aff65df44f893c2050b43f187bca1a744cf9845ee49e\",\"assumptions\":[],\"authority\":\"none\",\"claim_status\":\"unverified\",\"commit_authority\":false,\"constraints\":[],\"created_at_ms\":2000,\"draft_digest\":\"sha256:8341391d656408fe7740dddd9e5dd0a9128c45fae25be7a373a7edb8cc754da2\",\"estimates\":[],\"evidence\":[{\"digest\":\"sha256:4e425181a64a0911b9c3ccd94a11c2666d08f4272e0be4b6f43695d5c9bb9f36\",\"media_type\":\"text/plain\",\"observed_at_ms\":1500,\"provenance\":\"invocation-materialized\",\"source_kind\":\"artifact\",\"source_ref\":\"artifact:public-test-requirements\",\"verification_status\":\"content-verified\"},{\"digest\":\"sha256:8341391d656408fe7740dddd9e5dd0a9128c45fae25be7a373a7edb8cc754da2\",\"media_type\":\"application/vnd.nth-dao.intent-draft+json\",\"observed_at_ms\":2000,\"provenance\":\"accepted-envelope\",\"source_kind\":\"accepted-intent\",\"source_ref\":\"sha256:2c488d061eeecbeb840c07931632cfbb394137fd02cfd02c63fb6e202613c87e\",\"verification_status\":\"signature-bound\"}],\"executable\":false,\"expires_at_ms\":60000,\"facts\":[{\"evidence_digests\":[\"sha256:95f9a1783320e96b03b7247bcbd668c120fa5b2f15c222f1868dc3f5512bbafe\"],\"statement\":\"The proposed actions below are copied from the exact signed and accepted IntentDraft outcomes.\"}],\"format\":\"org.nth-dao.solver-proposal\",\"intent_envelope_digest\":\"sha256:2c488d061eeecbeb840c07931632cfbb394137fd02cfd02c63fb6e202613c87e\",\"policy_snapshot_digest\":\"sha256:19d0162cb85ccbe9adec999633259f02195f17222df0b63b0f4a892cd9c28ec0\",\"proposal_id\":\"proposal:conformance-alpha\",\"proposed_actions\":[\"Provide a review proposal without executing it.\"],\"requested_permissions\":[],\"review_required\":true,\"risks\":[\"This unsigned solver proposal is an unverified claim and requires deterministic policy evaluation plus explicit selection.\",\"Source content may contain untrusted instructions\"],\"scope_id\":\"workspace:conformance-intent\",\"selection_required\":true,\"solver_class\":\"org.nth-dao.solver.review\",\"solver_did\":\"\",\"solver_plugin_id\":\"org.nth-dao.intent.review-solver\",\"summary\":\"Review requirements and propose next steps.\",\"version\":\"1\"}",
+        "proposal_sha256": "sha256:2aaa2a50c60190109585377fa8777e60aba1b699c4a3986f7c1187ab51259525",
+        "ready": true,
+        "status": "proposal",
+        "supported_solver_classes": [
+          "org.nth-dao.solver.review"
+        ]
+      }
+    },
+    {
+      "name": "proposal-commit-authority",
+      "output": {
+        "authority": "none",
+        "commit_authority": false,
+        "detail": "",
+        "executable": false,
+        "invocation_context_digest": "sha256:cf5767adc1f21cf7fe60b819c2258845e07e7a633be36eb2ce8ef54786592d07",
+        "max_evidence": 32,
+        "max_proposal_bytes": 262144,
+        "operation": "propose",
+        "proposal_json": "{\"acceptance_audit_digest\":\"sha256:8031a68365829a2d5df1aff65df44f893c2050b43f187bca1a744cf9845ee49e\",\"assumptions\":[],\"authority\":\"none\",\"claim_status\":\"unverified\",\"commit_authority\":true,\"constraints\":[],\"created_at_ms\":2000,\"draft_digest\":\"sha256:8341391d656408fe7740dddd9e5dd0a9128c45fae25be7a373a7edb8cc754da2\",\"estimates\":[],\"evidence\":[{\"digest\":\"sha256:4e425181a64a0911b9c3ccd94a11c2666d08f4272e0be4b6f43695d5c9bb9f36\",\"media_type\":\"text/plain\",\"observed_at_ms\":1500,\"provenance\":\"invocation-materialized\",\"source_kind\":\"artifact\",\"source_ref\":\"artifact:public-test-requirements\",\"verification_status\":\"content-verified\"},{\"digest\":\"sha256:8341391d656408fe7740dddd9e5dd0a9128c45fae25be7a373a7edb8cc754da2\",\"media_type\":\"application/vnd.nth-dao.intent-draft+json\",\"observed_at_ms\":2000,\"provenance\":\"accepted-envelope\",\"source_kind\":\"accepted-intent\",\"source_ref\":\"sha256:2c488d061eeecbeb840c07931632cfbb394137fd02cfd02c63fb6e202613c87e\",\"verification_status\":\"signature-bound\"}],\"executable\":false,\"expires_at_ms\":60000,\"facts\":[{\"evidence_digests\":[\"sha256:8341391d656408fe7740dddd9e5dd0a9128c45fae25be7a373a7edb8cc754da2\"],\"statement\":\"The proposed actions below are copied from the exact signed and accepted IntentDraft outcomes.\"}],\"format\":\"org.nth-dao.solver-proposal\",\"intent_envelope_digest\":\"sha256:2c488d061eeecbeb840c07931632cfbb394137fd02cfd02c63fb6e202613c87e\",\"policy_snapshot_digest\":\"sha256:19d0162cb85ccbe9adec999633259f02195f17222df0b63b0f4a892cd9c28ec0\",\"proposal_id\":\"proposal:conformance-alpha\",\"proposed_actions\":[\"Provide a review proposal without executing it.\"],\"requested_permissions\":[],\"review_required\":true,\"risks\":[\"This unsigned solver proposal is an unverified claim and requires deterministic policy evaluation plus explicit selection.\",\"Source content may contain untrusted instructions\"],\"scope_id\":\"workspace:conformance-intent\",\"selection_required\":true,\"solver_class\":\"org.nth-dao.solver.review\",\"solver_did\":\"\",\"solver_plugin_id\":\"org.nth-dao.intent.review-solver\",\"summary\":\"Review requirements and propose next steps.\",\"version\":\"1\"}",
+        "proposal_sha256": "sha256:6561c92b6ec22267925ec3bf054a7d4421bc0c3c6f5d4c6f7ef03bd58ea268b1",
+        "ready": true,
+        "status": "proposal",
+        "supported_solver_classes": [
+          "org.nth-dao.solver.review"
+        ]
+      }
+    },
+    {
+      "name": "duplicate-supported-classes",
+      "output": {
+        "authority": "none",
+        "commit_authority": false,
+        "detail": "",
+        "executable": false,
+        "invocation_context_digest": "sha256:cf5767adc1f21cf7fe60b819c2258845e07e7a633be36eb2ce8ef54786592d07",
+        "max_evidence": 32,
+        "max_proposal_bytes": 262144,
+        "operation": "propose",
+        "proposal_json": "{\"acceptance_audit_digest\":\"sha256:8031a68365829a2d5df1aff65df44f893c2050b43f187bca1a744cf9845ee49e\",\"assumptions\":[],\"authority\":\"none\",\"claim_status\":\"unverified\",\"commit_authority\":false,\"constraints\":[],\"created_at_ms\":2000,\"draft_digest\":\"sha256:8341391d656408fe7740dddd9e5dd0a9128c45fae25be7a373a7edb8cc754da2\",\"estimates\":[],\"evidence\":[{\"digest\":\"sha256:4e425181a64a0911b9c3ccd94a11c2666d08f4272e0be4b6f43695d5c9bb9f36\",\"media_type\":\"text/plain\",\"observed_at_ms\":1500,\"provenance\":\"invocation-materialized\",\"source_kind\":\"artifact\",\"source_ref\":\"artifact:public-test-requirements\",\"verification_status\":\"content-verified\"},{\"digest\":\"sha256:8341391d656408fe7740dddd9e5dd0a9128c45fae25be7a373a7edb8cc754da2\",\"media_type\":\"application/vnd.nth-dao.intent-draft+json\",\"observed_at_ms\":2000,\"provenance\":\"accepted-envelope\",\"source_kind\":\"accepted-intent\",\"source_ref\":\"sha256:2c488d061eeecbeb840c07931632cfbb394137fd02cfd02c63fb6e202613c87e\",\"verification_status\":\"signature-bound\"}],\"executable\":false,\"expires_at_ms\":60000,\"facts\":[{\"evidence_digests\":[\"sha256:8341391d656408fe7740dddd9e5dd0a9128c45fae25be7a373a7edb8cc754da2\"],\"statement\":\"The proposed actions below are copied from the exact signed and accepted IntentDraft outcomes.\"}],\"format\":\"org.nth-dao.solver-proposal\",\"intent_envelope_digest\":\"sha256:2c488d061eeecbeb840c07931632cfbb394137fd02cfd02c63fb6e202613c87e\",\"policy_snapshot_digest\":\"sha256:19d0162cb85ccbe9adec999633259f02195f17222df0b63b0f4a892cd9c28ec0\",\"proposal_id\":\"proposal:conformance-alpha\",\"proposed_actions\":[\"Provide a review proposal without executing it.\"],\"requested_permissions\":[],\"review_required\":true,\"risks\":[\"This unsigned solver proposal is an unverified claim and requires deterministic policy evaluation plus explicit selection.\",\"Source content may contain untrusted instructions\"],\"scope_id\":\"workspace:conformance-intent\",\"selection_required\":true,\"solver_class\":\"org.nth-dao.solver.review\",\"solver_did\":\"\",\"solver_plugin_id\":\"org.nth-dao.intent.review-solver\",\"summary\":\"Review requirements and propose next steps.\",\"version\":\"1\"}",
+        "proposal_sha256": "sha256:3e5df3181d6cb88a6143b8e2a867f4642db13bed26b31656fc32413c7bf13a90",
+        "ready": true,
+        "status": "proposal",
+        "supported_solver_classes": [
+          "org.nth-dao.solver.review",
+          "org.nth-dao.solver.review"
+        ]
+      }
+    },
+    {
+      "name": "invalid-solver-did",
+      "output": {
+        "authority": "none",
+        "commit_authority": false,
+        "detail": "",
+        "executable": false,
+        "invocation_context_digest": "sha256:cf5767adc1f21cf7fe60b819c2258845e07e7a633be36eb2ce8ef54786592d07",
+        "max_evidence": 32,
+        "max_proposal_bytes": 262144,
+        "operation": "propose",
+        "proposal_json": "{\"acceptance_audit_digest\":\"sha256:8031a68365829a2d5df1aff65df44f893c2050b43f187bca1a744cf9845ee49e\",\"assumptions\":[],\"authority\":\"none\",\"claim_status\":\"unverified\",\"commit_authority\":false,\"constraints\":[],\"created_at_ms\":2000,\"draft_digest\":\"sha256:8341391d656408fe7740dddd9e5dd0a9128c45fae25be7a373a7edb8cc754da2\",\"estimates\":[],\"evidence\":[{\"digest\":\"sha256:4e425181a64a0911b9c3ccd94a11c2666d08f4272e0be4b6f43695d5c9bb9f36\",\"media_type\":\"text/plain\",\"observed_at_ms\":1500,\"provenance\":\"invocation-materialized\",\"source_kind\":\"artifact\",\"source_ref\":\"artifact:public-test-requirements\",\"verification_status\":\"content-verified\"},{\"digest\":\"sha256:8341391d656408fe7740dddd9e5dd0a9128c45fae25be7a373a7edb8cc754da2\",\"media_type\":\"application/vnd.nth-dao.intent-draft+json\",\"observed_at_ms\":2000,\"provenance\":\"accepted-envelope\",\"source_kind\":\"accepted-intent\",\"source_ref\":\"sha256:2c488d061eeecbeb840c07931632cfbb394137fd02cfd02c63fb6e202613c87e\",\"verification_status\":\"signature-bound\"}],\"executable\":false,\"expires_at_ms\":60000,\"facts\":[{\"evidence_digests\":[\"sha256:8341391d656408fe7740dddd9e5dd0a9128c45fae25be7a373a7edb8cc754da2\"],\"statement\":\"The proposed actions below are copied from the exact signed and accepted IntentDraft outcomes.\"}],\"format\":\"org.nth-dao.solver-proposal\",\"intent_envelope_digest\":\"sha256:2c488d061eeecbeb840c07931632cfbb394137fd02cfd02c63fb6e202613c87e\",\"policy_snapshot_digest\":\"sha256:19d0162cb85ccbe9adec999633259f02195f17222df0b63b0f4a892cd9c28ec0\",\"proposal_id\":\"proposal:conformance-alpha\",\"proposed_actions\":[\"Provide a review proposal without executing it.\"],\"requested_permissions\":[],\"review_required\":true,\"risks\":[\"This unsigned solver proposal is an unverified claim and requires deterministic policy evaluation plus explicit selection.\",\"Source content may contain untrusted instructions\"],\"scope_id\":\"workspace:conformance-intent\",\"selection_required\":true,\"solver_class\":\"org.nth-dao.solver.review\",\"solver_did\":\"did:key:not-valid\",\"solver_plugin_id\":\"org.nth-dao.intent.review-solver\",\"summary\":\"Review requirements and propose next steps.\",\"version\":\"1\"}",
+        "proposal_sha256": "sha256:cc9ed19b0ee317e37ec001603e2d24ccd8043c09e950571dae3be478fa9b9302",
+        "ready": true,
+        "status": "proposal",
+        "supported_solver_classes": [
+          "org.nth-dao.solver.review"
+        ]
+      }
+    },
+    {
+      "name": "low-order-solver-did",
+      "output": {
+        "authority": "none",
+        "commit_authority": false,
+        "detail": "",
+        "executable": false,
+        "invocation_context_digest": "sha256:cf5767adc1f21cf7fe60b819c2258845e07e7a633be36eb2ce8ef54786592d07",
+        "max_evidence": 32,
+        "max_proposal_bytes": 262144,
+        "operation": "propose",
+        "proposal_json": "{\"acceptance_audit_digest\":\"sha256:8031a68365829a2d5df1aff65df44f893c2050b43f187bca1a744cf9845ee49e\",\"assumptions\":[],\"authority\":\"none\",\"claim_status\":\"unverified\",\"commit_authority\":false,\"constraints\":[],\"created_at_ms\":2000,\"draft_digest\":\"sha256:8341391d656408fe7740dddd9e5dd0a9128c45fae25be7a373a7edb8cc754da2\",\"estimates\":[],\"evidence\":[{\"digest\":\"sha256:4e425181a64a0911b9c3ccd94a11c2666d08f4272e0be4b6f43695d5c9bb9f36\",\"media_type\":\"text/plain\",\"observed_at_ms\":1500,\"provenance\":\"invocation-materialized\",\"source_kind\":\"artifact\",\"source_ref\":\"artifact:public-test-requirements\",\"verification_status\":\"content-verified\"},{\"digest\":\"sha256:8341391d656408fe7740dddd9e5dd0a9128c45fae25be7a373a7edb8cc754da2\",\"media_type\":\"application/vnd.nth-dao.intent-draft+json\",\"observed_at_ms\":2000,\"provenance\":\"accepted-envelope\",\"source_kind\":\"accepted-intent\",\"source_ref\":\"sha256:2c488d061eeecbeb840c07931632cfbb394137fd02cfd02c63fb6e202613c87e\",\"verification_status\":\"signature-bound\"}],\"executable\":false,\"expires_at_ms\":60000,\"facts\":[{\"evidence_digests\":[\"sha256:8341391d656408fe7740dddd9e5dd0a9128c45fae25be7a373a7edb8cc754da2\"],\"statement\":\"The proposed actions below are copied from the exact signed and accepted IntentDraft outcomes.\"}],\"format\":\"org.nth-dao.solver-proposal\",\"intent_envelope_digest\":\"sha256:2c488d061eeecbeb840c07931632cfbb394137fd02cfd02c63fb6e202613c87e\",\"policy_snapshot_digest\":\"sha256:19d0162cb85ccbe9adec999633259f02195f17222df0b63b0f4a892cd9c28ec0\",\"proposal_id\":\"proposal:conformance-alpha\",\"proposed_actions\":[\"Provide a review proposal without executing it.\"],\"requested_permissions\":[],\"review_required\":true,\"risks\":[\"This unsigned solver proposal is an unverified claim and requires deterministic policy evaluation plus explicit selection.\",\"Source content may contain untrusted instructions\"],\"scope_id\":\"workspace:conformance-intent\",\"selection_required\":true,\"solver_class\":\"org.nth-dao.solver.review\",\"solver_did\":\"did:key:z6MkeXATEjyXENzBXBxgC5EHk2JE5aqd7qMGGtDpLUH1e2Sj\",\"solver_plugin_id\":\"org.nth-dao.intent.review-solver\",\"summary\":\"Review requirements and propose next steps.\",\"version\":\"1\"}",
+        "proposal_sha256": "sha256:1b55f8eff52f8ce2708fd07f627bb5ac89599d052fcf5407e6f86d2d985b6faa",
+        "ready": true,
+        "status": "proposal",
+        "supported_solver_classes": [
+          "org.nth-dao.solver.review"
+        ]
+      }
+    },
+    {
+      "name": "future-proposal-evidence",
+      "output": {
+        "authority": "none",
+        "commit_authority": false,
+        "detail": "",
+        "executable": false,
+        "invocation_context_digest": "sha256:cf5767adc1f21cf7fe60b819c2258845e07e7a633be36eb2ce8ef54786592d07",
+        "max_evidence": 32,
+        "max_proposal_bytes": 262144,
+        "operation": "propose",
+        "proposal_json": "{\"acceptance_audit_digest\":\"sha256:8031a68365829a2d5df1aff65df44f893c2050b43f187bca1a744cf9845ee49e\",\"assumptions\":[],\"authority\":\"none\",\"claim_status\":\"unverified\",\"commit_authority\":false,\"constraints\":[],\"created_at_ms\":2000,\"draft_digest\":\"sha256:8341391d656408fe7740dddd9e5dd0a9128c45fae25be7a373a7edb8cc754da2\",\"estimates\":[],\"evidence\":[{\"digest\":\"sha256:4e425181a64a0911b9c3ccd94a11c2666d08f4272e0be4b6f43695d5c9bb9f36\",\"media_type\":\"text/plain\",\"observed_at_ms\":2001,\"provenance\":\"invocation-materialized\",\"source_kind\":\"artifact\",\"source_ref\":\"artifact:public-test-requirements\",\"verification_status\":\"content-verified\"},{\"digest\":\"sha256:8341391d656408fe7740dddd9e5dd0a9128c45fae25be7a373a7edb8cc754da2\",\"media_type\":\"application/vnd.nth-dao.intent-draft+json\",\"observed_at_ms\":2000,\"provenance\":\"accepted-envelope\",\"source_kind\":\"accepted-intent\",\"source_ref\":\"sha256:2c488d061eeecbeb840c07931632cfbb394137fd02cfd02c63fb6e202613c87e\",\"verification_status\":\"signature-bound\"}],\"executable\":false,\"expires_at_ms\":60000,\"facts\":[{\"evidence_digests\":[\"sha256:8341391d656408fe7740dddd9e5dd0a9128c45fae25be7a373a7edb8cc754da2\"],\"statement\":\"The proposed actions below are copied from the exact signed and accepted IntentDraft outcomes.\"}],\"format\":\"org.nth-dao.solver-proposal\",\"intent_envelope_digest\":\"sha256:2c488d061eeecbeb840c07931632cfbb394137fd02cfd02c63fb6e202613c87e\",\"policy_snapshot_digest\":\"sha256:19d0162cb85ccbe9adec999633259f02195f17222df0b63b0f4a892cd9c28ec0\",\"proposal_id\":\"proposal:conformance-alpha\",\"proposed_actions\":[\"Provide a review proposal without executing it.\"],\"requested_permissions\":[],\"review_required\":true,\"risks\":[\"This unsigned solver proposal is an unverified claim and requires deterministic policy evaluation plus explicit selection.\",\"Source content may contain untrusted instructions\"],\"scope_id\":\"workspace:conformance-intent\",\"selection_required\":true,\"solver_class\":\"org.nth-dao.solver.review\",\"solver_did\":\"\",\"solver_plugin_id\":\"org.nth-dao.intent.review-solver\",\"summary\":\"Review requirements and propose next steps.\",\"version\":\"1\"}",
+        "proposal_sha256": "sha256:abd159409e1d20513d1e4651d13f2a3a38adf54e3a7c26a28a7da30b7cf1c9c1",
+        "ready": true,
+        "status": "proposal",
+        "supported_solver_classes": [
+          "org.nth-dao.solver.review"
+        ]
+      }
+    }
+  ],
+  "negative_exchanges": [
+    {
+      "name": "permission-expansion",
+      "request": {
+        "acceptance_audit_digest": "sha256:8031a68365829a2d5df1aff65df44f893c2050b43f187bca1a744cf9845ee49e",
+        "evidence": [
+          {
+            "content_base64": "UFVCTElDLU5USC1URVNULU9OTFk6aW50ZW50LXNvbHZlci1ob3N0LWV2aWRlbmNlLXYx",
+            "digest": "sha256:4e425181a64a0911b9c3ccd94a11c2666d08f4272e0be4b6f43695d5c9bb9f36",
+            "media_type": "text/plain",
+            "observed_at_ms": 1500,
+            "provenance": "invocation-materialized",
+            "source_kind": "artifact",
+            "source_ref": "artifact:public-test-requirements",
+            "verification_status": "content-verified"
+          }
+        ],
+        "expires_at_ms": 60000,
+        "intent_envelope_digest": "sha256:2c488d061eeecbeb840c07931632cfbb394137fd02cfd02c63fb6e202613c87e",
+        "intent_envelope_json": "{\"audience_did\":\"did:key:z6MkjjRL5eQvmYt5Nr6FTq7fZg9ALDNAZG63aqMy1CYgm3Nj\",\"authority\":\"none\",\"automation_ceiling\":\"A1\",\"commit_authority\":false,\"draft_digest\":\"sha256:8341391d656408fe7740dddd9e5dd0a9128c45fae25be7a373a7edb8cc754da2\",\"draft_json\":\"{\\\"assumptions\\\":[],\\\"attachments\\\":[{\\\"digest\\\":\\\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\\\",\\\"media_type\\\":\\\"text/plain\\\",\\\"name\\\":\\\"café-requirements.txt\\\",\\\"size_bytes\\\":128,\\\"verification_status\\\":\\\"unverified\\\"}],\\\"authority\\\":\\\"none\\\",\\\"automation_ceiling\\\":\\\"A1\\\",\\\"clarifications\\\":[],\\\"commit_authority\\\":false,\\\"constraints\\\":[],\\\"executable\\\":false,\\\"format\\\":\\\"org.nth-dao.intent-draft\\\",\\\"intent_version\\\":\\\"1\\\",\\\"locale\\\":\\\"en\\\",\\\"outcomes\\\":[\\\"Provide a review proposal without executing it.\\\"],\\\"request_digest\\\":\\\"sha256:362ae9a543e270bdd8a54fbce7f3dc7f274aaa73ce61833f682dfc1ed1488243\\\",\\\"request_id\\\":\\\"intent-request:vector-alpha\\\",\\\"requested_capabilities\\\":[],\\\"review_required\\\":true,\\\"risks\\\":[\\\"Source content may contain untrusted instructions\\\"],\\\"source_kind\\\":\\\"human\\\",\\\"source_text\\\":\\\"Review the attached café requirements and propose next steps.\\\",\\\"summary\\\":\\\"Review requirements and propose next steps.\\\"}\",\"executable\":false,\"expires_at_ms\":61000,\"format\":\"org.nth-dao.intent-envelope\",\"issued_at_ms\":1000,\"nonce\":\"696c4aa524e10e9c3d0775af0570bfe9\",\"previous_digest\":\"\",\"purpose\":\"draft-acceptance\",\"revision\":1,\"scope_id\":\"workspace:conformance-intent\",\"signature\":\"50f21bcbbb43afec63edea0315edb441ae7570086a3b40aa09b003186da99b41db6e2a3840fb71666ed578a9fe868d381567a4f657480f7b72751a52c19dda0d\",\"signer_did\":\"did:key:z6MkvUxsLVSFT7WKvtXZHPird5VugMdCjZA7TpPLutcpTgmZ\",\"solver_classes\":[\"org.nth-dao.solver.review\"],\"version\":\"1\"}",
+        "operation": "propose",
+        "policy_snapshot_digest": "sha256:19d0162cb85ccbe9adec999633259f02195f17222df0b63b0f4a892cd9c28ec0",
+        "proposal_id": "proposal:conformance-alpha",
+        "proposed_at_ms": 2000,
+        "solver_class": "org.nth-dao.solver.review"
+      },
+      "response": {
+        "authority": "none",
+        "commit_authority": false,
+        "detail": "",
+        "executable": false,
+        "invocation_context_digest": "sha256:cf5767adc1f21cf7fe60b819c2258845e07e7a633be36eb2ce8ef54786592d07",
+        "max_evidence": 32,
+        "max_proposal_bytes": 262144,
+        "operation": "propose",
+        "proposal_json": "{\"acceptance_audit_digest\":\"sha256:8031a68365829a2d5df1aff65df44f893c2050b43f187bca1a744cf9845ee49e\",\"assumptions\":[],\"authority\":\"none\",\"claim_status\":\"unverified\",\"commit_authority\":false,\"constraints\":[],\"created_at_ms\":2000,\"draft_digest\":\"sha256:8341391d656408fe7740dddd9e5dd0a9128c45fae25be7a373a7edb8cc754da2\",\"estimates\":[],\"evidence\":[{\"digest\":\"sha256:4e425181a64a0911b9c3ccd94a11c2666d08f4272e0be4b6f43695d5c9bb9f36\",\"media_type\":\"text/plain\",\"observed_at_ms\":1500,\"provenance\":\"invocation-materialized\",\"source_kind\":\"artifact\",\"source_ref\":\"artifact:public-test-requirements\",\"verification_status\":\"content-verified\"},{\"digest\":\"sha256:8341391d656408fe7740dddd9e5dd0a9128c45fae25be7a373a7edb8cc754da2\",\"media_type\":\"application/vnd.nth-dao.intent-draft+json\",\"observed_at_ms\":2000,\"provenance\":\"accepted-envelope\",\"source_kind\":\"accepted-intent\",\"source_ref\":\"sha256:2c488d061eeecbeb840c07931632cfbb394137fd02cfd02c63fb6e202613c87e\",\"verification_status\":\"signature-bound\"}],\"executable\":false,\"expires_at_ms\":60000,\"facts\":[{\"evidence_digests\":[\"sha256:8341391d656408fe7740dddd9e5dd0a9128c45fae25be7a373a7edb8cc754da2\"],\"statement\":\"The proposed actions below are copied from the exact signed and accepted IntentDraft outcomes.\"}],\"format\":\"org.nth-dao.solver-proposal\",\"intent_envelope_digest\":\"sha256:2c488d061eeecbeb840c07931632cfbb394137fd02cfd02c63fb6e202613c87e\",\"policy_snapshot_digest\":\"sha256:19d0162cb85ccbe9adec999633259f02195f17222df0b63b0f4a892cd9c28ec0\",\"proposal_id\":\"proposal:conformance-alpha\",\"proposed_actions\":[\"Provide a review proposal without executing it.\"],\"requested_permissions\":[\"payment.commit\"],\"review_required\":true,\"risks\":[\"This unsigned solver proposal is an unverified claim and requires deterministic policy evaluation plus explicit selection.\",\"Source content may contain untrusted instructions\"],\"scope_id\":\"workspace:conformance-intent\",\"selection_required\":true,\"solver_class\":\"org.nth-dao.solver.review\",\"solver_did\":\"\",\"solver_plugin_id\":\"org.nth-dao.intent.review-solver\",\"summary\":\"Review requirements and propose next steps.\",\"version\":\"1\"}",
+        "proposal_sha256": "sha256:2c1025558c01fdfa0472c71b774a311a30fc1c01be8e4ef917a0f110a55f33dd",
+        "ready": true,
+        "status": "proposal",
+        "supported_solver_classes": [
+          "org.nth-dao.solver.review"
+        ]
+      }
+    },
+    {
+      "name": "policy-rebinding",
+      "request": {
+        "acceptance_audit_digest": "sha256:8031a68365829a2d5df1aff65df44f893c2050b43f187bca1a744cf9845ee49e",
+        "evidence": [
+          {
+            "content_base64": "UFVCTElDLU5USC1URVNULU9OTFk6aW50ZW50LXNvbHZlci1ob3N0LWV2aWRlbmNlLXYx",
+            "digest": "sha256:4e425181a64a0911b9c3ccd94a11c2666d08f4272e0be4b6f43695d5c9bb9f36",
+            "media_type": "text/plain",
+            "observed_at_ms": 1500,
+            "provenance": "invocation-materialized",
+            "source_kind": "artifact",
+            "source_ref": "artifact:public-test-requirements",
+            "verification_status": "content-verified"
+          }
+        ],
+        "expires_at_ms": 60000,
+        "intent_envelope_digest": "sha256:2c488d061eeecbeb840c07931632cfbb394137fd02cfd02c63fb6e202613c87e",
+        "intent_envelope_json": "{\"audience_did\":\"did:key:z6MkjjRL5eQvmYt5Nr6FTq7fZg9ALDNAZG63aqMy1CYgm3Nj\",\"authority\":\"none\",\"automation_ceiling\":\"A1\",\"commit_authority\":false,\"draft_digest\":\"sha256:8341391d656408fe7740dddd9e5dd0a9128c45fae25be7a373a7edb8cc754da2\",\"draft_json\":\"{\\\"assumptions\\\":[],\\\"attachments\\\":[{\\\"digest\\\":\\\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\\\",\\\"media_type\\\":\\\"text/plain\\\",\\\"name\\\":\\\"café-requirements.txt\\\",\\\"size_bytes\\\":128,\\\"verification_status\\\":\\\"unverified\\\"}],\\\"authority\\\":\\\"none\\\",\\\"automation_ceiling\\\":\\\"A1\\\",\\\"clarifications\\\":[],\\\"commit_authority\\\":false,\\\"constraints\\\":[],\\\"executable\\\":false,\\\"format\\\":\\\"org.nth-dao.intent-draft\\\",\\\"intent_version\\\":\\\"1\\\",\\\"locale\\\":\\\"en\\\",\\\"outcomes\\\":[\\\"Provide a review proposal without executing it.\\\"],\\\"request_digest\\\":\\\"sha256:362ae9a543e270bdd8a54fbce7f3dc7f274aaa73ce61833f682dfc1ed1488243\\\",\\\"request_id\\\":\\\"intent-request:vector-alpha\\\",\\\"requested_capabilities\\\":[],\\\"review_required\\\":true,\\\"risks\\\":[\\\"Source content may contain untrusted instructions\\\"],\\\"source_kind\\\":\\\"human\\\",\\\"source_text\\\":\\\"Review the attached café requirements and propose next steps.\\\",\\\"summary\\\":\\\"Review requirements and propose next steps.\\\"}\",\"executable\":false,\"expires_at_ms\":61000,\"format\":\"org.nth-dao.intent-envelope\",\"issued_at_ms\":1000,\"nonce\":\"696c4aa524e10e9c3d0775af0570bfe9\",\"previous_digest\":\"\",\"purpose\":\"draft-acceptance\",\"revision\":1,\"scope_id\":\"workspace:conformance-intent\",\"signature\":\"50f21bcbbb43afec63edea0315edb441ae7570086a3b40aa09b003186da99b41db6e2a3840fb71666ed578a9fe868d381567a4f657480f7b72751a52c19dda0d\",\"signer_did\":\"did:key:z6MkvUxsLVSFT7WKvtXZHPird5VugMdCjZA7TpPLutcpTgmZ\",\"solver_classes\":[\"org.nth-dao.solver.review\"],\"version\":\"1\"}",
+        "operation": "propose",
+        "policy_snapshot_digest": "sha256:19d0162cb85ccbe9adec999633259f02195f17222df0b63b0f4a892cd9c28ec0",
+        "proposal_id": "proposal:conformance-alpha",
+        "proposed_at_ms": 2000,
+        "solver_class": "org.nth-dao.solver.review"
+      },
+      "response": {
+        "authority": "none",
+        "commit_authority": false,
+        "detail": "",
+        "executable": false,
+        "invocation_context_digest": "sha256:cf5767adc1f21cf7fe60b819c2258845e07e7a633be36eb2ce8ef54786592d07",
+        "max_evidence": 32,
+        "max_proposal_bytes": 262144,
+        "operation": "propose",
+        "proposal_json": "{\"acceptance_audit_digest\":\"sha256:8031a68365829a2d5df1aff65df44f893c2050b43f187bca1a744cf9845ee49e\",\"assumptions\":[],\"authority\":\"none\",\"claim_status\":\"unverified\",\"commit_authority\":false,\"constraints\":[],\"created_at_ms\":2000,\"draft_digest\":\"sha256:8341391d656408fe7740dddd9e5dd0a9128c45fae25be7a373a7edb8cc754da2\",\"estimates\":[],\"evidence\":[{\"digest\":\"sha256:4e425181a64a0911b9c3ccd94a11c2666d08f4272e0be4b6f43695d5c9bb9f36\",\"media_type\":\"text/plain\",\"observed_at_ms\":1500,\"provenance\":\"invocation-materialized\",\"source_kind\":\"artifact\",\"source_ref\":\"artifact:public-test-requirements\",\"verification_status\":\"content-verified\"},{\"digest\":\"sha256:8341391d656408fe7740dddd9e5dd0a9128c45fae25be7a373a7edb8cc754da2\",\"media_type\":\"application/vnd.nth-dao.intent-draft+json\",\"observed_at_ms\":2000,\"provenance\":\"accepted-envelope\",\"source_kind\":\"accepted-intent\",\"source_ref\":\"sha256:2c488d061eeecbeb840c07931632cfbb394137fd02cfd02c63fb6e202613c87e\",\"verification_status\":\"signature-bound\"}],\"executable\":false,\"expires_at_ms\":60000,\"facts\":[{\"evidence_digests\":[\"sha256:8341391d656408fe7740dddd9e5dd0a9128c45fae25be7a373a7edb8cc754da2\"],\"statement\":\"The proposed actions below are copied from the exact signed and accepted IntentDraft outcomes.\"}],\"format\":\"org.nth-dao.solver-proposal\",\"intent_envelope_digest\":\"sha256:2c488d061eeecbeb840c07931632cfbb394137fd02cfd02c63fb6e202613c87e\",\"policy_snapshot_digest\":\"sha256:e1dd9d145918f41e90a410420e097f27803c456d8cd0c19981a9b6ce62ebc990\",\"proposal_id\":\"proposal:conformance-alpha\",\"proposed_actions\":[\"Provide a review proposal without executing it.\"],\"requested_permissions\":[],\"review_required\":true,\"risks\":[\"This unsigned solver proposal is an unverified claim and requires deterministic policy evaluation plus explicit selection.\",\"Source content may contain untrusted instructions\"],\"scope_id\":\"workspace:conformance-intent\",\"selection_required\":true,\"solver_class\":\"org.nth-dao.solver.review\",\"solver_did\":\"\",\"solver_plugin_id\":\"org.nth-dao.intent.review-solver\",\"summary\":\"Review requirements and propose next steps.\",\"version\":\"1\"}",
+        "proposal_sha256": "sha256:064b11e34b6aa15921557e72bb49a93b4a10891d854365091dcc7d70dac3a109",
+        "ready": true,
+        "status": "proposal",
+        "supported_solver_classes": [
+          "org.nth-dao.solver.review"
+        ]
+      }
+    },
+    {
+      "name": "host-evidence-dropped",
+      "request": {
+        "acceptance_audit_digest": "sha256:8031a68365829a2d5df1aff65df44f893c2050b43f187bca1a744cf9845ee49e",
+        "evidence": [
+          {
+            "content_base64": "UFVCTElDLU5USC1URVNULU9OTFk6aW50ZW50LXNvbHZlci1ob3N0LWV2aWRlbmNlLXYx",
+            "digest": "sha256:4e425181a64a0911b9c3ccd94a11c2666d08f4272e0be4b6f43695d5c9bb9f36",
+            "media_type": "text/plain",
+            "observed_at_ms": 1500,
+            "provenance": "invocation-materialized",
+            "source_kind": "artifact",
+            "source_ref": "artifact:public-test-requirements",
+            "verification_status": "content-verified"
+          }
+        ],
+        "expires_at_ms": 60000,
+        "intent_envelope_digest": "sha256:2c488d061eeecbeb840c07931632cfbb394137fd02cfd02c63fb6e202613c87e",
+        "intent_envelope_json": "{\"audience_did\":\"did:key:z6MkjjRL5eQvmYt5Nr6FTq7fZg9ALDNAZG63aqMy1CYgm3Nj\",\"authority\":\"none\",\"automation_ceiling\":\"A1\",\"commit_authority\":false,\"draft_digest\":\"sha256:8341391d656408fe7740dddd9e5dd0a9128c45fae25be7a373a7edb8cc754da2\",\"draft_json\":\"{\\\"assumptions\\\":[],\\\"attachments\\\":[{\\\"digest\\\":\\\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\\\",\\\"media_type\\\":\\\"text/plain\\\",\\\"name\\\":\\\"café-requirements.txt\\\",\\\"size_bytes\\\":128,\\\"verification_status\\\":\\\"unverified\\\"}],\\\"authority\\\":\\\"none\\\",\\\"automation_ceiling\\\":\\\"A1\\\",\\\"clarifications\\\":[],\\\"commit_authority\\\":false,\\\"constraints\\\":[],\\\"executable\\\":false,\\\"format\\\":\\\"org.nth-dao.intent-draft\\\",\\\"intent_version\\\":\\\"1\\\",\\\"locale\\\":\\\"en\\\",\\\"outcomes\\\":[\\\"Provide a review proposal without executing it.\\\"],\\\"request_digest\\\":\\\"sha256:362ae9a543e270bdd8a54fbce7f3dc7f274aaa73ce61833f682dfc1ed1488243\\\",\\\"request_id\\\":\\\"intent-request:vector-alpha\\\",\\\"requested_capabilities\\\":[],\\\"review_required\\\":true,\\\"risks\\\":[\\\"Source content may contain untrusted instructions\\\"],\\\"source_kind\\\":\\\"human\\\",\\\"source_text\\\":\\\"Review the attached café requirements and propose next steps.\\\",\\\"summary\\\":\\\"Review requirements and propose next steps.\\\"}\",\"executable\":false,\"expires_at_ms\":61000,\"format\":\"org.nth-dao.intent-envelope\",\"issued_at_ms\":1000,\"nonce\":\"696c4aa524e10e9c3d0775af0570bfe9\",\"previous_digest\":\"\",\"purpose\":\"draft-acceptance\",\"revision\":1,\"scope_id\":\"workspace:conformance-intent\",\"signature\":\"50f21bcbbb43afec63edea0315edb441ae7570086a3b40aa09b003186da99b41db6e2a3840fb71666ed578a9fe868d381567a4f657480f7b72751a52c19dda0d\",\"signer_did\":\"did:key:z6MkvUxsLVSFT7WKvtXZHPird5VugMdCjZA7TpPLutcpTgmZ\",\"solver_classes\":[\"org.nth-dao.solver.review\"],\"version\":\"1\"}",
+        "operation": "propose",
+        "policy_snapshot_digest": "sha256:19d0162cb85ccbe9adec999633259f02195f17222df0b63b0f4a892cd9c28ec0",
+        "proposal_id": "proposal:conformance-alpha",
+        "proposed_at_ms": 2000,
+        "solver_class": "org.nth-dao.solver.review"
+      },
+      "response": {
+        "authority": "none",
+        "commit_authority": false,
+        "detail": "",
+        "executable": false,
+        "invocation_context_digest": "sha256:cf5767adc1f21cf7fe60b819c2258845e07e7a633be36eb2ce8ef54786592d07",
+        "max_evidence": 32,
+        "max_proposal_bytes": 262144,
+        "operation": "propose",
+        "proposal_json": "{\"acceptance_audit_digest\":\"sha256:8031a68365829a2d5df1aff65df44f893c2050b43f187bca1a744cf9845ee49e\",\"assumptions\":[],\"authority\":\"none\",\"claim_status\":\"unverified\",\"commit_authority\":false,\"constraints\":[],\"created_at_ms\":2000,\"draft_digest\":\"sha256:8341391d656408fe7740dddd9e5dd0a9128c45fae25be7a373a7edb8cc754da2\",\"estimates\":[],\"evidence\":[{\"digest\":\"sha256:8341391d656408fe7740dddd9e5dd0a9128c45fae25be7a373a7edb8cc754da2\",\"media_type\":\"application/vnd.nth-dao.intent-draft+json\",\"observed_at_ms\":2000,\"provenance\":\"accepted-envelope\",\"source_kind\":\"accepted-intent\",\"source_ref\":\"sha256:2c488d061eeecbeb840c07931632cfbb394137fd02cfd02c63fb6e202613c87e\",\"verification_status\":\"signature-bound\"}],\"executable\":false,\"expires_at_ms\":60000,\"facts\":[{\"evidence_digests\":[\"sha256:8341391d656408fe7740dddd9e5dd0a9128c45fae25be7a373a7edb8cc754da2\"],\"statement\":\"The proposed actions below are copied from the exact signed and accepted IntentDraft outcomes.\"}],\"format\":\"org.nth-dao.solver-proposal\",\"intent_envelope_digest\":\"sha256:2c488d061eeecbeb840c07931632cfbb394137fd02cfd02c63fb6e202613c87e\",\"policy_snapshot_digest\":\"sha256:19d0162cb85ccbe9adec999633259f02195f17222df0b63b0f4a892cd9c28ec0\",\"proposal_id\":\"proposal:conformance-alpha\",\"proposed_actions\":[\"Provide a review proposal without executing it.\"],\"requested_permissions\":[],\"review_required\":true,\"risks\":[\"This unsigned solver proposal is an unverified claim and requires deterministic policy evaluation plus explicit selection.\",\"Source content may contain untrusted instructions\"],\"scope_id\":\"workspace:conformance-intent\",\"selection_required\":true,\"solver_class\":\"org.nth-dao.solver.review\",\"solver_did\":\"\",\"solver_plugin_id\":\"org.nth-dao.intent.review-solver\",\"summary\":\"Review requirements and propose next steps.\",\"version\":\"1\"}",
+        "proposal_sha256": "sha256:afaff6eb5e23cdc29ce7cb71d889de37c664c1de76cd8a87fd06fe261b1995f5",
+        "ready": true,
+        "status": "proposal",
+        "supported_solver_classes": [
+          "org.nth-dao.solver.review"
+        ]
+      }
+    },
+    {
+      "name": "proposal-id-rebinding",
+      "request": {
+        "acceptance_audit_digest": "sha256:8031a68365829a2d5df1aff65df44f893c2050b43f187bca1a744cf9845ee49e",
+        "evidence": [
+          {
+            "content_base64": "UFVCTElDLU5USC1URVNULU9OTFk6aW50ZW50LXNvbHZlci1ob3N0LWV2aWRlbmNlLXYx",
+            "digest": "sha256:4e425181a64a0911b9c3ccd94a11c2666d08f4272e0be4b6f43695d5c9bb9f36",
+            "media_type": "text/plain",
+            "observed_at_ms": 1500,
+            "provenance": "invocation-materialized",
+            "source_kind": "artifact",
+            "source_ref": "artifact:public-test-requirements",
+            "verification_status": "content-verified"
+          }
+        ],
+        "expires_at_ms": 60000,
+        "intent_envelope_digest": "sha256:2c488d061eeecbeb840c07931632cfbb394137fd02cfd02c63fb6e202613c87e",
+        "intent_envelope_json": "{\"audience_did\":\"did:key:z6MkjjRL5eQvmYt5Nr6FTq7fZg9ALDNAZG63aqMy1CYgm3Nj\",\"authority\":\"none\",\"automation_ceiling\":\"A1\",\"commit_authority\":false,\"draft_digest\":\"sha256:8341391d656408fe7740dddd9e5dd0a9128c45fae25be7a373a7edb8cc754da2\",\"draft_json\":\"{\\\"assumptions\\\":[],\\\"attachments\\\":[{\\\"digest\\\":\\\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\\\",\\\"media_type\\\":\\\"text/plain\\\",\\\"name\\\":\\\"café-requirements.txt\\\",\\\"size_bytes\\\":128,\\\"verification_status\\\":\\\"unverified\\\"}],\\\"authority\\\":\\\"none\\\",\\\"automation_ceiling\\\":\\\"A1\\\",\\\"clarifications\\\":[],\\\"commit_authority\\\":false,\\\"constraints\\\":[],\\\"executable\\\":false,\\\"format\\\":\\\"org.nth-dao.intent-draft\\\",\\\"intent_version\\\":\\\"1\\\",\\\"locale\\\":\\\"en\\\",\\\"outcomes\\\":[\\\"Provide a review proposal without executing it.\\\"],\\\"request_digest\\\":\\\"sha256:362ae9a543e270bdd8a54fbce7f3dc7f274aaa73ce61833f682dfc1ed1488243\\\",\\\"request_id\\\":\\\"intent-request:vector-alpha\\\",\\\"requested_capabilities\\\":[],\\\"review_required\\\":true,\\\"risks\\\":[\\\"Source content may contain untrusted instructions\\\"],\\\"source_kind\\\":\\\"human\\\",\\\"source_text\\\":\\\"Review the attached café requirements and propose next steps.\\\",\\\"summary\\\":\\\"Review requirements and propose next steps.\\\"}\",\"executable\":false,\"expires_at_ms\":61000,\"format\":\"org.nth-dao.intent-envelope\",\"issued_at_ms\":1000,\"nonce\":\"696c4aa524e10e9c3d0775af0570bfe9\",\"previous_digest\":\"\",\"purpose\":\"draft-acceptance\",\"revision\":1,\"scope_id\":\"workspace:conformance-intent\",\"signature\":\"50f21bcbbb43afec63edea0315edb441ae7570086a3b40aa09b003186da99b41db6e2a3840fb71666ed578a9fe868d381567a4f657480f7b72751a52c19dda0d\",\"signer_did\":\"did:key:z6MkvUxsLVSFT7WKvtXZHPird5VugMdCjZA7TpPLutcpTgmZ\",\"solver_classes\":[\"org.nth-dao.solver.review\"],\"version\":\"1\"}",
+        "operation": "propose",
+        "policy_snapshot_digest": "sha256:19d0162cb85ccbe9adec999633259f02195f17222df0b63b0f4a892cd9c28ec0",
+        "proposal_id": "proposal:conformance-alpha",
+        "proposed_at_ms": 2000,
+        "solver_class": "org.nth-dao.solver.review"
+      },
+      "response": {
+        "authority": "none",
+        "commit_authority": false,
+        "detail": "",
+        "executable": false,
+        "invocation_context_digest": "sha256:cf5767adc1f21cf7fe60b819c2258845e07e7a633be36eb2ce8ef54786592d07",
+        "max_evidence": 32,
+        "max_proposal_bytes": 262144,
+        "operation": "propose",
+        "proposal_json": "{\"acceptance_audit_digest\":\"sha256:8031a68365829a2d5df1aff65df44f893c2050b43f187bca1a744cf9845ee49e\",\"assumptions\":[],\"authority\":\"none\",\"claim_status\":\"unverified\",\"commit_authority\":false,\"constraints\":[],\"created_at_ms\":2000,\"draft_digest\":\"sha256:8341391d656408fe7740dddd9e5dd0a9128c45fae25be7a373a7edb8cc754da2\",\"estimates\":[],\"evidence\":[{\"digest\":\"sha256:4e425181a64a0911b9c3ccd94a11c2666d08f4272e0be4b6f43695d5c9bb9f36\",\"media_type\":\"text/plain\",\"observed_at_ms\":1500,\"provenance\":\"invocation-materialized\",\"source_kind\":\"artifact\",\"source_ref\":\"artifact:public-test-requirements\",\"verification_status\":\"content-verified\"},{\"digest\":\"sha256:8341391d656408fe7740dddd9e5dd0a9128c45fae25be7a373a7edb8cc754da2\",\"media_type\":\"application/vnd.nth-dao.intent-draft+json\",\"observed_at_ms\":2000,\"provenance\":\"accepted-envelope\",\"source_kind\":\"accepted-intent\",\"source_ref\":\"sha256:2c488d061eeecbeb840c07931632cfbb394137fd02cfd02c63fb6e202613c87e\",\"verification_status\":\"signature-bound\"}],\"executable\":false,\"expires_at_ms\":60000,\"facts\":[{\"evidence_digests\":[\"sha256:8341391d656408fe7740dddd9e5dd0a9128c45fae25be7a373a7edb8cc754da2\"],\"statement\":\"The proposed actions below are copied from the exact signed and accepted IntentDraft outcomes.\"}],\"format\":\"org.nth-dao.solver-proposal\",\"intent_envelope_digest\":\"sha256:2c488d061eeecbeb840c07931632cfbb394137fd02cfd02c63fb6e202613c87e\",\"policy_snapshot_digest\":\"sha256:19d0162cb85ccbe9adec999633259f02195f17222df0b63b0f4a892cd9c28ec0\",\"proposal_id\":\"proposal:other\",\"proposed_actions\":[\"Provide a review proposal without executing it.\"],\"requested_permissions\":[],\"review_required\":true,\"risks\":[\"This unsigned solver proposal is an unverified claim and requires deterministic policy evaluation plus explicit selection.\",\"Source content may contain untrusted instructions\"],\"scope_id\":\"workspace:conformance-intent\",\"selection_required\":true,\"solver_class\":\"org.nth-dao.solver.review\",\"solver_did\":\"\",\"solver_plugin_id\":\"org.nth-dao.intent.review-solver\",\"summary\":\"Review requirements and propose next steps.\",\"version\":\"1\"}",
+        "proposal_sha256": "sha256:0df98aeed3d44c018961a8c74c4d6ad6e6a3d5453b26fcc0e5d51fa428affbdc",
+        "ready": true,
+        "status": "proposal",
+        "supported_solver_classes": [
+          "org.nth-dao.solver.review"
+        ]
+      }
+    },
+    {
+      "name": "unsupported-solver-class",
+      "request": {
+        "acceptance_audit_digest": "sha256:8031a68365829a2d5df1aff65df44f893c2050b43f187bca1a744cf9845ee49e",
+        "evidence": [
+          {
+            "content_base64": "UFVCTElDLU5USC1URVNULU9OTFk6aW50ZW50LXNvbHZlci1ob3N0LWV2aWRlbmNlLXYx",
+            "digest": "sha256:4e425181a64a0911b9c3ccd94a11c2666d08f4272e0be4b6f43695d5c9bb9f36",
+            "media_type": "text/plain",
+            "observed_at_ms": 1500,
+            "provenance": "invocation-materialized",
+            "source_kind": "artifact",
+            "source_ref": "artifact:public-test-requirements",
+            "verification_status": "content-verified"
+          }
+        ],
+        "expires_at_ms": 60000,
+        "intent_envelope_digest": "sha256:2c488d061eeecbeb840c07931632cfbb394137fd02cfd02c63fb6e202613c87e",
+        "intent_envelope_json": "{\"audience_did\":\"did:key:z6MkjjRL5eQvmYt5Nr6FTq7fZg9ALDNAZG63aqMy1CYgm3Nj\",\"authority\":\"none\",\"automation_ceiling\":\"A1\",\"commit_authority\":false,\"draft_digest\":\"sha256:8341391d656408fe7740dddd9e5dd0a9128c45fae25be7a373a7edb8cc754da2\",\"draft_json\":\"{\\\"assumptions\\\":[],\\\"attachments\\\":[{\\\"digest\\\":\\\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\\\",\\\"media_type\\\":\\\"text/plain\\\",\\\"name\\\":\\\"café-requirements.txt\\\",\\\"size_bytes\\\":128,\\\"verification_status\\\":\\\"unverified\\\"}],\\\"authority\\\":\\\"none\\\",\\\"automation_ceiling\\\":\\\"A1\\\",\\\"clarifications\\\":[],\\\"commit_authority\\\":false,\\\"constraints\\\":[],\\\"executable\\\":false,\\\"format\\\":\\\"org.nth-dao.intent-draft\\\",\\\"intent_version\\\":\\\"1\\\",\\\"locale\\\":\\\"en\\\",\\\"outcomes\\\":[\\\"Provide a review proposal without executing it.\\\"],\\\"request_digest\\\":\\\"sha256:362ae9a543e270bdd8a54fbce7f3dc7f274aaa73ce61833f682dfc1ed1488243\\\",\\\"request_id\\\":\\\"intent-request:vector-alpha\\\",\\\"requested_capabilities\\\":[],\\\"review_required\\\":true,\\\"risks\\\":[\\\"Source content may contain untrusted instructions\\\"],\\\"source_kind\\\":\\\"human\\\",\\\"source_text\\\":\\\"Review the attached café requirements and propose next steps.\\\",\\\"summary\\\":\\\"Review requirements and propose next steps.\\\"}\",\"executable\":false,\"expires_at_ms\":61000,\"format\":\"org.nth-dao.intent-envelope\",\"issued_at_ms\":1000,\"nonce\":\"696c4aa524e10e9c3d0775af0570bfe9\",\"previous_digest\":\"\",\"purpose\":\"draft-acceptance\",\"revision\":1,\"scope_id\":\"workspace:conformance-intent\",\"signature\":\"50f21bcbbb43afec63edea0315edb441ae7570086a3b40aa09b003186da99b41db6e2a3840fb71666ed578a9fe868d381567a4f657480f7b72751a52c19dda0d\",\"signer_did\":\"did:key:z6MkvUxsLVSFT7WKvtXZHPird5VugMdCjZA7TpPLutcpTgmZ\",\"solver_classes\":[\"org.nth-dao.solver.review\"],\"version\":\"1\"}",
+        "operation": "propose",
+        "policy_snapshot_digest": "sha256:19d0162cb85ccbe9adec999633259f02195f17222df0b63b0f4a892cd9c28ec0",
+        "proposal_id": "proposal:conformance-alpha",
+        "proposed_at_ms": 2000,
+        "solver_class": "org.nth-dao.solver.review"
+      },
+      "response": {
+        "authority": "none",
+        "commit_authority": false,
+        "detail": "",
+        "executable": false,
+        "invocation_context_digest": "sha256:cf5767adc1f21cf7fe60b819c2258845e07e7a633be36eb2ce8ef54786592d07",
+        "max_evidence": 32,
+        "max_proposal_bytes": 262144,
+        "operation": "propose",
+        "proposal_json": "{\"acceptance_audit_digest\":\"sha256:8031a68365829a2d5df1aff65df44f893c2050b43f187bca1a744cf9845ee49e\",\"assumptions\":[],\"authority\":\"none\",\"claim_status\":\"unverified\",\"commit_authority\":false,\"constraints\":[],\"created_at_ms\":2000,\"draft_digest\":\"sha256:8341391d656408fe7740dddd9e5dd0a9128c45fae25be7a373a7edb8cc754da2\",\"estimates\":[],\"evidence\":[{\"digest\":\"sha256:4e425181a64a0911b9c3ccd94a11c2666d08f4272e0be4b6f43695d5c9bb9f36\",\"media_type\":\"text/plain\",\"observed_at_ms\":1500,\"provenance\":\"invocation-materialized\",\"source_kind\":\"artifact\",\"source_ref\":\"artifact:public-test-requirements\",\"verification_status\":\"content-verified\"},{\"digest\":\"sha256:8341391d656408fe7740dddd9e5dd0a9128c45fae25be7a373a7edb8cc754da2\",\"media_type\":\"application/vnd.nth-dao.intent-draft+json\",\"observed_at_ms\":2000,\"provenance\":\"accepted-envelope\",\"source_kind\":\"accepted-intent\",\"source_ref\":\"sha256:2c488d061eeecbeb840c07931632cfbb394137fd02cfd02c63fb6e202613c87e\",\"verification_status\":\"signature-bound\"}],\"executable\":false,\"expires_at_ms\":60000,\"facts\":[{\"evidence_digests\":[\"sha256:8341391d656408fe7740dddd9e5dd0a9128c45fae25be7a373a7edb8cc754da2\"],\"statement\":\"The proposed actions below are copied from the exact signed and accepted IntentDraft outcomes.\"}],\"format\":\"org.nth-dao.solver-proposal\",\"intent_envelope_digest\":\"sha256:2c488d061eeecbeb840c07931632cfbb394137fd02cfd02c63fb6e202613c87e\",\"policy_snapshot_digest\":\"sha256:19d0162cb85ccbe9adec999633259f02195f17222df0b63b0f4a892cd9c28ec0\",\"proposal_id\":\"proposal:conformance-alpha\",\"proposed_actions\":[\"Provide a review proposal without executing it.\"],\"requested_permissions\":[],\"review_required\":true,\"risks\":[\"This unsigned solver proposal is an unverified claim and requires deterministic policy evaluation plus explicit selection.\",\"Source content may contain untrusted instructions\"],\"scope_id\":\"workspace:conformance-intent\",\"selection_required\":true,\"solver_class\":\"org.nth-dao.solver.review\",\"solver_did\":\"\",\"solver_plugin_id\":\"org.nth-dao.intent.review-solver\",\"summary\":\"Review requirements and propose next steps.\",\"version\":\"1\"}",
+        "proposal_sha256": "sha256:3e5df3181d6cb88a6143b8e2a867f4642db13bed26b31656fc32413c7bf13a90",
+        "ready": true,
+        "status": "proposal",
+        "supported_solver_classes": [
+          "org.nth-dao.solver.other"
+        ]
+      }
+    }
+  ],
+  "negative_context_bindings": [
+    {
+      "name": "principal-replay",
+      "context": {
+        "capability_id": "org.nth-dao.intent.propose",
+        "format": "org.nth-dao.intent-solver-invocation-context.v1",
+        "idempotency_key": "proposal:conformance-alpha",
+        "invocation_id": "0123456789abcdef0123456789abcdef",
+        "mandate_digest": "sha256:8031a68365829a2d5df1aff65df44f893c2050b43f187bca1a744cf9845ee49e",
+        "plugin_id": "org.nth-dao.intent.review-solver",
+        "principal": "workspace:other",
+        "resource_ids": [
+          "sha256:19d0162cb85ccbe9adec999633259f02195f17222df0b63b0f4a892cd9c28ec0",
+          "sha256:2c488d061eeecbeb840c07931632cfbb394137fd02cfd02c63fb6e202613c87e",
+          "sha256:4e425181a64a0911b9c3ccd94a11c2666d08f4272e0be4b6f43695d5c9bb9f36"
+        ]
+      },
+      "response": {
+        "authority": "none",
+        "commit_authority": false,
+        "detail": "",
+        "executable": false,
+        "invocation_context_digest": "sha256:cf5767adc1f21cf7fe60b819c2258845e07e7a633be36eb2ce8ef54786592d07",
+        "max_evidence": 32,
+        "max_proposal_bytes": 262144,
+        "operation": "propose",
+        "proposal_json": "{\"acceptance_audit_digest\":\"sha256:8031a68365829a2d5df1aff65df44f893c2050b43f187bca1a744cf9845ee49e\",\"assumptions\":[],\"authority\":\"none\",\"claim_status\":\"unverified\",\"commit_authority\":false,\"constraints\":[],\"created_at_ms\":2000,\"draft_digest\":\"sha256:8341391d656408fe7740dddd9e5dd0a9128c45fae25be7a373a7edb8cc754da2\",\"estimates\":[],\"evidence\":[{\"digest\":\"sha256:4e425181a64a0911b9c3ccd94a11c2666d08f4272e0be4b6f43695d5c9bb9f36\",\"media_type\":\"text/plain\",\"observed_at_ms\":1500,\"provenance\":\"invocation-materialized\",\"source_kind\":\"artifact\",\"source_ref\":\"artifact:public-test-requirements\",\"verification_status\":\"content-verified\"},{\"digest\":\"sha256:8341391d656408fe7740dddd9e5dd0a9128c45fae25be7a373a7edb8cc754da2\",\"media_type\":\"application/vnd.nth-dao.intent-draft+json\",\"observed_at_ms\":2000,\"provenance\":\"accepted-envelope\",\"source_kind\":\"accepted-intent\",\"source_ref\":\"sha256:2c488d061eeecbeb840c07931632cfbb394137fd02cfd02c63fb6e202613c87e\",\"verification_status\":\"signature-bound\"}],\"executable\":false,\"expires_at_ms\":60000,\"facts\":[{\"evidence_digests\":[\"sha256:8341391d656408fe7740dddd9e5dd0a9128c45fae25be7a373a7edb8cc754da2\"],\"statement\":\"The proposed actions below are copied from the exact signed and accepted IntentDraft outcomes.\"}],\"format\":\"org.nth-dao.solver-proposal\",\"intent_envelope_digest\":\"sha256:2c488d061eeecbeb840c07931632cfbb394137fd02cfd02c63fb6e202613c87e\",\"policy_snapshot_digest\":\"sha256:19d0162cb85ccbe9adec999633259f02195f17222df0b63b0f4a892cd9c28ec0\",\"proposal_id\":\"proposal:conformance-alpha\",\"proposed_actions\":[\"Provide a review proposal without executing it.\"],\"requested_permissions\":[],\"review_required\":true,\"risks\":[\"This unsigned solver proposal is an unverified claim and requires deterministic policy evaluation plus explicit selection.\",\"Source content may contain untrusted instructions\"],\"scope_id\":\"workspace:conformance-intent\",\"selection_required\":true,\"solver_class\":\"org.nth-dao.solver.review\",\"solver_did\":\"\",\"solver_plugin_id\":\"org.nth-dao.intent.review-solver\",\"summary\":\"Review requirements and propose next steps.\",\"version\":\"1\"}",
+        "proposal_sha256": "sha256:3e5df3181d6cb88a6143b8e2a867f4642db13bed26b31656fc32413c7bf13a90",
+        "ready": true,
+        "status": "proposal",
+        "supported_solver_classes": [
+          "org.nth-dao.solver.review"
+        ]
+      }
+    },
+    {
+      "name": "plugin-replay",
+      "context": {
+        "capability_id": "org.nth-dao.intent.propose",
+        "format": "org.nth-dao.intent-solver-invocation-context.v1",
+        "idempotency_key": "proposal:conformance-alpha",
+        "invocation_id": "0123456789abcdef0123456789abcdef",
+        "mandate_digest": "sha256:8031a68365829a2d5df1aff65df44f893c2050b43f187bca1a744cf9845ee49e",
+        "plugin_id": "org.nth-dao.intent.other-solver",
+        "principal": "workspace:conformance-intent",
+        "resource_ids": [
+          "sha256:19d0162cb85ccbe9adec999633259f02195f17222df0b63b0f4a892cd9c28ec0",
+          "sha256:2c488d061eeecbeb840c07931632cfbb394137fd02cfd02c63fb6e202613c87e",
+          "sha256:4e425181a64a0911b9c3ccd94a11c2666d08f4272e0be4b6f43695d5c9bb9f36"
+        ]
+      },
+      "response": {
+        "authority": "none",
+        "commit_authority": false,
+        "detail": "",
+        "executable": false,
+        "invocation_context_digest": "sha256:cf5767adc1f21cf7fe60b819c2258845e07e7a633be36eb2ce8ef54786592d07",
+        "max_evidence": 32,
+        "max_proposal_bytes": 262144,
+        "operation": "propose",
+        "proposal_json": "{\"acceptance_audit_digest\":\"sha256:8031a68365829a2d5df1aff65df44f893c2050b43f187bca1a744cf9845ee49e\",\"assumptions\":[],\"authority\":\"none\",\"claim_status\":\"unverified\",\"commit_authority\":false,\"constraints\":[],\"created_at_ms\":2000,\"draft_digest\":\"sha256:8341391d656408fe7740dddd9e5dd0a9128c45fae25be7a373a7edb8cc754da2\",\"estimates\":[],\"evidence\":[{\"digest\":\"sha256:4e425181a64a0911b9c3ccd94a11c2666d08f4272e0be4b6f43695d5c9bb9f36\",\"media_type\":\"text/plain\",\"observed_at_ms\":1500,\"provenance\":\"invocation-materialized\",\"source_kind\":\"artifact\",\"source_ref\":\"artifact:public-test-requirements\",\"verification_status\":\"content-verified\"},{\"digest\":\"sha256:8341391d656408fe7740dddd9e5dd0a9128c45fae25be7a373a7edb8cc754da2\",\"media_type\":\"application/vnd.nth-dao.intent-draft+json\",\"observed_at_ms\":2000,\"provenance\":\"accepted-envelope\",\"source_kind\":\"accepted-intent\",\"source_ref\":\"sha256:2c488d061eeecbeb840c07931632cfbb394137fd02cfd02c63fb6e202613c87e\",\"verification_status\":\"signature-bound\"}],\"executable\":false,\"expires_at_ms\":60000,\"facts\":[{\"evidence_digests\":[\"sha256:8341391d656408fe7740dddd9e5dd0a9128c45fae25be7a373a7edb8cc754da2\"],\"statement\":\"The proposed actions below are copied from the exact signed and accepted IntentDraft outcomes.\"}],\"format\":\"org.nth-dao.solver-proposal\",\"intent_envelope_digest\":\"sha256:2c488d061eeecbeb840c07931632cfbb394137fd02cfd02c63fb6e202613c87e\",\"policy_snapshot_digest\":\"sha256:19d0162cb85ccbe9adec999633259f02195f17222df0b63b0f4a892cd9c28ec0\",\"proposal_id\":\"proposal:conformance-alpha\",\"proposed_actions\":[\"Provide a review proposal without executing it.\"],\"requested_permissions\":[],\"review_required\":true,\"risks\":[\"This unsigned solver proposal is an unverified claim and requires deterministic policy evaluation plus explicit selection.\",\"Source content may contain untrusted instructions\"],\"scope_id\":\"workspace:conformance-intent\",\"selection_required\":true,\"solver_class\":\"org.nth-dao.solver.review\",\"solver_did\":\"\",\"solver_plugin_id\":\"org.nth-dao.intent.review-solver\",\"summary\":\"Review requirements and propose next steps.\",\"version\":\"1\"}",
+        "proposal_sha256": "sha256:3e5df3181d6cb88a6143b8e2a867f4642db13bed26b31656fc32413c7bf13a90",
+        "ready": true,
+        "status": "proposal",
+        "supported_solver_classes": [
+          "org.nth-dao.solver.review"
+        ]
+      }
+    },
+    {
+      "name": "resource-replay",
+      "context": {
+        "capability_id": "org.nth-dao.intent.propose",
+        "format": "org.nth-dao.intent-solver-invocation-context.v1",
+        "idempotency_key": "proposal:conformance-alpha",
+        "invocation_id": "0123456789abcdef0123456789abcdef",
+        "mandate_digest": "sha256:8031a68365829a2d5df1aff65df44f893c2050b43f187bca1a744cf9845ee49e",
+        "plugin_id": "org.nth-dao.intent.review-solver",
+        "principal": "workspace:conformance-intent",
+        "resource_ids": [
+          "sha256:19d0162cb85ccbe9adec999633259f02195f17222df0b63b0f4a892cd9c28ec0",
+          "sha256:2c488d061eeecbeb840c07931632cfbb394137fd02cfd02c63fb6e202613c87e",
+          "sha256:4e425181a64a0911b9c3ccd94a11c2666d08f4272e0be4b6f43695d5c9bb9f36",
+          "sha256:5f5a751c14735b99f5eeb9b0ce438bce4cd2243057d3d13348b4b2d6dbf0017e"
+        ]
+      },
+      "response": {
+        "authority": "none",
+        "commit_authority": false,
+        "detail": "",
+        "executable": false,
+        "invocation_context_digest": "sha256:cf5767adc1f21cf7fe60b819c2258845e07e7a633be36eb2ce8ef54786592d07",
+        "max_evidence": 32,
+        "max_proposal_bytes": 262144,
+        "operation": "propose",
+        "proposal_json": "{\"acceptance_audit_digest\":\"sha256:8031a68365829a2d5df1aff65df44f893c2050b43f187bca1a744cf9845ee49e\",\"assumptions\":[],\"authority\":\"none\",\"claim_status\":\"unverified\",\"commit_authority\":false,\"constraints\":[],\"created_at_ms\":2000,\"draft_digest\":\"sha256:8341391d656408fe7740dddd9e5dd0a9128c45fae25be7a373a7edb8cc754da2\",\"estimates\":[],\"evidence\":[{\"digest\":\"sha256:4e425181a64a0911b9c3ccd94a11c2666d08f4272e0be4b6f43695d5c9bb9f36\",\"media_type\":\"text/plain\",\"observed_at_ms\":1500,\"provenance\":\"invocation-materialized\",\"source_kind\":\"artifact\",\"source_ref\":\"artifact:public-test-requirements\",\"verification_status\":\"content-verified\"},{\"digest\":\"sha256:8341391d656408fe7740dddd9e5dd0a9128c45fae25be7a373a7edb8cc754da2\",\"media_type\":\"application/vnd.nth-dao.intent-draft+json\",\"observed_at_ms\":2000,\"provenance\":\"accepted-envelope\",\"source_kind\":\"accepted-intent\",\"source_ref\":\"sha256:2c488d061eeecbeb840c07931632cfbb394137fd02cfd02c63fb6e202613c87e\",\"verification_status\":\"signature-bound\"}],\"executable\":false,\"expires_at_ms\":60000,\"facts\":[{\"evidence_digests\":[\"sha256:8341391d656408fe7740dddd9e5dd0a9128c45fae25be7a373a7edb8cc754da2\"],\"statement\":\"The proposed actions below are copied from the exact signed and accepted IntentDraft outcomes.\"}],\"format\":\"org.nth-dao.solver-proposal\",\"intent_envelope_digest\":\"sha256:2c488d061eeecbeb840c07931632cfbb394137fd02cfd02c63fb6e202613c87e\",\"policy_snapshot_digest\":\"sha256:19d0162cb85ccbe9adec999633259f02195f17222df0b63b0f4a892cd9c28ec0\",\"proposal_id\":\"proposal:conformance-alpha\",\"proposed_actions\":[\"Provide a review proposal without executing it.\"],\"requested_permissions\":[],\"review_required\":true,\"risks\":[\"This unsigned solver proposal is an unverified claim and requires deterministic policy evaluation plus explicit selection.\",\"Source content may contain untrusted instructions\"],\"scope_id\":\"workspace:conformance-intent\",\"selection_required\":true,\"solver_class\":\"org.nth-dao.solver.review\",\"solver_did\":\"\",\"solver_plugin_id\":\"org.nth-dao.intent.review-solver\",\"summary\":\"Review requirements and propose next steps.\",\"version\":\"1\"}",
+        "proposal_sha256": "sha256:3e5df3181d6cb88a6143b8e2a867f4642db13bed26b31656fc32413c7bf13a90",
+        "ready": true,
+        "status": "proposal",
+        "supported_solver_classes": [
+          "org.nth-dao.solver.review"
+        ]
+      }
+    }
+  ],
+  "negative_authorities": [
+    {
+      "name": "wrong-acceptance-audit",
+      "authority": {
+        "capability_ids": [
+          "org.nth-dao.intent.propose"
+        ],
+        "idempotency_key": "proposal:conformance-alpha",
+        "mandate_digest": "sha256:cfa66ce33e42de1fa4f4020c3a5aad1f188df68faf65b6a23933b38543854b47",
+        "principal": "workspace:conformance-intent",
+        "resource_ids": [
+          "sha256:19d0162cb85ccbe9adec999633259f02195f17222df0b63b0f4a892cd9c28ec0",
+          "sha256:2c488d061eeecbeb840c07931632cfbb394137fd02cfd02c63fb6e202613c87e",
+          "sha256:4e425181a64a0911b9c3ccd94a11c2666d08f4272e0be4b6f43695d5c9bb9f36"
+        ]
+      },
+      "request": {
+        "acceptance_audit_digest": "sha256:8031a68365829a2d5df1aff65df44f893c2050b43f187bca1a744cf9845ee49e",
+        "evidence": [
+          {
+            "content_base64": "UFVCTElDLU5USC1URVNULU9OTFk6aW50ZW50LXNvbHZlci1ob3N0LWV2aWRlbmNlLXYx",
+            "digest": "sha256:4e425181a64a0911b9c3ccd94a11c2666d08f4272e0be4b6f43695d5c9bb9f36",
+            "media_type": "text/plain",
+            "observed_at_ms": 1500,
+            "provenance": "invocation-materialized",
+            "source_kind": "artifact",
+            "source_ref": "artifact:public-test-requirements",
+            "verification_status": "content-verified"
+          }
+        ],
+        "expires_at_ms": 60000,
+        "intent_envelope_digest": "sha256:2c488d061eeecbeb840c07931632cfbb394137fd02cfd02c63fb6e202613c87e",
+        "intent_envelope_json": "{\"audience_did\":\"did:key:z6MkjjRL5eQvmYt5Nr6FTq7fZg9ALDNAZG63aqMy1CYgm3Nj\",\"authority\":\"none\",\"automation_ceiling\":\"A1\",\"commit_authority\":false,\"draft_digest\":\"sha256:8341391d656408fe7740dddd9e5dd0a9128c45fae25be7a373a7edb8cc754da2\",\"draft_json\":\"{\\\"assumptions\\\":[],\\\"attachments\\\":[{\\\"digest\\\":\\\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\\\",\\\"media_type\\\":\\\"text/plain\\\",\\\"name\\\":\\\"café-requirements.txt\\\",\\\"size_bytes\\\":128,\\\"verification_status\\\":\\\"unverified\\\"}],\\\"authority\\\":\\\"none\\\",\\\"automation_ceiling\\\":\\\"A1\\\",\\\"clarifications\\\":[],\\\"commit_authority\\\":false,\\\"constraints\\\":[],\\\"executable\\\":false,\\\"format\\\":\\\"org.nth-dao.intent-draft\\\",\\\"intent_version\\\":\\\"1\\\",\\\"locale\\\":\\\"en\\\",\\\"outcomes\\\":[\\\"Provide a review proposal without executing it.\\\"],\\\"request_digest\\\":\\\"sha256:362ae9a543e270bdd8a54fbce7f3dc7f274aaa73ce61833f682dfc1ed1488243\\\",\\\"request_id\\\":\\\"intent-request:vector-alpha\\\",\\\"requested_capabilities\\\":[],\\\"review_required\\\":true,\\\"risks\\\":[\\\"Source content may contain untrusted instructions\\\"],\\\"source_kind\\\":\\\"human\\\",\\\"source_text\\\":\\\"Review the attached café requirements and propose next steps.\\\",\\\"summary\\\":\\\"Review requirements and propose next steps.\\\"}\",\"executable\":false,\"expires_at_ms\":61000,\"format\":\"org.nth-dao.intent-envelope\",\"issued_at_ms\":1000,\"nonce\":\"696c4aa524e10e9c3d0775af0570bfe9\",\"previous_digest\":\"\",\"purpose\":\"draft-acceptance\",\"revision\":1,\"scope_id\":\"workspace:conformance-intent\",\"signature\":\"50f21bcbbb43afec63edea0315edb441ae7570086a3b40aa09b003186da99b41db6e2a3840fb71666ed578a9fe868d381567a4f657480f7b72751a52c19dda0d\",\"signer_did\":\"did:key:z6MkvUxsLVSFT7WKvtXZHPird5VugMdCjZA7TpPLutcpTgmZ\",\"solver_classes\":[\"org.nth-dao.solver.review\"],\"version\":\"1\"}",
+        "operation": "propose",
+        "policy_snapshot_digest": "sha256:19d0162cb85ccbe9adec999633259f02195f17222df0b63b0f4a892cd9c28ec0",
+        "proposal_id": "proposal:conformance-alpha",
+        "proposed_at_ms": 2000,
+        "solver_class": "org.nth-dao.solver.review"
+      }
+    },
+    {
+      "name": "wrong-idempotency",
+      "authority": {
+        "capability_ids": [
+          "org.nth-dao.intent.propose"
+        ],
+        "idempotency_key": "proposal:other",
+        "mandate_digest": "sha256:8031a68365829a2d5df1aff65df44f893c2050b43f187bca1a744cf9845ee49e",
+        "principal": "workspace:conformance-intent",
+        "resource_ids": [
+          "sha256:19d0162cb85ccbe9adec999633259f02195f17222df0b63b0f4a892cd9c28ec0",
+          "sha256:2c488d061eeecbeb840c07931632cfbb394137fd02cfd02c63fb6e202613c87e",
+          "sha256:4e425181a64a0911b9c3ccd94a11c2666d08f4272e0be4b6f43695d5c9bb9f36"
+        ]
+      },
+      "request": {
+        "acceptance_audit_digest": "sha256:8031a68365829a2d5df1aff65df44f893c2050b43f187bca1a744cf9845ee49e",
+        "evidence": [
+          {
+            "content_base64": "UFVCTElDLU5USC1URVNULU9OTFk6aW50ZW50LXNvbHZlci1ob3N0LWV2aWRlbmNlLXYx",
+            "digest": "sha256:4e425181a64a0911b9c3ccd94a11c2666d08f4272e0be4b6f43695d5c9bb9f36",
+            "media_type": "text/plain",
+            "observed_at_ms": 1500,
+            "provenance": "invocation-materialized",
+            "source_kind": "artifact",
+            "source_ref": "artifact:public-test-requirements",
+            "verification_status": "content-verified"
+          }
+        ],
+        "expires_at_ms": 60000,
+        "intent_envelope_digest": "sha256:2c488d061eeecbeb840c07931632cfbb394137fd02cfd02c63fb6e202613c87e",
+        "intent_envelope_json": "{\"audience_did\":\"did:key:z6MkjjRL5eQvmYt5Nr6FTq7fZg9ALDNAZG63aqMy1CYgm3Nj\",\"authority\":\"none\",\"automation_ceiling\":\"A1\",\"commit_authority\":false,\"draft_digest\":\"sha256:8341391d656408fe7740dddd9e5dd0a9128c45fae25be7a373a7edb8cc754da2\",\"draft_json\":\"{\\\"assumptions\\\":[],\\\"attachments\\\":[{\\\"digest\\\":\\\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\\\",\\\"media_type\\\":\\\"text/plain\\\",\\\"name\\\":\\\"café-requirements.txt\\\",\\\"size_bytes\\\":128,\\\"verification_status\\\":\\\"unverified\\\"}],\\\"authority\\\":\\\"none\\\",\\\"automation_ceiling\\\":\\\"A1\\\",\\\"clarifications\\\":[],\\\"commit_authority\\\":false,\\\"constraints\\\":[],\\\"executable\\\":false,\\\"format\\\":\\\"org.nth-dao.intent-draft\\\",\\\"intent_version\\\":\\\"1\\\",\\\"locale\\\":\\\"en\\\",\\\"outcomes\\\":[\\\"Provide a review proposal without executing it.\\\"],\\\"request_digest\\\":\\\"sha256:362ae9a543e270bdd8a54fbce7f3dc7f274aaa73ce61833f682dfc1ed1488243\\\",\\\"request_id\\\":\\\"intent-request:vector-alpha\\\",\\\"requested_capabilities\\\":[],\\\"review_required\\\":true,\\\"risks\\\":[\\\"Source content may contain untrusted instructions\\\"],\\\"source_kind\\\":\\\"human\\\",\\\"source_text\\\":\\\"Review the attached café requirements and propose next steps.\\\",\\\"summary\\\":\\\"Review requirements and propose next steps.\\\"}\",\"executable\":false,\"expires_at_ms\":61000,\"format\":\"org.nth-dao.intent-envelope\",\"issued_at_ms\":1000,\"nonce\":\"696c4aa524e10e9c3d0775af0570bfe9\",\"previous_digest\":\"\",\"purpose\":\"draft-acceptance\",\"revision\":1,\"scope_id\":\"workspace:conformance-intent\",\"signature\":\"50f21bcbbb43afec63edea0315edb441ae7570086a3b40aa09b003186da99b41db6e2a3840fb71666ed578a9fe868d381567a4f657480f7b72751a52c19dda0d\",\"signer_did\":\"did:key:z6MkvUxsLVSFT7WKvtXZHPird5VugMdCjZA7TpPLutcpTgmZ\",\"solver_classes\":[\"org.nth-dao.solver.review\"],\"version\":\"1\"}",
+        "operation": "propose",
+        "policy_snapshot_digest": "sha256:19d0162cb85ccbe9adec999633259f02195f17222df0b63b0f4a892cd9c28ec0",
+        "proposal_id": "proposal:conformance-alpha",
+        "proposed_at_ms": 2000,
+        "solver_class": "org.nth-dao.solver.review"
+      }
+    },
+    {
+      "name": "extra-resource-scope",
+      "authority": {
+        "capability_ids": [
+          "org.nth-dao.intent.propose"
+        ],
+        "idempotency_key": "proposal:conformance-alpha",
+        "mandate_digest": "sha256:8031a68365829a2d5df1aff65df44f893c2050b43f187bca1a744cf9845ee49e",
+        "principal": "workspace:conformance-intent",
+        "resource_ids": [
+          "sha256:19d0162cb85ccbe9adec999633259f02195f17222df0b63b0f4a892cd9c28ec0",
+          "sha256:2c488d061eeecbeb840c07931632cfbb394137fd02cfd02c63fb6e202613c87e",
+          "sha256:4e425181a64a0911b9c3ccd94a11c2666d08f4272e0be4b6f43695d5c9bb9f36",
+          "sha256:d5fbdf245bb6c06a215658cab7e36598eaf73075c7a6cd311b376c51904aff0d"
+        ]
+      },
+      "request": {
+        "acceptance_audit_digest": "sha256:8031a68365829a2d5df1aff65df44f893c2050b43f187bca1a744cf9845ee49e",
+        "evidence": [
+          {
+            "content_base64": "UFVCTElDLU5USC1URVNULU9OTFk6aW50ZW50LXNvbHZlci1ob3N0LWV2aWRlbmNlLXYx",
+            "digest": "sha256:4e425181a64a0911b9c3ccd94a11c2666d08f4272e0be4b6f43695d5c9bb9f36",
+            "media_type": "text/plain",
+            "observed_at_ms": 1500,
+            "provenance": "invocation-materialized",
+            "source_kind": "artifact",
+            "source_ref": "artifact:public-test-requirements",
+            "verification_status": "content-verified"
+          }
+        ],
+        "expires_at_ms": 60000,
+        "intent_envelope_digest": "sha256:2c488d061eeecbeb840c07931632cfbb394137fd02cfd02c63fb6e202613c87e",
+        "intent_envelope_json": "{\"audience_did\":\"did:key:z6MkjjRL5eQvmYt5Nr6FTq7fZg9ALDNAZG63aqMy1CYgm3Nj\",\"authority\":\"none\",\"automation_ceiling\":\"A1\",\"commit_authority\":false,\"draft_digest\":\"sha256:8341391d656408fe7740dddd9e5dd0a9128c45fae25be7a373a7edb8cc754da2\",\"draft_json\":\"{\\\"assumptions\\\":[],\\\"attachments\\\":[{\\\"digest\\\":\\\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\\\",\\\"media_type\\\":\\\"text/plain\\\",\\\"name\\\":\\\"café-requirements.txt\\\",\\\"size_bytes\\\":128,\\\"verification_status\\\":\\\"unverified\\\"}],\\\"authority\\\":\\\"none\\\",\\\"automation_ceiling\\\":\\\"A1\\\",\\\"clarifications\\\":[],\\\"commit_authority\\\":false,\\\"constraints\\\":[],\\\"executable\\\":false,\\\"format\\\":\\\"org.nth-dao.intent-draft\\\",\\\"intent_version\\\":\\\"1\\\",\\\"locale\\\":\\\"en\\\",\\\"outcomes\\\":[\\\"Provide a review proposal without executing it.\\\"],\\\"request_digest\\\":\\\"sha256:362ae9a543e270bdd8a54fbce7f3dc7f274aaa73ce61833f682dfc1ed1488243\\\",\\\"request_id\\\":\\\"intent-request:vector-alpha\\\",\\\"requested_capabilities\\\":[],\\\"review_required\\\":true,\\\"risks\\\":[\\\"Source content may contain untrusted instructions\\\"],\\\"source_kind\\\":\\\"human\\\",\\\"source_text\\\":\\\"Review the attached café requirements and propose next steps.\\\",\\\"summary\\\":\\\"Review requirements and propose next steps.\\\"}\",\"executable\":false,\"expires_at_ms\":61000,\"format\":\"org.nth-dao.intent-envelope\",\"issued_at_ms\":1000,\"nonce\":\"696c4aa524e10e9c3d0775af0570bfe9\",\"previous_digest\":\"\",\"purpose\":\"draft-acceptance\",\"revision\":1,\"scope_id\":\"workspace:conformance-intent\",\"signature\":\"50f21bcbbb43afec63edea0315edb441ae7570086a3b40aa09b003186da99b41db6e2a3840fb71666ed578a9fe868d381567a4f657480f7b72751a52c19dda0d\",\"signer_did\":\"did:key:z6MkvUxsLVSFT7WKvtXZHPird5VugMdCjZA7TpPLutcpTgmZ\",\"solver_classes\":[\"org.nth-dao.solver.review\"],\"version\":\"1\"}",
+        "operation": "propose",
+        "policy_snapshot_digest": "sha256:19d0162cb85ccbe9adec999633259f02195f17222df0b63b0f4a892cd9c28ec0",
+        "proposal_id": "proposal:conformance-alpha",
+        "proposed_at_ms": 2000,
+        "solver_class": "org.nth-dao.solver.review"
+      }
+    },
+    {
+      "name": "wrong-capability",
+      "authority": {
+        "capability_ids": [
+          "org.example.other"
+        ],
+        "idempotency_key": "proposal:conformance-alpha",
+        "mandate_digest": "sha256:8031a68365829a2d5df1aff65df44f893c2050b43f187bca1a744cf9845ee49e",
+        "principal": "workspace:conformance-intent",
+        "resource_ids": [
+          "sha256:19d0162cb85ccbe9adec999633259f02195f17222df0b63b0f4a892cd9c28ec0",
+          "sha256:2c488d061eeecbeb840c07931632cfbb394137fd02cfd02c63fb6e202613c87e",
+          "sha256:4e425181a64a0911b9c3ccd94a11c2666d08f4272e0be4b6f43695d5c9bb9f36"
+        ]
+      },
+      "request": {
+        "acceptance_audit_digest": "sha256:8031a68365829a2d5df1aff65df44f893c2050b43f187bca1a744cf9845ee49e",
+        "evidence": [
+          {
+            "content_base64": "UFVCTElDLU5USC1URVNULU9OTFk6aW50ZW50LXNvbHZlci1ob3N0LWV2aWRlbmNlLXYx",
+            "digest": "sha256:4e425181a64a0911b9c3ccd94a11c2666d08f4272e0be4b6f43695d5c9bb9f36",
+            "media_type": "text/plain",
+            "observed_at_ms": 1500,
+            "provenance": "invocation-materialized",
+            "source_kind": "artifact",
+            "source_ref": "artifact:public-test-requirements",
+            "verification_status": "content-verified"
+          }
+        ],
+        "expires_at_ms": 60000,
+        "intent_envelope_digest": "sha256:2c488d061eeecbeb840c07931632cfbb394137fd02cfd02c63fb6e202613c87e",
+        "intent_envelope_json": "{\"audience_did\":\"did:key:z6MkjjRL5eQvmYt5Nr6FTq7fZg9ALDNAZG63aqMy1CYgm3Nj\",\"authority\":\"none\",\"automation_ceiling\":\"A1\",\"commit_authority\":false,\"draft_digest\":\"sha256:8341391d656408fe7740dddd9e5dd0a9128c45fae25be7a373a7edb8cc754da2\",\"draft_json\":\"{\\\"assumptions\\\":[],\\\"attachments\\\":[{\\\"digest\\\":\\\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\\\",\\\"media_type\\\":\\\"text/plain\\\",\\\"name\\\":\\\"café-requirements.txt\\\",\\\"size_bytes\\\":128,\\\"verification_status\\\":\\\"unverified\\\"}],\\\"authority\\\":\\\"none\\\",\\\"automation_ceiling\\\":\\\"A1\\\",\\\"clarifications\\\":[],\\\"commit_authority\\\":false,\\\"constraints\\\":[],\\\"executable\\\":false,\\\"format\\\":\\\"org.nth-dao.intent-draft\\\",\\\"intent_version\\\":\\\"1\\\",\\\"locale\\\":\\\"en\\\",\\\"outcomes\\\":[\\\"Provide a review proposal without executing it.\\\"],\\\"request_digest\\\":\\\"sha256:362ae9a543e270bdd8a54fbce7f3dc7f274aaa73ce61833f682dfc1ed1488243\\\",\\\"request_id\\\":\\\"intent-request:vector-alpha\\\",\\\"requested_capabilities\\\":[],\\\"review_required\\\":true,\\\"risks\\\":[\\\"Source content may contain untrusted instructions\\\"],\\\"source_kind\\\":\\\"human\\\",\\\"source_text\\\":\\\"Review the attached café requirements and propose next steps.\\\",\\\"summary\\\":\\\"Review requirements and propose next steps.\\\"}\",\"executable\":false,\"expires_at_ms\":61000,\"format\":\"org.nth-dao.intent-envelope\",\"issued_at_ms\":1000,\"nonce\":\"696c4aa524e10e9c3d0775af0570bfe9\",\"previous_digest\":\"\",\"purpose\":\"draft-acceptance\",\"revision\":1,\"scope_id\":\"workspace:conformance-intent\",\"signature\":\"50f21bcbbb43afec63edea0315edb441ae7570086a3b40aa09b003186da99b41db6e2a3840fb71666ed578a9fe868d381567a4f657480f7b72751a52c19dda0d\",\"signer_did\":\"did:key:z6MkvUxsLVSFT7WKvtXZHPird5VugMdCjZA7TpPLutcpTgmZ\",\"solver_classes\":[\"org.nth-dao.solver.review\"],\"version\":\"1\"}",
+        "operation": "propose",
+        "policy_snapshot_digest": "sha256:19d0162cb85ccbe9adec999633259f02195f17222df0b63b0f4a892cd9c28ec0",
+        "proposal_id": "proposal:conformance-alpha",
+        "proposed_at_ms": 2000,
+        "solver_class": "org.nth-dao.solver.review"
+      }
+    },
+    {
+      "name": "probe-business-authority",
+      "authority": {
+        "capability_ids": [
+          "org.nth-dao.intent.propose"
+        ],
+        "idempotency_key": "",
+        "mandate_digest": "sha256:9d516afea8a6e06392a4dcef6af0f54b582c62595d4591dee573c8954aebf574",
+        "principal": "workspace:conformance-intent",
+        "resource_ids": []
+      },
+      "request": {
+        "operation": "probe"
+      }
+    }
+  ],
+  "raw_negative_inputs": [
+    {
+      "name": "proposed-at-exponent-token",
+      "input_json": "{\"acceptance_audit_digest\":\"sha256:8031a68365829a2d5df1aff65df44f893c2050b43f187bca1a744cf9845ee49e\",\"evidence\":[{\"content_base64\":\"UFVCTElDLU5USC1URVNULU9OTFk6aW50ZW50LXNvbHZlci1ob3N0LWV2aWRlbmNlLXYx\",\"digest\":\"sha256:4e425181a64a0911b9c3ccd94a11c2666d08f4272e0be4b6f43695d5c9bb9f36\",\"media_type\":\"text/plain\",\"observed_at_ms\":1500,\"provenance\":\"invocation-materialized\",\"source_kind\":\"artifact\",\"source_ref\":\"artifact:public-test-requirements\",\"verification_status\":\"content-verified\"}],\"expires_at_ms\":60000,\"intent_envelope_digest\":\"sha256:2c488d061eeecbeb840c07931632cfbb394137fd02cfd02c63fb6e202613c87e\",\"intent_envelope_json\":\"{\\\"audience_did\\\":\\\"did:key:z6MkjjRL5eQvmYt5Nr6FTq7fZg9ALDNAZG63aqMy1CYgm3Nj\\\",\\\"authority\\\":\\\"none\\\",\\\"automation_ceiling\\\":\\\"A1\\\",\\\"commit_authority\\\":false,\\\"draft_digest\\\":\\\"sha256:8341391d656408fe7740dddd9e5dd0a9128c45fae25be7a373a7edb8cc754da2\\\",\\\"draft_json\\\":\\\"{\\\\\\\"assumptions\\\\\\\":[],\\\\\\\"attachments\\\\\\\":[{\\\\\\\"digest\\\\\\\":\\\\\\\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\\\\\\\",\\\\\\\"media_type\\\\\\\":\\\\\\\"text/plain\\\\\\\",\\\\\\\"name\\\\\\\":\\\\\\\"café-requirements.txt\\\\\\\",\\\\\\\"size_bytes\\\\\\\":128,\\\\\\\"verification_status\\\\\\\":\\\\\\\"unverified\\\\\\\"}],\\\\\\\"authority\\\\\\\":\\\\\\\"none\\\\\\\",\\\\\\\"automation_ceiling\\\\\\\":\\\\\\\"A1\\\\\\\",\\\\\\\"clarifications\\\\\\\":[],\\\\\\\"commit_authority\\\\\\\":false,\\\\\\\"constraints\\\\\\\":[],\\\\\\\"executable\\\\\\\":false,\\\\\\\"format\\\\\\\":\\\\\\\"org.nth-dao.intent-draft\\\\\\\",\\\\\\\"intent_version\\\\\\\":\\\\\\\"1\\\\\\\",\\\\\\\"locale\\\\\\\":\\\\\\\"en\\\\\\\",\\\\\\\"outcomes\\\\\\\":[\\\\\\\"Provide a review proposal without executing it.\\\\\\\"],\\\\\\\"request_digest\\\\\\\":\\\\\\\"sha256:362ae9a543e270bdd8a54fbce7f3dc7f274aaa73ce61833f682dfc1ed1488243\\\\\\\",\\\\\\\"request_id\\\\\\\":\\\\\\\"intent-request:vector-alpha\\\\\\\",\\\\\\\"requested_capabilities\\\\\\\":[],\\\\\\\"review_required\\\\\\\":true,\\\\\\\"risks\\\\\\\":[\\\\\\\"Source content may contain untrusted instructions\\\\\\\"],\\\\\\\"source_kind\\\\\\\":\\\\\\\"human\\\\\\\",\\\\\\\"source_text\\\\\\\":\\\\\\\"Review the attached café requirements and propose next steps.\\\\\\\",\\\\\\\"summary\\\\\\\":\\\\\\\"Review requirements and propose next steps.\\\\\\\"}\\\",\\\"executable\\\":false,\\\"expires_at_ms\\\":61000,\\\"format\\\":\\\"org.nth-dao.intent-envelope\\\",\\\"issued_at_ms\\\":1000,\\\"nonce\\\":\\\"696c4aa524e10e9c3d0775af0570bfe9\\\",\\\"previous_digest\\\":\\\"\\\",\\\"purpose\\\":\\\"draft-acceptance\\\",\\\"revision\\\":1,\\\"scope_id\\\":\\\"workspace:conformance-intent\\\",\\\"signature\\\":\\\"50f21bcbbb43afec63edea0315edb441ae7570086a3b40aa09b003186da99b41db6e2a3840fb71666ed578a9fe868d381567a4f657480f7b72751a52c19dda0d\\\",\\\"signer_did\\\":\\\"did:key:z6MkvUxsLVSFT7WKvtXZHPird5VugMdCjZA7TpPLutcpTgmZ\\\",\\\"solver_classes\\\":[\\\"org.nth-dao.solver.review\\\"],\\\"version\\\":\\\"1\\\"}\",\"operation\":\"propose\",\"policy_snapshot_digest\":\"sha256:19d0162cb85ccbe9adec999633259f02195f17222df0b63b0f4a892cd9c28ec0\",\"proposal_id\":\"proposal:conformance-alpha\",\"proposed_at_ms\":2e3,\"solver_class\":\"org.nth-dao.solver.review\"}"
+    },
+    {
+      "name": "proposed-at-decimal-token",
+      "input_json": "{\"acceptance_audit_digest\":\"sha256:8031a68365829a2d5df1aff65df44f893c2050b43f187bca1a744cf9845ee49e\",\"evidence\":[{\"content_base64\":\"UFVCTElDLU5USC1URVNULU9OTFk6aW50ZW50LXNvbHZlci1ob3N0LWV2aWRlbmNlLXYx\",\"digest\":\"sha256:4e425181a64a0911b9c3ccd94a11c2666d08f4272e0be4b6f43695d5c9bb9f36\",\"media_type\":\"text/plain\",\"observed_at_ms\":1500,\"provenance\":\"invocation-materialized\",\"source_kind\":\"artifact\",\"source_ref\":\"artifact:public-test-requirements\",\"verification_status\":\"content-verified\"}],\"expires_at_ms\":60000,\"intent_envelope_digest\":\"sha256:2c488d061eeecbeb840c07931632cfbb394137fd02cfd02c63fb6e202613c87e\",\"intent_envelope_json\":\"{\\\"audience_did\\\":\\\"did:key:z6MkjjRL5eQvmYt5Nr6FTq7fZg9ALDNAZG63aqMy1CYgm3Nj\\\",\\\"authority\\\":\\\"none\\\",\\\"automation_ceiling\\\":\\\"A1\\\",\\\"commit_authority\\\":false,\\\"draft_digest\\\":\\\"sha256:8341391d656408fe7740dddd9e5dd0a9128c45fae25be7a373a7edb8cc754da2\\\",\\\"draft_json\\\":\\\"{\\\\\\\"assumptions\\\\\\\":[],\\\\\\\"attachments\\\\\\\":[{\\\\\\\"digest\\\\\\\":\\\\\\\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\\\\\\\",\\\\\\\"media_type\\\\\\\":\\\\\\\"text/plain\\\\\\\",\\\\\\\"name\\\\\\\":\\\\\\\"café-requirements.txt\\\\\\\",\\\\\\\"size_bytes\\\\\\\":128,\\\\\\\"verification_status\\\\\\\":\\\\\\\"unverified\\\\\\\"}],\\\\\\\"authority\\\\\\\":\\\\\\\"none\\\\\\\",\\\\\\\"automation_ceiling\\\\\\\":\\\\\\\"A1\\\\\\\",\\\\\\\"clarifications\\\\\\\":[],\\\\\\\"commit_authority\\\\\\\":false,\\\\\\\"constraints\\\\\\\":[],\\\\\\\"executable\\\\\\\":false,\\\\\\\"format\\\\\\\":\\\\\\\"org.nth-dao.intent-draft\\\\\\\",\\\\\\\"intent_version\\\\\\\":\\\\\\\"1\\\\\\\",\\\\\\\"locale\\\\\\\":\\\\\\\"en\\\\\\\",\\\\\\\"outcomes\\\\\\\":[\\\\\\\"Provide a review proposal without executing it.\\\\\\\"],\\\\\\\"request_digest\\\\\\\":\\\\\\\"sha256:362ae9a543e270bdd8a54fbce7f3dc7f274aaa73ce61833f682dfc1ed1488243\\\\\\\",\\\\\\\"request_id\\\\\\\":\\\\\\\"intent-request:vector-alpha\\\\\\\",\\\\\\\"requested_capabilities\\\\\\\":[],\\\\\\\"review_required\\\\\\\":true,\\\\\\\"risks\\\\\\\":[\\\\\\\"Source content may contain untrusted instructions\\\\\\\"],\\\\\\\"source_kind\\\\\\\":\\\\\\\"human\\\\\\\",\\\\\\\"source_text\\\\\\\":\\\\\\\"Review the attached café requirements and propose next steps.\\\\\\\",\\\\\\\"summary\\\\\\\":\\\\\\\"Review requirements and propose next steps.\\\\\\\"}\\\",\\\"executable\\\":false,\\\"expires_at_ms\\\":61000,\\\"format\\\":\\\"org.nth-dao.intent-envelope\\\",\\\"issued_at_ms\\\":1000,\\\"nonce\\\":\\\"696c4aa524e10e9c3d0775af0570bfe9\\\",\\\"previous_digest\\\":\\\"\\\",\\\"purpose\\\":\\\"draft-acceptance\\\",\\\"revision\\\":1,\\\"scope_id\\\":\\\"workspace:conformance-intent\\\",\\\"signature\\\":\\\"50f21bcbbb43afec63edea0315edb441ae7570086a3b40aa09b003186da99b41db6e2a3840fb71666ed578a9fe868d381567a4f657480f7b72751a52c19dda0d\\\",\\\"signer_did\\\":\\\"did:key:z6MkvUxsLVSFT7WKvtXZHPird5VugMdCjZA7TpPLutcpTgmZ\\\",\\\"solver_classes\\\":[\\\"org.nth-dao.solver.review\\\"],\\\"version\\\":\\\"1\\\"}\",\"operation\":\"propose\",\"policy_snapshot_digest\":\"sha256:19d0162cb85ccbe9adec999633259f02195f17222df0b63b0f4a892cd9c28ec0\",\"proposal_id\":\"proposal:conformance-alpha\",\"proposed_at_ms\":2000.0,\"solver_class\":\"org.nth-dao.solver.review\"}"
+    },
+    {
+      "name": "evidence-negative-zero-decimal-token",
+      "input_json": "{\"acceptance_audit_digest\":\"sha256:8031a68365829a2d5df1aff65df44f893c2050b43f187bca1a744cf9845ee49e\",\"evidence\":[{\"content_base64\":\"UFVCTElDLU5USC1URVNULU9OTFk6aW50ZW50LXNvbHZlci1ob3N0LWV2aWRlbmNlLXYx\",\"digest\":\"sha256:4e425181a64a0911b9c3ccd94a11c2666d08f4272e0be4b6f43695d5c9bb9f36\",\"media_type\":\"text/plain\",\"observed_at_ms\":-0.0,\"provenance\":\"invocation-materialized\",\"source_kind\":\"artifact\",\"source_ref\":\"artifact:public-test-requirements\",\"verification_status\":\"content-verified\"}],\"expires_at_ms\":60000,\"intent_envelope_digest\":\"sha256:2c488d061eeecbeb840c07931632cfbb394137fd02cfd02c63fb6e202613c87e\",\"intent_envelope_json\":\"{\\\"audience_did\\\":\\\"did:key:z6MkjjRL5eQvmYt5Nr6FTq7fZg9ALDNAZG63aqMy1CYgm3Nj\\\",\\\"authority\\\":\\\"none\\\",\\\"automation_ceiling\\\":\\\"A1\\\",\\\"commit_authority\\\":false,\\\"draft_digest\\\":\\\"sha256:8341391d656408fe7740dddd9e5dd0a9128c45fae25be7a373a7edb8cc754da2\\\",\\\"draft_json\\\":\\\"{\\\\\\\"assumptions\\\\\\\":[],\\\\\\\"attachments\\\\\\\":[{\\\\\\\"digest\\\\\\\":\\\\\\\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\\\\\\\",\\\\\\\"media_type\\\\\\\":\\\\\\\"text/plain\\\\\\\",\\\\\\\"name\\\\\\\":\\\\\\\"café-requirements.txt\\\\\\\",\\\\\\\"size_bytes\\\\\\\":128,\\\\\\\"verification_status\\\\\\\":\\\\\\\"unverified\\\\\\\"}],\\\\\\\"authority\\\\\\\":\\\\\\\"none\\\\\\\",\\\\\\\"automation_ceiling\\\\\\\":\\\\\\\"A1\\\\\\\",\\\\\\\"clarifications\\\\\\\":[],\\\\\\\"commit_authority\\\\\\\":false,\\\\\\\"constraints\\\\\\\":[],\\\\\\\"executable\\\\\\\":false,\\\\\\\"format\\\\\\\":\\\\\\\"org.nth-dao.intent-draft\\\\\\\",\\\\\\\"intent_version\\\\\\\":\\\\\\\"1\\\\\\\",\\\\\\\"locale\\\\\\\":\\\\\\\"en\\\\\\\",\\\\\\\"outcomes\\\\\\\":[\\\\\\\"Provide a review proposal without executing it.\\\\\\\"],\\\\\\\"request_digest\\\\\\\":\\\\\\\"sha256:362ae9a543e270bdd8a54fbce7f3dc7f274aaa73ce61833f682dfc1ed1488243\\\\\\\",\\\\\\\"request_id\\\\\\\":\\\\\\\"intent-request:vector-alpha\\\\\\\",\\\\\\\"requested_capabilities\\\\\\\":[],\\\\\\\"review_required\\\\\\\":true,\\\\\\\"risks\\\\\\\":[\\\\\\\"Source content may contain untrusted instructions\\\\\\\"],\\\\\\\"source_kind\\\\\\\":\\\\\\\"human\\\\\\\",\\\\\\\"source_text\\\\\\\":\\\\\\\"Review the attached café requirements and propose next steps.\\\\\\\",\\\\\\\"summary\\\\\\\":\\\\\\\"Review requirements and propose next steps.\\\\\\\"}\\\",\\\"executable\\\":false,\\\"expires_at_ms\\\":61000,\\\"format\\\":\\\"org.nth-dao.intent-envelope\\\",\\\"issued_at_ms\\\":1000,\\\"nonce\\\":\\\"696c4aa524e10e9c3d0775af0570bfe9\\\",\\\"previous_digest\\\":\\\"\\\",\\\"purpose\\\":\\\"draft-acceptance\\\",\\\"revision\\\":1,\\\"scope_id\\\":\\\"workspace:conformance-intent\\\",\\\"signature\\\":\\\"50f21bcbbb43afec63edea0315edb441ae7570086a3b40aa09b003186da99b41db6e2a3840fb71666ed578a9fe868d381567a4f657480f7b72751a52c19dda0d\\\",\\\"signer_did\\\":\\\"did:key:z6MkvUxsLVSFT7WKvtXZHPird5VugMdCjZA7TpPLutcpTgmZ\\\",\\\"solver_classes\\\":[\\\"org.nth-dao.solver.review\\\"],\\\"version\\\":\\\"1\\\"}\",\"operation\":\"propose\",\"policy_snapshot_digest\":\"sha256:19d0162cb85ccbe9adec999633259f02195f17222df0b63b0f4a892cd9c28ec0\",\"proposal_id\":\"proposal:conformance-alpha\",\"proposed_at_ms\":2000,\"solver_class\":\"org.nth-dao.solver.review\"}"
+    },
+    {
+      "name": "expires-at-unsafe-integer",
+      "input_json": "{\"acceptance_audit_digest\":\"sha256:8031a68365829a2d5df1aff65df44f893c2050b43f187bca1a744cf9845ee49e\",\"evidence\":[{\"content_base64\":\"UFVCTElDLU5USC1URVNULU9OTFk6aW50ZW50LXNvbHZlci1ob3N0LWV2aWRlbmNlLXYx\",\"digest\":\"sha256:4e425181a64a0911b9c3ccd94a11c2666d08f4272e0be4b6f43695d5c9bb9f36\",\"media_type\":\"text/plain\",\"observed_at_ms\":1500,\"provenance\":\"invocation-materialized\",\"source_kind\":\"artifact\",\"source_ref\":\"artifact:public-test-requirements\",\"verification_status\":\"content-verified\"}],\"expires_at_ms\":9007199254740992,\"intent_envelope_digest\":\"sha256:2c488d061eeecbeb840c07931632cfbb394137fd02cfd02c63fb6e202613c87e\",\"intent_envelope_json\":\"{\\\"audience_did\\\":\\\"did:key:z6MkjjRL5eQvmYt5Nr6FTq7fZg9ALDNAZG63aqMy1CYgm3Nj\\\",\\\"authority\\\":\\\"none\\\",\\\"automation_ceiling\\\":\\\"A1\\\",\\\"commit_authority\\\":false,\\\"draft_digest\\\":\\\"sha256:8341391d656408fe7740dddd9e5dd0a9128c45fae25be7a373a7edb8cc754da2\\\",\\\"draft_json\\\":\\\"{\\\\\\\"assumptions\\\\\\\":[],\\\\\\\"attachments\\\\\\\":[{\\\\\\\"digest\\\\\\\":\\\\\\\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\\\\\\\",\\\\\\\"media_type\\\\\\\":\\\\\\\"text/plain\\\\\\\",\\\\\\\"name\\\\\\\":\\\\\\\"café-requirements.txt\\\\\\\",\\\\\\\"size_bytes\\\\\\\":128,\\\\\\\"verification_status\\\\\\\":\\\\\\\"unverified\\\\\\\"}],\\\\\\\"authority\\\\\\\":\\\\\\\"none\\\\\\\",\\\\\\\"automation_ceiling\\\\\\\":\\\\\\\"A1\\\\\\\",\\\\\\\"clarifications\\\\\\\":[],\\\\\\\"commit_authority\\\\\\\":false,\\\\\\\"constraints\\\\\\\":[],\\\\\\\"executable\\\\\\\":false,\\\\\\\"format\\\\\\\":\\\\\\\"org.nth-dao.intent-draft\\\\\\\",\\\\\\\"intent_version\\\\\\\":\\\\\\\"1\\\\\\\",\\\\\\\"locale\\\\\\\":\\\\\\\"en\\\\\\\",\\\\\\\"outcomes\\\\\\\":[\\\\\\\"Provide a review proposal without executing it.\\\\\\\"],\\\\\\\"request_digest\\\\\\\":\\\\\\\"sha256:362ae9a543e270bdd8a54fbce7f3dc7f274aaa73ce61833f682dfc1ed1488243\\\\\\\",\\\\\\\"request_id\\\\\\\":\\\\\\\"intent-request:vector-alpha\\\\\\\",\\\\\\\"requested_capabilities\\\\\\\":[],\\\\\\\"review_required\\\\\\\":true,\\\\\\\"risks\\\\\\\":[\\\\\\\"Source content may contain untrusted instructions\\\\\\\"],\\\\\\\"source_kind\\\\\\\":\\\\\\\"human\\\\\\\",\\\\\\\"source_text\\\\\\\":\\\\\\\"Review the attached café requirements and propose next steps.\\\\\\\",\\\\\\\"summary\\\\\\\":\\\\\\\"Review requirements and propose next steps.\\\\\\\"}\\\",\\\"executable\\\":false,\\\"expires_at_ms\\\":61000,\\\"format\\\":\\\"org.nth-dao.intent-envelope\\\",\\\"issued_at_ms\\\":1000,\\\"nonce\\\":\\\"696c4aa524e10e9c3d0775af0570bfe9\\\",\\\"previous_digest\\\":\\\"\\\",\\\"purpose\\\":\\\"draft-acceptance\\\",\\\"revision\\\":1,\\\"scope_id\\\":\\\"workspace:conformance-intent\\\",\\\"signature\\\":\\\"50f21bcbbb43afec63edea0315edb441ae7570086a3b40aa09b003186da99b41db6e2a3840fb71666ed578a9fe868d381567a4f657480f7b72751a52c19dda0d\\\",\\\"signer_did\\\":\\\"did:key:z6MkvUxsLVSFT7WKvtXZHPird5VugMdCjZA7TpPLutcpTgmZ\\\",\\\"solver_classes\\\":[\\\"org.nth-dao.solver.review\\\"],\\\"version\\\":\\\"1\\\"}\",\"operation\":\"propose\",\"policy_snapshot_digest\":\"sha256:19d0162cb85ccbe9adec999633259f02195f17222df0b63b0f4a892cd9c28ec0\",\"proposal_id\":\"proposal:conformance-alpha\",\"proposed_at_ms\":2000,\"solver_class\":\"org.nth-dao.solver.review\"}"
+    }
+  ],
+  "raw_negative_outputs": [
+    {
+      "name": "max-evidence-exponent-token",
+      "output_json": "{\"authority\":\"none\",\"commit_authority\":false,\"detail\":\"\",\"executable\":false,\"invocation_context_digest\":\"sha256:cf5767adc1f21cf7fe60b819c2258845e07e7a633be36eb2ce8ef54786592d07\",\"max_evidence\":3.2e1,\"max_proposal_bytes\":262144,\"operation\":\"propose\",\"proposal_json\":\"{\\\"acceptance_audit_digest\\\":\\\"sha256:8031a68365829a2d5df1aff65df44f893c2050b43f187bca1a744cf9845ee49e\\\",\\\"assumptions\\\":[],\\\"authority\\\":\\\"none\\\",\\\"claim_status\\\":\\\"unverified\\\",\\\"commit_authority\\\":false,\\\"constraints\\\":[],\\\"created_at_ms\\\":2000,\\\"draft_digest\\\":\\\"sha256:8341391d656408fe7740dddd9e5dd0a9128c45fae25be7a373a7edb8cc754da2\\\",\\\"estimates\\\":[],\\\"evidence\\\":[{\\\"digest\\\":\\\"sha256:4e425181a64a0911b9c3ccd94a11c2666d08f4272e0be4b6f43695d5c9bb9f36\\\",\\\"media_type\\\":\\\"text/plain\\\",\\\"observed_at_ms\\\":1500,\\\"provenance\\\":\\\"invocation-materialized\\\",\\\"source_kind\\\":\\\"artifact\\\",\\\"source_ref\\\":\\\"artifact:public-test-requirements\\\",\\\"verification_status\\\":\\\"content-verified\\\"},{\\\"digest\\\":\\\"sha256:8341391d656408fe7740dddd9e5dd0a9128c45fae25be7a373a7edb8cc754da2\\\",\\\"media_type\\\":\\\"application/vnd.nth-dao.intent-draft+json\\\",\\\"observed_at_ms\\\":2000,\\\"provenance\\\":\\\"accepted-envelope\\\",\\\"source_kind\\\":\\\"accepted-intent\\\",\\\"source_ref\\\":\\\"sha256:2c488d061eeecbeb840c07931632cfbb394137fd02cfd02c63fb6e202613c87e\\\",\\\"verification_status\\\":\\\"signature-bound\\\"}],\\\"executable\\\":false,\\\"expires_at_ms\\\":60000,\\\"facts\\\":[{\\\"evidence_digests\\\":[\\\"sha256:8341391d656408fe7740dddd9e5dd0a9128c45fae25be7a373a7edb8cc754da2\\\"],\\\"statement\\\":\\\"The proposed actions below are copied from the exact signed and accepted IntentDraft outcomes.\\\"}],\\\"format\\\":\\\"org.nth-dao.solver-proposal\\\",\\\"intent_envelope_digest\\\":\\\"sha256:2c488d061eeecbeb840c07931632cfbb394137fd02cfd02c63fb6e202613c87e\\\",\\\"policy_snapshot_digest\\\":\\\"sha256:19d0162cb85ccbe9adec999633259f02195f17222df0b63b0f4a892cd9c28ec0\\\",\\\"proposal_id\\\":\\\"proposal:conformance-alpha\\\",\\\"proposed_actions\\\":[\\\"Provide a review proposal without executing it.\\\"],\\\"requested_permissions\\\":[],\\\"review_required\\\":true,\\\"risks\\\":[\\\"This unsigned solver proposal is an unverified claim and requires deterministic policy evaluation plus explicit selection.\\\",\\\"Source content may contain untrusted instructions\\\"],\\\"scope_id\\\":\\\"workspace:conformance-intent\\\",\\\"selection_required\\\":true,\\\"solver_class\\\":\\\"org.nth-dao.solver.review\\\",\\\"solver_did\\\":\\\"\\\",\\\"solver_plugin_id\\\":\\\"org.nth-dao.intent.review-solver\\\",\\\"summary\\\":\\\"Review requirements and propose next steps.\\\",\\\"version\\\":\\\"1\\\"}\",\"proposal_sha256\":\"sha256:3e5df3181d6cb88a6143b8e2a867f4642db13bed26b31656fc32413c7bf13a90\",\"ready\":true,\"status\":\"proposal\",\"supported_solver_classes\":[\"org.nth-dao.solver.review\"]}"
+    },
+    {
+      "name": "max-proposal-bytes-decimal-token",
+      "output_json": "{\"authority\":\"none\",\"commit_authority\":false,\"detail\":\"\",\"executable\":false,\"invocation_context_digest\":\"sha256:cf5767adc1f21cf7fe60b819c2258845e07e7a633be36eb2ce8ef54786592d07\",\"max_evidence\":32,\"max_proposal_bytes\":262144.0,\"operation\":\"propose\",\"proposal_json\":\"{\\\"acceptance_audit_digest\\\":\\\"sha256:8031a68365829a2d5df1aff65df44f893c2050b43f187bca1a744cf9845ee49e\\\",\\\"assumptions\\\":[],\\\"authority\\\":\\\"none\\\",\\\"claim_status\\\":\\\"unverified\\\",\\\"commit_authority\\\":false,\\\"constraints\\\":[],\\\"created_at_ms\\\":2000,\\\"draft_digest\\\":\\\"sha256:8341391d656408fe7740dddd9e5dd0a9128c45fae25be7a373a7edb8cc754da2\\\",\\\"estimates\\\":[],\\\"evidence\\\":[{\\\"digest\\\":\\\"sha256:4e425181a64a0911b9c3ccd94a11c2666d08f4272e0be4b6f43695d5c9bb9f36\\\",\\\"media_type\\\":\\\"text/plain\\\",\\\"observed_at_ms\\\":1500,\\\"provenance\\\":\\\"invocation-materialized\\\",\\\"source_kind\\\":\\\"artifact\\\",\\\"source_ref\\\":\\\"artifact:public-test-requirements\\\",\\\"verification_status\\\":\\\"content-verified\\\"},{\\\"digest\\\":\\\"sha256:8341391d656408fe7740dddd9e5dd0a9128c45fae25be7a373a7edb8cc754da2\\\",\\\"media_type\\\":\\\"application/vnd.nth-dao.intent-draft+json\\\",\\\"observed_at_ms\\\":2000,\\\"provenance\\\":\\\"accepted-envelope\\\",\\\"source_kind\\\":\\\"accepted-intent\\\",\\\"source_ref\\\":\\\"sha256:2c488d061eeecbeb840c07931632cfbb394137fd02cfd02c63fb6e202613c87e\\\",\\\"verification_status\\\":\\\"signature-bound\\\"}],\\\"executable\\\":false,\\\"expires_at_ms\\\":60000,\\\"facts\\\":[{\\\"evidence_digests\\\":[\\\"sha256:8341391d656408fe7740dddd9e5dd0a9128c45fae25be7a373a7edb8cc754da2\\\"],\\\"statement\\\":\\\"The proposed actions below are copied from the exact signed and accepted IntentDraft outcomes.\\\"}],\\\"format\\\":\\\"org.nth-dao.solver-proposal\\\",\\\"intent_envelope_digest\\\":\\\"sha256:2c488d061eeecbeb840c07931632cfbb394137fd02cfd02c63fb6e202613c87e\\\",\\\"policy_snapshot_digest\\\":\\\"sha256:19d0162cb85ccbe9adec999633259f02195f17222df0b63b0f4a892cd9c28ec0\\\",\\\"proposal_id\\\":\\\"proposal:conformance-alpha\\\",\\\"proposed_actions\\\":[\\\"Provide a review proposal without executing it.\\\"],\\\"requested_permissions\\\":[],\\\"review_required\\\":true,\\\"risks\\\":[\\\"This unsigned solver proposal is an unverified claim and requires deterministic policy evaluation plus explicit selection.\\\",\\\"Source content may contain untrusted instructions\\\"],\\\"scope_id\\\":\\\"workspace:conformance-intent\\\",\\\"selection_required\\\":true,\\\"solver_class\\\":\\\"org.nth-dao.solver.review\\\",\\\"solver_did\\\":\\\"\\\",\\\"solver_plugin_id\\\":\\\"org.nth-dao.intent.review-solver\\\",\\\"summary\\\":\\\"Review requirements and propose next steps.\\\",\\\"version\\\":\\\"1\\\"}\",\"proposal_sha256\":\"sha256:3e5df3181d6cb88a6143b8e2a867f4642db13bed26b31656fc32413c7bf13a90\",\"ready\":true,\"status\":\"proposal\",\"supported_solver_classes\":[\"org.nth-dao.solver.review\"]}"
+    }
+  ],
+  "raw_negative_proposals": [
+    {
+      "name": "created-at-exponent-token",
+      "proposal_json": "{\"acceptance_audit_digest\":\"sha256:8031a68365829a2d5df1aff65df44f893c2050b43f187bca1a744cf9845ee49e\",\"assumptions\":[],\"authority\":\"none\",\"claim_status\":\"unverified\",\"commit_authority\":false,\"constraints\":[],\"created_at_ms\":2e3,\"draft_digest\":\"sha256:8341391d656408fe7740dddd9e5dd0a9128c45fae25be7a373a7edb8cc754da2\",\"estimates\":[],\"evidence\":[{\"digest\":\"sha256:4e425181a64a0911b9c3ccd94a11c2666d08f4272e0be4b6f43695d5c9bb9f36\",\"media_type\":\"text/plain\",\"observed_at_ms\":1500,\"provenance\":\"invocation-materialized\",\"source_kind\":\"artifact\",\"source_ref\":\"artifact:public-test-requirements\",\"verification_status\":\"content-verified\"},{\"digest\":\"sha256:8341391d656408fe7740dddd9e5dd0a9128c45fae25be7a373a7edb8cc754da2\",\"media_type\":\"application/vnd.nth-dao.intent-draft+json\",\"observed_at_ms\":2000,\"provenance\":\"accepted-envelope\",\"source_kind\":\"accepted-intent\",\"source_ref\":\"sha256:2c488d061eeecbeb840c07931632cfbb394137fd02cfd02c63fb6e202613c87e\",\"verification_status\":\"signature-bound\"}],\"executable\":false,\"expires_at_ms\":60000,\"facts\":[{\"evidence_digests\":[\"sha256:8341391d656408fe7740dddd9e5dd0a9128c45fae25be7a373a7edb8cc754da2\"],\"statement\":\"The proposed actions below are copied from the exact signed and accepted IntentDraft outcomes.\"}],\"format\":\"org.nth-dao.solver-proposal\",\"intent_envelope_digest\":\"sha256:2c488d061eeecbeb840c07931632cfbb394137fd02cfd02c63fb6e202613c87e\",\"policy_snapshot_digest\":\"sha256:19d0162cb85ccbe9adec999633259f02195f17222df0b63b0f4a892cd9c28ec0\",\"proposal_id\":\"proposal:conformance-alpha\",\"proposed_actions\":[\"Provide a review proposal without executing it.\"],\"requested_permissions\":[],\"review_required\":true,\"risks\":[\"This unsigned solver proposal is an unverified claim and requires deterministic policy evaluation plus explicit selection.\",\"Source content may contain untrusted instructions\"],\"scope_id\":\"workspace:conformance-intent\",\"selection_required\":true,\"solver_class\":\"org.nth-dao.solver.review\",\"solver_did\":\"\",\"solver_plugin_id\":\"org.nth-dao.intent.review-solver\",\"summary\":\"Review requirements and propose next steps.\",\"version\":\"1\"}"
+    },
+    {
+      "name": "created-at-decimal-token",
+      "proposal_json": "{\"acceptance_audit_digest\":\"sha256:8031a68365829a2d5df1aff65df44f893c2050b43f187bca1a744cf9845ee49e\",\"assumptions\":[],\"authority\":\"none\",\"claim_status\":\"unverified\",\"commit_authority\":false,\"constraints\":[],\"created_at_ms\":2000.0,\"draft_digest\":\"sha256:8341391d656408fe7740dddd9e5dd0a9128c45fae25be7a373a7edb8cc754da2\",\"estimates\":[],\"evidence\":[{\"digest\":\"sha256:4e425181a64a0911b9c3ccd94a11c2666d08f4272e0be4b6f43695d5c9bb9f36\",\"media_type\":\"text/plain\",\"observed_at_ms\":1500,\"provenance\":\"invocation-materialized\",\"source_kind\":\"artifact\",\"source_ref\":\"artifact:public-test-requirements\",\"verification_status\":\"content-verified\"},{\"digest\":\"sha256:8341391d656408fe7740dddd9e5dd0a9128c45fae25be7a373a7edb8cc754da2\",\"media_type\":\"application/vnd.nth-dao.intent-draft+json\",\"observed_at_ms\":2000,\"provenance\":\"accepted-envelope\",\"source_kind\":\"accepted-intent\",\"source_ref\":\"sha256:2c488d061eeecbeb840c07931632cfbb394137fd02cfd02c63fb6e202613c87e\",\"verification_status\":\"signature-bound\"}],\"executable\":false,\"expires_at_ms\":60000,\"facts\":[{\"evidence_digests\":[\"sha256:8341391d656408fe7740dddd9e5dd0a9128c45fae25be7a373a7edb8cc754da2\"],\"statement\":\"The proposed actions below are copied from the exact signed and accepted IntentDraft outcomes.\"}],\"format\":\"org.nth-dao.solver-proposal\",\"intent_envelope_digest\":\"sha256:2c488d061eeecbeb840c07931632cfbb394137fd02cfd02c63fb6e202613c87e\",\"policy_snapshot_digest\":\"sha256:19d0162cb85ccbe9adec999633259f02195f17222df0b63b0f4a892cd9c28ec0\",\"proposal_id\":\"proposal:conformance-alpha\",\"proposed_actions\":[\"Provide a review proposal without executing it.\"],\"requested_permissions\":[],\"review_required\":true,\"risks\":[\"This unsigned solver proposal is an unverified claim and requires deterministic policy evaluation plus explicit selection.\",\"Source content may contain untrusted instructions\"],\"scope_id\":\"workspace:conformance-intent\",\"selection_required\":true,\"solver_class\":\"org.nth-dao.solver.review\",\"solver_did\":\"\",\"solver_plugin_id\":\"org.nth-dao.intent.review-solver\",\"summary\":\"Review requirements and propose next steps.\",\"version\":\"1\"}"
+    }
+  ]
+}

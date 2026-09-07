@@ -14,6 +14,7 @@ import pytest
 from nth_dao.plugins import (
     CapabilitySchemas,
     InvocationAuthority,
+    PluginAuthorizationError,
     PluginContractError,
     PluginHost,
     PluginHostPolicy,
@@ -35,6 +36,7 @@ from nth_dao.plugins.intent_resolver import (
     INTENT_RESOLVER_OUTPUT_SCHEMA,
     canonical_intent_draft,
     intent_resolver_request_digest,
+    validate_intent_resolver_authority,
 )
 from nth_dao.web import create_app
 
@@ -116,13 +118,20 @@ def test_literal_resolver_manifest_has_no_permissions_or_effects() -> None:
 
 @pytest.mark.parametrize(
     "missing",
-    ("input_validator", "output_validator", "exchange_validator", "response_context_validator"),
+    (
+        "input_validator",
+        "output_validator",
+        "exchange_validator",
+        "authority_validator",
+        "response_context_validator",
+    ),
 )
 def test_host_requires_every_boundary_for_context_bound_resolver(missing: str) -> None:
     validators = {
         "input_validator": lambda value: None,
         "output_validator": lambda value: None,
         "exchange_validator": lambda request, response: None,
+        "authority_validator": lambda request, authority: None,
         "response_context_validator": lambda response, context: None,
     }
     validators[missing] = None
@@ -141,6 +150,17 @@ def test_host_requires_every_boundary_for_context_bound_resolver(missing: str) -
                 )
             },
         )
+
+
+def test_resolver_authority_rejects_business_scope() -> None:
+    authority = InvocationAuthority(
+        principal="workspace:alpha",
+        capability_ids=frozenset({INTENT_RESOLVER_CAPABILITY_ID}),
+        mandate_digest="sha256:" + "a" * 64,
+    )
+
+    with pytest.raises(PluginAuthorizationError, match="must not receive"):
+        validate_intent_resolver_authority(_request(), authority)
 
 
 @pytest.mark.parametrize(

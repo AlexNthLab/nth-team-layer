@@ -1,0 +1,93 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "authority": {
+      "type": "string",
+      "enum": [
+        "none"
+      ]
+    },
+    "commit_authority": {
+      "type": "boolean",
+      "enum": [
+        false
+      ]
+    },
+    "detail": {
+      "type": "string",
+      "maxLength": 2048
+    },
+    "executable": {
+      "type": "boolean",
+      "enum": [
+        false
+      ]
+    },
+    "invocation_context_digest": {
+      "type": "string",
+      "minLength": 71,
+      "maxLength": 71
+    },
+    "max_evidence": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
+    "max_proposal_bytes": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
+    "operation": {
+      "type": "string",
+      "enum": [
+        "probe",
+        "propose"
+      ]
+    },
+    "proposal_json": {
+      "type": "string",
+      "maxLength": 262144
+    },
+    "proposal_sha256": {
+      "type": "string",
+      "maxLength": 71
+    },
+    "ready": {
+      "type": "boolean"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "",
+        "proposal"
+      ]
+    },
+    "supported_solver_classes": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 16,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 256
+      }
+    }
+  },
+  "required": [
+    "authority",
+    "commit_authority",
+    "detail",
+    "executable",
+    "invocation_context_digest",
+    "max_evidence",
+    "max_proposal_bytes",
+    "operation",
+    "proposal_json",
+    "proposal_sha256",
+    "ready",
+    "status",
+    "supported_solver_classes"
+  ]
+}

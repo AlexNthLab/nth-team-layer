@@ -1,4 +1,128 @@
 {
+  "negative_authorities": [
+    {
+      "authority": {
+        "capability_ids": [
+          "org.example.other"
+        ],
+        "idempotency_key": "",
+        "mandate_digest": "",
+        "principal": "vector-principal",
+        "resource_ids": []
+      },
+      "expected_error_contains": "lacks capability scope",
+      "name": "resolver-authority-requires-capability",
+      "request": {
+        "attachments": [
+          {
+            "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "media_type": "text/plain",
+            "name": "café-requirements.txt",
+            "size_bytes": 128,
+            "verification_status": "unverified"
+          }
+        ],
+        "automation_ceiling": "A1",
+        "locale": "en",
+        "operation": "resolve",
+        "request_id": "intent-request:vector-alpha",
+        "source_kind": "human",
+        "source_text": "Review the attached café requirements and propose next steps."
+      }
+    },
+    {
+      "authority": {
+        "capability_ids": [
+          "org.nth-dao.intent.resolve"
+        ],
+        "idempotency_key": "",
+        "mandate_digest": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+        "principal": "vector-principal",
+        "resource_ids": []
+      },
+      "expected_error_contains": "must not receive",
+      "name": "resolver-authority-rejects-mandate",
+      "request": {
+        "attachments": [
+          {
+            "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "media_type": "text/plain",
+            "name": "café-requirements.txt",
+            "size_bytes": 128,
+            "verification_status": "unverified"
+          }
+        ],
+        "automation_ceiling": "A1",
+        "locale": "en",
+        "operation": "resolve",
+        "request_id": "intent-request:vector-alpha",
+        "source_kind": "human",
+        "source_text": "Review the attached café requirements and propose next steps."
+      }
+    },
+    {
+      "authority": {
+        "capability_ids": [
+          "org.nth-dao.intent.resolve"
+        ],
+        "idempotency_key": "intent-request:smuggled",
+        "mandate_digest": "",
+        "principal": "vector-principal",
+        "resource_ids": []
+      },
+      "expected_error_contains": "must not receive",
+      "name": "resolver-authority-rejects-idempotency",
+      "request": {
+        "attachments": [
+          {
+            "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "media_type": "text/plain",
+            "name": "café-requirements.txt",
+            "size_bytes": 128,
+            "verification_status": "unverified"
+          }
+        ],
+        "automation_ceiling": "A1",
+        "locale": "en",
+        "operation": "resolve",
+        "request_id": "intent-request:vector-alpha",
+        "source_kind": "human",
+        "source_text": "Review the attached café requirements and propose next steps."
+      }
+    },
+    {
+      "authority": {
+        "capability_ids": [
+          "org.nth-dao.intent.resolve"
+        ],
+        "idempotency_key": "",
+        "mandate_digest": "",
+        "principal": "vector-principal",
+        "resource_ids": [
+          "sha256:4444444444444444444444444444444444444444444444444444444444444444"
+        ]
+      },
+      "expected_error_contains": "must not receive",
+      "name": "resolver-authority-rejects-resources",
+      "request": {
+        "attachments": [
+          {
+            "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "media_type": "text/plain",
+            "name": "café-requirements.txt",
+            "size_bytes": 128,
+            "verification_status": "unverified"
+          }
+        ],
+        "automation_ceiling": "A1",
+        "locale": "en",
+        "operation": "resolve",
+        "request_id": "intent-request:vector-alpha",
+        "source_kind": "human",
+        "source_text": "Review the attached café requirements and propose next steps."
+      }
+    }
+  ],
   "negative_context_bindings": [
     {
       "context": {
@@ -1804,6 +1928,15 @@
   ],
   "positive_exchanges": [
     {
+      "authority": {
+        "capability_ids": [
+          "org.nth-dao.intent.resolve"
+        ],
+        "idempotency_key": "",
+        "mandate_digest": "",
+        "principal": "vector-principal",
+        "resource_ids": []
+      },
       "context": {
         "capability_id": "org.nth-dao.intent.resolve",
         "format": "org.nth-dao.intent-resolver-invocation-context.v1",
@@ -1840,6 +1973,15 @@
       }
     },
     {
+      "authority": {
+        "capability_ids": [
+          "org.nth-dao.intent.resolve"
+        ],
+        "idempotency_key": "",
+        "mandate_digest": "",
+        "principal": "vector-principal",
+        "resource_ids": []
+      },
       "context": {
         "capability_id": "org.nth-dao.intent.resolve",
         "format": "org.nth-dao.intent-resolver-invocation-context.v1",
@@ -2101,5 +2243,5 @@
       ]
     }
   ],
-  "protocol_digest": "sha256:57f7a4d53bbe24233fc6f83f0b882c9bcbc4a65df823b4f5e05b5fa833094841"
+  "protocol_digest": "sha256:4ae40eea18ba6acddcb4ff4534ee739d15d85d1f8878ae8930b764a8a9c82d5b"
 }

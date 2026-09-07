@@ -12,6 +12,7 @@ import pytest
 
 import nth_dao.plugins as plugin_facade
 from nth_dao.canonical_json import canonical_json
+from nth_dao.plugins.host import InvocationAuthority, PluginAuthorizationError
 from nth_dao.plugins.intent_resolver import (
     INTENT_DRAFT_FORMAT,
     INTENT_RESOLVER_CAPABILITY_ID,
@@ -27,6 +28,7 @@ from nth_dao.plugins.intent_resolver import (
     intent_resolver_vector_documents,
     intent_resolver_wire_vectors,
     validate_intent_draft,
+    validate_intent_resolver_authority,
     validate_intent_resolver_exchange,
     validate_intent_resolver_context_binding,
     validate_intent_resolver_input,
@@ -46,6 +48,16 @@ def _resolve_exchange():
     return _vectors()["positive_exchanges"][1]
 
 
+def _authority(document: dict) -> InvocationAuthority:
+    return InvocationAuthority(
+        principal=document["principal"],
+        capability_ids=frozenset(document["capability_ids"]),
+        mandate_digest=document["mandate_digest"],
+        idempotency_key=document["idempotency_key"],
+        resource_ids=frozenset(document["resource_ids"]),
+    )
+
+
 def test_intent_resolver_contract_is_confidential_and_non_authoritative() -> None:
     assert INTENT_RESOLVER_CAPABILITY_ID == "org.nth-dao.intent.resolve"
     assert INTENT_RESOLVER_CONTRACT.effects == ("none",)
@@ -54,8 +66,14 @@ def test_intent_resolver_contract_is_confidential_and_non_authoritative() -> Non
     assert INTENT_RESOLVER_CONTRACT.security == "untrusted-hint"
     assert INTENT_RESOLVER_CONTRACT.retention == "none"
     assert plugin_facade.INTENT_RESOLVER_CONTRACT is INTENT_RESOLVER_CONTRACT
-    assert intent_resolver_protocol_document()["error_model"] == {}
-    assert intent_resolver_protocol_document()["semantics"] == {
+    protocol = intent_resolver_protocol_document()
+    assert protocol["error_model"] == {}
+    assert protocol["invocation_authority"] == {
+        "business_scope": "mandate-idempotency-and-resources-forbidden",
+        "capability_scope": INTENT_RESOLVER_CAPABILITY_ID,
+        "principal": "host-selected-local-attribution",
+    }
+    assert protocol["semantics"] == {
         "authority": "none",
         "execution": "forbidden",
         "input_binding": "request-and-source-fields-exact",
@@ -72,6 +90,10 @@ def test_intent_resolver_vectors_validate_positive_and_negative_cases() -> None:
     for response in vectors["positive_outputs"]:
         validate_intent_resolver_output(response)
     for exchange in vectors["positive_exchanges"]:
+        validate_intent_resolver_authority(
+            exchange["request"],
+            _authority(exchange["authority"]),
+        )
         validate_intent_resolver_exchange(
             exchange["request"],
             exchange["response"],
@@ -80,6 +102,15 @@ def test_intent_resolver_vectors_validate_positive_and_negative_cases() -> None:
             exchange["response"],
             exchange["context"],
         )
+    for case in vectors["negative_authorities"]:
+        with pytest.raises(
+            PluginAuthorizationError,
+            match=case["expected_error_contains"],
+        ):
+            validate_intent_resolver_authority(
+                case["request"],
+                _authority(case["authority"]),
+            )
     for case in vectors["negative_outputs"]:
         with pytest.raises(
             PluginSchemaError,
@@ -383,9 +414,25 @@ function validateContext(response, context) {
     fail("does not bind Host invocation context");
   }
 }
+function validateAuthority(request, authority) {
+  const keys = ["capability_ids", "idempotency_key", "mandate_digest", "principal", "resource_ids"];
+  if (authority === null || typeof authority !== "object" || Array.isArray(authority)
+      || canonicalText(Object.keys(authority).sort()) !== canonicalText(keys)) fail("authority shape");
+  validateText(authority.principal, "authority principal", 512);
+  if (!Array.isArray(authority.capability_ids) || authority.capability_ids.length === 0
+      || authority.capability_ids.some(item => typeof item !== "string")) fail("authority capability scope");
+  if (!authority.capability_ids.includes("org.nth-dao.intent.resolve")) fail("lacks capability scope");
+  if (typeof authority.mandate_digest !== "string"
+      || typeof authority.idempotency_key !== "string"
+      || !Array.isArray(authority.resource_ids)) fail("authority business scope shape");
+  if (authority.mandate_digest || authority.idempotency_key || authority.resource_ids.length) {
+    fail("must not receive mandate, idempotency, or resource authority");
+  }
+}
 for (const request of vector.positive_inputs) validateInput(request);
 for (const response of vector.positive_outputs) validateOutput(response);
 for (const item of vector.positive_exchanges) {
+  validateAuthority(item.request, item.authority);
   validateOutput(item.response);
   validateExchange(item.request, item.response);
   validateContext(item.response, item.context);
@@ -401,6 +448,12 @@ for (const item of vector.negative_inputs) {
   try { validateInput(item.input); }
   catch (error) { if (!(error instanceof ValidationError)) throw error; rejected = true; }
   if (!rejected) fail(`negative input accepted: ${item.name}`);
+}
+for (const item of vector.negative_authorities) {
+  let rejected = false;
+  try { validateAuthority(item.request, item.authority); }
+  catch (error) { if (!(error instanceof ValidationError)) throw error; rejected = true; }
+  if (!rejected) fail(`negative authority accepted: ${item.name}`);
 }
 for (const item of vector.negative_exchanges) {
   let rejected = false;

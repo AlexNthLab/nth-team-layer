@@ -626,6 +626,33 @@ class IntentAcceptanceStore:
         _rows, records = self._read_history()
         return next((r for r in records if r.envelope_digest == envelope_digest), None)
 
+    def _lookup_with_scope_head(
+        self,
+        envelope_digest: str,
+    ) -> tuple[IntentAcceptanceRecord | None, IntentAcceptanceRecord | None]:
+        """Return one verified record and its verified scope head in one snapshot."""
+
+        if type(envelope_digest) is not str or _HASH.fullmatch(envelope_digest) is None:
+            raise ValueError("envelope_digest must be a content hash")
+        _rows, records = self._read_history()
+        record = next(
+            (item for item in records if item.envelope_digest == envelope_digest),
+            None,
+        )
+        if record is None:
+            return None, None
+        envelope = record.envelope
+        head = next(
+            (
+                item
+                for item in reversed(records)
+                if item.envelope["audience_did"] == envelope["audience_did"]
+                and item.envelope["scope_id"] == envelope["scope_id"]
+            ),
+            None,
+        )
+        return record, head
+
     def history(self, *, after_sequence: int = 0, limit: int = 100) -> tuple[IntentAcceptanceRecord, ...]:
         if type(after_sequence) is not int or not 0 <= after_sequence <= _MAX_SAFE_INTEGER:
             raise ValueError("after_sequence must be a nonnegative safe integer")

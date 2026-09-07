@@ -65,6 +65,14 @@ from .literal_intent_resolver import (
     literal_intent_resolver_manifest,
     register_literal_intent_resolver,
 )
+from .review_intent_solver import (
+    REVIEW_INTENT_SOLVER_CLASS,
+    REVIEW_INTENT_SOLVER_PLUGIN_ID,
+    ReviewIntentSolverPlugin,
+    ReviewIntentSolverProvider,
+    register_review_intent_solver,
+    review_intent_solver_manifest,
+)
 from .loopback_transport import (
     LOOPBACK_TRANSPORT_MAX_BYTES,
     LOOPBACK_TRANSPORT_MAX_BYTES_PER_PRINCIPAL,
@@ -139,6 +147,10 @@ __all__ = [
     "LITERAL_INTENT_RESOLVER_PLUGIN_ID",
     "LiteralIntentResolverPlugin",
     "LiteralIntentResolverProvider",
+    "REVIEW_INTENT_SOLVER_CLASS",
+    "REVIEW_INTENT_SOLVER_PLUGIN_ID",
+    "ReviewIntentSolverPlugin",
+    "ReviewIntentSolverProvider",
     "MemoryMarketIndexPlugin",
     "MemoryMarketIndexProvider",
     "MemoryMessageStorePlugin",
@@ -182,6 +194,8 @@ __all__ = [
     "register_memory_message_store",
     "register_memory_market_index",
     "register_literal_intent_resolver",
+    "register_review_intent_solver",
+    "review_intent_solver_manifest",
     "register_loopback_transport",
     "register_supervised_agent_provider",
     "supervised_agent_manifest",

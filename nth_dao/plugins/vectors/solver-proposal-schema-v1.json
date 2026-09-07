@@ -1,0 +1,321 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "acceptance_audit_digest": {
+      "type": "string",
+      "minLength": 71,
+      "maxLength": 71
+    },
+    "assumptions": {
+      "type": "array",
+      "maxItems": 64,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 8192
+      }
+    },
+    "authority": {
+      "type": "string",
+      "enum": [
+        "none"
+      ]
+    },
+    "claim_status": {
+      "type": "string",
+      "enum": [
+        "unverified"
+      ]
+    },
+    "commit_authority": {
+      "type": "boolean",
+      "enum": [
+        false
+      ]
+    },
+    "constraints": {
+      "type": "array",
+      "maxItems": 64,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 8192
+      }
+    },
+    "created_at_ms": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "draft_digest": {
+      "type": "string",
+      "minLength": 71,
+      "maxLength": 71
+    },
+    "estimates": {
+      "type": "array",
+      "maxItems": 64,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "basis": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 8192
+          },
+          "evidence_digests": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 32,
+            "items": {
+              "type": "string",
+              "minLength": 71,
+              "maxLength": 71
+            }
+          },
+          "statement": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 8192
+          }
+        },
+        "required": [
+          "basis",
+          "evidence_digests",
+          "statement"
+        ]
+      }
+    },
+    "evidence": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 33,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "digest": {
+            "type": "string",
+            "minLength": 71,
+            "maxLength": 71
+          },
+          "media_type": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 255
+          },
+          "observed_at_ms": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "provenance": {
+            "type": "string",
+            "enum": [
+              "accepted-envelope",
+              "invocation-materialized",
+              "solver-observed"
+            ]
+          },
+          "source_kind": {
+            "type": "string",
+            "enum": [
+              "accepted-intent",
+              "artifact",
+              "observation",
+              "remote-resource",
+              "repository"
+            ]
+          },
+          "source_ref": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "verification_status": {
+            "type": "string",
+            "enum": [
+              "content-verified",
+              "signature-bound",
+              "unverified"
+            ]
+          }
+        },
+        "required": [
+          "digest",
+          "media_type",
+          "observed_at_ms",
+          "provenance",
+          "source_kind",
+          "source_ref",
+          "verification_status"
+        ]
+      }
+    },
+    "executable": {
+      "type": "boolean",
+      "enum": [
+        false
+      ]
+    },
+    "expires_at_ms": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "facts": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 64,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "evidence_digests": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 32,
+            "items": {
+              "type": "string",
+              "minLength": 71,
+              "maxLength": 71
+            }
+          },
+          "statement": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 8192
+          }
+        },
+        "required": [
+          "evidence_digests",
+          "statement"
+        ]
+      }
+    },
+    "format": {
+      "type": "string",
+      "enum": [
+        "org.nth-dao.solver-proposal"
+      ]
+    },
+    "intent_envelope_digest": {
+      "type": "string",
+      "minLength": 71,
+      "maxLength": 71
+    },
+    "policy_snapshot_digest": {
+      "type": "string",
+      "minLength": 71,
+      "maxLength": 71
+    },
+    "proposal_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    },
+    "proposed_actions": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 64,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 8192
+      }
+    },
+    "requested_permissions": {
+      "type": "array",
+      "maxItems": 64,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 256
+      }
+    },
+    "review_required": {
+      "type": "boolean",
+      "enum": [
+        true
+      ]
+    },
+    "risks": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 64,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 8192
+      }
+    },
+    "scope_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    },
+    "selection_required": {
+      "type": "boolean",
+      "enum": [
+        true
+      ]
+    },
+    "solver_class": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    },
+    "solver_did": {
+      "type": "string",
+      "maxLength": 128
+    },
+    "solver_plugin_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    },
+    "summary": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 8192
+    },
+    "version": {
+      "type": "string",
+      "enum": [
+        "1"
+      ]
+    }
+  },
+  "required": [
+    "acceptance_audit_digest",
+    "assumptions",
+    "authority",
+    "claim_status",
+    "commit_authority",
+    "constraints",
+    "created_at_ms",
+    "draft_digest",
+    "estimates",
+    "evidence",
+    "executable",
+    "expires_at_ms",
+    "facts",
+    "format",
+    "intent_envelope_digest",
+    "policy_snapshot_digest",
+    "proposal_id",
+    "proposed_actions",
+    "requested_permissions",
+    "review_required",
+    "risks",
+    "scope_id",
+    "selection_required",
+    "solver_class",
+    "solver_did",
+    "solver_plugin_id",
+    "summary",
+    "version"
+  ]
+}
